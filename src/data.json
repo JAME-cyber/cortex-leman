@@ -1,0 +1,64 @@
+{
+  "brand": {
+    "name": "Cortex Léman",
+    "baseline": "L'Exigence de la Preuve dans un Monde d'Incertitude",
+    "contactEmail": "harness@cortex-leman.com",
+    "location": "Annemasse - Grand Genève"
+  },
+  "hero": {
+    "headline": "Ne demandez pas l'avis d'une IA. Exigez un audit de rigueur.",
+    "subheadline": "Infrastructure d'orchestration asymétrique (22 agents). Nous transformons vos intuitions business en stratégies quantifiées, validées par la science et le marché local.",
+    "primaryCTA": "Lancer un Audit",
+    "secondaryCTA": "Voir l'Architecture"
+  },
+  "architecture_bento": [
+    {
+      "id": "pole_intelligence",
+      "title": "Pôle Intelligence (Exploration)",
+      "description": "3 agents dédiés à la R&D profonde. Veille réglementaire, analyse de brevets et scraping web sans hallucination.",
+      "metric": "100% Sourcé"
+    },
+    {
+      "id": "local_vault",
+      "title": "Local Knowledge Vault",
+      "description": "Mémoire propriétaire intégrant les spécificités fiscales, légales et démographiques de la zone transfrontalière franco-suisse.",
+      "metric": "Ancrage Local"
+    },
+    {
+      "id": "pole_factory",
+      "title": "Pôle Factory (Exécution)",
+      "description": "3 agents isolés de la recherche, dédiés à la stricte mise en forme des données validées (Rapports PDF, Business Plans).",
+      "metric": "Zéro Dérive"
+    }
+  ],
+  "methodology_steps": [
+    {
+      "step": 1,
+      "title": "Soumission du Projet",
+      "description": "Vous exposez votre concept. Le Cortex central (Harness) évalue immédiatement si les données sont suffisantes ou s'il manque des paramètres critiques."
+    },
+    {
+      "step": 2,
+      "title": "Déploiement Asymétrique",
+      "description": "Le Harness délègue la recherche de preuves au pôle Intelligence et interroge la base de connaissances du Grand Genève."
+    },
+    {
+      "step": 3,
+      "title": "Scoring Quantitatif (SKILL)",
+      "description": "Évaluation algorithmique sur 7 critères stricts (Faisabilité technique, LTV/CAC, Adéquation Marché). Une note sur 100 est générée."
+    },
+    {
+      "step": 4,
+      "title": "Plan d'Action (90 Jours)",
+      "description": "Le pôle Factory compile les résultats dans un livrable exécutif contenant une roadmap segmentée pour vos trois prochains mois."
+    }
+  ],
+  "trust_and_security": {
+    "title": "Souveraineté des Décisions",
+    "features": [
+      "Hébergement Local",
+      "Audit de Conformité (Compliance Enforcer)",
+      "Zéro fuite de données vers les LLMs publics"
+    ]
+  }
+}
