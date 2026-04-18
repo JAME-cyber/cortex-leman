@@ -1,0 +1,1244 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cortex Leman - Audit RGPD-IA complet avec OWASP GenAI v1.0</title>
+    <meta name="description" content="Premier audit RGPD-IA complet incluant OWASP GenAI (Agentic AI + Data Security) + OWASP Top 10. Prix: 1500-7500€. Délai: 2-3 semaines.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0d1117;
+            color: #f0f2f5;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: rgba(13, 17, 23, 0.92);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .nav-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 64px;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .nav-logo {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #3b82f6, #10b981);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 700;
+            color: #0d1117;
+        }
+
+        .nav-brand-text {
+            font-weight: 700;
+            font-size: 18px;
+            color: #f0f2f5;
+        }
+
+        .nav-brand-text span {
+            color: #3b82f6;
+        }
+
+        .nav-cta {
+            font-size: 13px;
+            font-weight: 500;
+            padding: 8px 18px;
+            border-radius: 8px;
+            background: rgba(75, 158, 255, 0.12);
+            color: #3b82f6;
+            border: 1px solid rgba(75, 158, 255, 0.3);
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .nav-cta:hover {
+            background: rgba(75, 158, 255, 0.18);
+            border-color: #3b82f6;
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 120px 24px 80px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-grid {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            background-image: linear-gradient(rgba(75, 158, 255, 0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(75, 158, 255, 0.04) 1px, transparent 1px);
+            background-size: 48px 48px;
+        }
+
+        .hero-glow {
+            position: absolute;
+            top: 20%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(75, 158, 255, 0.08) 0%, transparent 70%);
+            z-index: 0;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            border-radius: 100;
+            background: rgba(75, 158, 255, 0.08);
+            border: 1px solid rgba(75, 158, 255, 0.2);
+            margin-bottom: 32px;
+        }
+
+        .hero-badge-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #10b981;
+        }
+
+        .hero-badge-text {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 12px;
+            color: rgba(75, 158, 255, 0.9);
+            letter-spacing: 0.08em;
+        }
+
+        .hero-title {
+            font-size: clamp(42px, 7vw, 88px);
+            font-weight: 800;
+            line-height: 1.0;
+            color: #f0f2f5;
+            margin-bottom: 24px;
+            letter-spacing: -2px;
+        }
+
+        .hero-title .highlight {
+            color: #3b82f6;
+        }
+
+        .hero-title .highlight-2 {
+            color: #F59E0B;
+        }
+
+        .hero-subtitle {
+            font-size: 18px;
+            color: rgba(240, 242, 245, 0.55);
+            max-width: 720px;
+            line-height: 1.7;
+            margin-bottom: 48px;
+        }
+
+        .hero-subtitle strong {
+            color: #10b981;
+        }
+
+        .hero-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 24px;
+            margin-top: 48px;
+            padding-top: 48px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .hero-stat {
+            font-size: 28px;
+            font-weight: 800;
+            color: #3b82f6;
+            letter-spacing: -1px;
+            margin-bottom: 8px;
+        }
+
+        .hero-stat-label {
+            font-size: 13px;
+            color: rgba(240, 242, 245, 0.4);
+        }
+
+        .hero-ctas {
+            display: flex;
+            gap: 16px;
+            margin-top: 48px;
+            flex-wrap: wrap;
+        }
+
+        .hero-cta {
+            font-weight: 600;
+            font-size: 15px;
+            padding: 14px 28px;
+            border-radius: 10px;
+            text-decoration: none;
+            background: #3b82f6;
+            color: #0d1117;
+            border: 1px solid rgba(75, 158, 255, 0.3);
+            transition: all 0.2s;
+        }
+
+        .hero-cta:hover {
+            background: #6DB3FF;
+        }
+
+        .hero-cta-secondary {
+            font-weight: 600;
+            font-size: 15px;
+            padding: 14px 28px;
+            border-radius: 10px;
+            text-decoration: none;
+            background: rgba(255, 255, 255, 0.05);
+            color: rgba(240, 242, 245, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.2s;
+        }
+
+        .hero-cta-secondary:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: #3b82f6;
+            color: #0d1117;
+        }
+
+        /* OWASP GenAI Section */
+        .owasp-genai {
+            padding: 120px 24px;
+            background: rgba(75, 158, 255, 0.02);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .section-header {
+            margin-bottom: 64px;
+            text-align: center;
+        }
+
+        .section-badge {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 0.15em;
+            color: #F59E0B;
+            text-transform: uppercase;
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 6px;
+            background: rgba(245, 158, 11, 0.06);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            margin-bottom: 8px;
+        }
+
+        .section-title {
+            font-size: clamp(42px, 6vw, 64px);
+            font-weight: 800;
+            color: #f0f2f5;
+            margin-bottom: 16px;
+            letter-spacing: -2px;
+        }
+
+        .section-subtitle {
+            font-size: 18px;
+            color: rgba(240, 242, 245, 0.55);
+            max-width: 720px;
+            line-height: 1.7;
+            margin: 0 auto;
+        }
+
+        .section-subtitle strong {
+            color: #3b82f6;
+        }
+
+        .threats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 32px;
+            border-radius: 16px;
+        }
+
+        .threat-card {
+            padding: 24px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .threat-card.critical {
+            background: rgba(239, 68, 68, 0.04);
+            border-color: rgba(220, 38, 38, 0.2);
+        }
+
+        .threat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+
+        .threat-badge {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 0.12em;
+            padding: 4px 10px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        .threat-badge.critical {
+            background: rgba(220, 38, 38, 0.15);
+            color: #f0f2f5;
+        }
+
+        .threat-badge.high {
+            background: rgba(163, 230, 53, 0.1);
+            color: #f0f2f5;
+        }
+
+        .threat-name {
+            font-size: 20px;
+            font-weight: 700;
+            color: #f0f2f5;
+            margin: 0 0 8px;
+        }
+
+        .threat-description {
+            font-size: 14px;
+            color: rgba(240, 242, 245, 0.45);
+            line-height: 1.6;
+            margin: 0 0 16px;
+        }
+
+        .threat-mitigations {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .threat-mitigations-title {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 11px;
+            color: #10b981;
+            letter-spacing: 0.1em;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .threat-mitigations-list {
+            font-size: 13px;
+            color: rgba(240, 242, 245, 0.55);
+            margin: 0;
+            padding-left: 24px;
+        }
+
+        .threat-mitigations-list li {
+            margin-bottom: 4px;
+        }
+
+        .threat-mitigations-list strong {
+            color: #3b82f6;
+        }
+
+        /* Pricing Section */
+        .pricing {
+            padding: 120px 24px;
+            background: rgba(75, 158, 255, 0.02);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .pricing-header {
+            margin-bottom: 64px;
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin-bottom: 48px;
+        }
+
+        .pricing-card {
+            padding: 36px 32px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            background: rgba(255, 255, 255, 0.02);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pricing-card.popular {
+            border: 2px solid #3b82f6;
+            background: rgba(75, 158, 255, 0.05);
+        }
+
+        .pricing-badge {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 10px;
+            padding: 4px 10px;
+            border-radius: 100;
+            background: #3b82f6;
+            color: #0d1117;
+            letter-spacing: 0.08em;
+        }
+
+        .pricing-name {
+            font-size: 22px;
+            font-weight: 700;
+            color: #f0f2f5;
+            margin-bottom: 8px;
+        }
+
+        .pricing-price {
+            display: flex;
+            align-items: baseline;
+            gap: 4px;
+            margin: 20px 0 28px;
+        }
+
+        .pricing-price-amount {
+            font-size: 44px;
+            font-weight: 800;
+            color: #3b82f6;
+            letter-spacing: -2px;
+        }
+
+        .pricing-price-currency {
+            font-size: 16px;
+            color: rgba(240, 242, 245, 0.4);
+            font-weight: 400;
+        }
+
+        .pricing-delay {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 11px;
+            color: #10b981;
+            letter-spacing: 0.12em;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+        }
+
+        .pricing-description {
+            font-size: 14px;
+            color: rgba(240, 242, 245, 0.45);
+            line-height: 1.6;
+            margin: 0 0 24px;
+        }
+
+        .pricing-features {
+            font-size: 13px;
+            color: rgba(240, 242, 245, 0.55);
+            margin: 0 0 24px;
+            padding-left: 24px;
+        }
+
+        .pricing-features li {
+            margin-bottom: 8px;
+        }
+
+        .pricing-features strong {
+            color: #3b82f6;
+        }
+
+        .pricing-cta {
+            display: block;
+            text-align: center;
+            padding: 12px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            background: #3b82f6;
+            color: #0d1117;
+            border: 1px solid rgba(75, 158, 255, 0.3);
+            transition: all 0.2s;
+        }
+
+        .pricing-cta:hover {
+            background: #6DB3FF;
+        }
+
+        /* Comparison Table */
+        .comparison {
+            margin-top: 48px;
+            padding: 24px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 16px;
+        }
+
+        .comparison h3 {
+            font-size: clamp(24px, 3vw, 32px);
+            font-weight: 700;
+            color: #f0f2f5;
+            margin-bottom: 24px;
+            letter-spacing: -1px;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .comparison-table thead {
+            background: #0d1117;
+        }
+
+        .comparison-table th {
+            padding: 12px 16px;
+            color: #fff;
+            font-weight: 600;
+            text-align: left;
+        }
+
+        .comparison-table th:nth-child(2) {
+            background: #3b82f6;
+            text-align: center;
+        }
+
+        .comparison-table th:nth-child(3) {
+            background: #F59E0B;
+            text-align: center;
+        }
+
+        .comparison-table tbody tr:nth-child(even) {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .comparison-table td {
+            padding: 12px 16px;
+            color: #f0f2f5;
+            font-weight: 600;
+        }
+
+        .comparison-table td:nth-child(2),
+        .comparison-table td:nth-child(3) {
+            text-align: center;
+        }
+
+        .comparison-table td:nth-child(3) {
+            color: #3b82f6;
+            font-weight: 600;
+        }
+
+        /* Footer */
+        footer {
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 40px 24px;
+            background: #495057;
+            color: #fff;
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .footer-brand {
+            font-weight: 700;
+            font-size: 16px;
+            color: #fff;
+        }
+
+        .footer-text {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.7);
+            max-width: 600px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 42px;
+            }
+
+            .hero-subtitle {
+                font-size: 16px;
+            }
+
+            .hero-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-ctas {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .hero-cta,
+            .hero-cta-secondary {
+                width: 100%;
+                text-align: center;
+            }
+
+            .nav-content {
+                padding: 0 16px;
+            }
+
+            .comparison-table {
+                font-size: 11px;
+            }
+
+            .comparison-table th,
+            .comparison-table td {
+                padding: 8px 12px;
+            }
+            
+            .contact-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* Contact Section */
+        .contact {
+            padding: 120px 24px;
+            background: rgba(75, 158, 255, 0.02);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .contact-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 48px;
+            margin-top: 48px;
+        }
+
+        .contact-info {
+            padding: 32px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .contact-info-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #f0f2f5;
+            margin-bottom: 24px;
+            letter-spacing: -1px;
+        }
+
+        .contact-info-list {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 32px;
+        }
+
+        .contact-info-list li {
+            font-size: 14px;
+            color: rgba(240, 242, 245, 0.8);
+            line-height: 2;
+            margin-bottom: 12px;
+        }
+
+        .contact-social {
+            padding-top: 24px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .contact-social-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #f0f2f5;
+            margin-bottom: 16px;
+        }
+
+        .contact-social-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+            font-size: 14px;
+            color: rgba(240, 242, 245, 0.8);
+        }
+
+        .contact-social-icon {
+            font-size: 20px;
+        }
+
+        .contact-form-container {
+            padding: 32px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: rgba(240, 242, 245, 0.8);
+            margin-bottom: 8px;
+        }
+
+        .form-input,
+        .form-textarea {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #f0f2f5;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s;
+        }
+
+        .form-input:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-submit {
+            width: 100%;
+            padding: 14px 28px;
+            background: #3b82f6;
+            color: #0d1117;
+            border: 1px solid rgba(75, 158, 255, 0.3);
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .form-submit:hover {
+            background: #6DB3FF;
+        }
+
+        .form-privacy {
+            font-size: 12px;
+            color: rgba(240, 242, 245, 0.4);
+            text-align: center;
+            margin-top: 16px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="container">
+            <div class="nav-content">
+                <a href="#" class="nav-brand">
+                    <div class="nav-logo">CL</div>
+                    <div class="nav-brand-text">Cortex <span>Leman</span></div>
+                </a>
+                <a href="#contact-section" class="nav-cta">Démarrer un audit</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-grid"></div>
+        <div class="hero-glow"></div>
+        <div class="container hero-content">
+            <div class="hero-badge">
+                <div class="hero-badge-dot"></div>
+                <div class="hero-badge-text">OWASP GENAI v1.0 · 9-Phase SecOps · 12 Menaces</div>
+            </div>
+            <h1 class="hero-title">
+                Audit RGPD-IA complet avec<br>
+                <span class="highlight">OWASP GenAI</span> + <span class="highlight-2">OWASP Top 10</span>
+            </h1>
+            <p class="hero-subtitle">
+                Contrairement à <strong>OneTrust et Vanta</strong> qui ne couvrent que <strong>OWASP Top 10 traditionnel</strong>, Cortex Leman couvre en plus <strong>OWASP GenAI Agentic AI (9-Phase SecOps)</strong> + <strong>OWASP GenAI Data Security v1.0 (12 menaces)</strong>.
+                <br><br>
+                Premier audit spécifique aux systèmes d'IA multi-agents (LLM, agents autonomes, chatbots) conformes à l'AI Act (juillet 2025).
+            </p>
+
+            <div class="hero-stats">
+                <div>
+                    <div class="hero-stat">🔒 OWASP GenAI v1.0</div>
+                    <div class="hero-stat-label">Audit complet (3 audits inclus)</div>
+                </div>
+                <div>
+                    <div class="hero-stat">📋 AI Act Compliance</div>
+                    <div class="hero-stat-label">Articles 9-16, Sanctions jusqu'à 6% CA</div>
+                </div>
+                <div>
+                    <div class="hero-stat">⚡ Délai rapide</div>
+                    <div class="hero-stat-label">2-3 semaines vs 6-12 mois</div>
+                </div>
+                <div>
+                    <div class="hero-stat">🎯 Spécialisé PME FR-CH</div>
+                    <div class="hero-stat-label">Support local, FR/DE/IT</div>
+                </div>
+            </div>
+
+            <div class="hero-ctas">
+                <a href="#owasp-genai" class="hero-cta">Découvrir OWASP GenAI →</a>
+                <a href="#contact-section" class="hero-cta-secondary">Démarrer un audit →</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- OWASP GenAI Section -->
+    <section class="owasp-genai" id="owasp-genai">
+        <div class="container">
+            <div class="section-header">
+                <div class="section-badge">OWASP GENAI v1.0</div>
+                <h2 class="section-title">12 Menaces OWASP GenAI</h2>
+                <p class="section-subtitle">
+                    Contrairement à <strong>OneTrust et Vanta</strong> qui ne couvrent que <strong>OWASP Top 10 traditionnel</strong>, Cortex Leman est le premier audit à couvrir <strong>OWASP GenAI Agentic AI (9-Phase SecOps)</strong> + <strong>OWASP GenAI Data Security v1.0 (12 menaces)</strong>.
+                </p>
+            </div>
+
+            <div class="threats-grid">
+                <div class="threat-card critical">
+                    <div class="threat-header">
+                        <span class="threat-badge critical">CRITICAL</span>
+                        <h3 class="threat-name">Data Poisoning</h3>
+                    </div>
+                    <p class="threat-description">Injection de données malveillantes dans training data</p>
+                    <div class="threat-mitigations">
+                        <div class="threat-mitigations-title">Mitigations:</div>
+                        <ul class="threat-mitigations-list">
+                            <li><strong>Data sanitization</strong> pipeline</li>
+                            <li><strong>Outlier detection</strong></li>
+                            <li><strong>Adversarial filtering</strong></li>
+                            <li><strong>Immutable training data</strong> (WORM)</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="threat-card">
+                    <div class="threat-header">
+                        <span class="threat-badge high">HIGH</span>
+                        <h3 class="threat-name">Data Extraction</h3>
+                    </div>
+                    <p class="threat-description">Extraction non autorisée de training data</p>
+                    <div class="threat-mitigations">
+                        <div class="threat-mitigations-title">Mitigations:</div>
+                        <ul class="threat-mitigations-list">
+                            <li><strong>Differential privacy</strong> (DP-SGD, DP-SGD)</li>
+                            <li><strong>Output filtering</strong></li>
+                            <li><strong>Response length limits</strong></li>
+                            <li><strong>Rate limiting</strong> sur model queries</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="threat-card">
+                    <div class="threat-header">
+                        <span class="threat-badge high">HIGH</span>
+                        <h3 class="threat-name">Model Inversion</h3>
+                    </div>
+                    <p class="threat-description">Reconstruction de training data depuis le modèle</p>
+                    <div class="threat-mitigations">
+                        <div class="threat-mitigations-title">Mitigations:</div>
+                        <ul class="threat-mitigations-list">
+                            <li><strong>Gradient shielding</strong> during inference</li>
+                            <li><strong>Model regularization</strong> (L1/L2, dropout)</li>
+                            <li><strong>Output confidence thresholds</strong></li>
+                            <li><strong>Shadow models</strong> for anomaly detection</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="threat-card critical">
+                    <div class="threat-header">
+                        <span class="threat-badge critical">CRITICAL</span>
+                        <h3 class="threat-name">Backdoor Attacks</h3>
+                    </div>
+                    <p class="threat-description">Insertion de triggers cachés dans le modèle</p>
+                    <div class="threat-mitigations">
+                        <div class="threat-mitigations-title">Mitigations:</div>
+                        <ul class="threat-mitigations-list">
+                            <li><strong>Pruning fine-tuned layers</strong> before deployment</li>
+                            <li><strong>Outlier detection</strong> during inference</li>
+                            <li><strong>Adversarial testing</strong> before deployment</li>
+                            <li><strong>Backdoor detection</strong> (trigger scanning)</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="threat-card">
+                    <div class="threat-header">
+                        <span class="threat-badge high">HIGH</span>
+                        <h3 class="threat-name">Adversarial Examples</h3>
+                    </div>
+                    <p class="threat-description">Input perturbés pour tromper le modèle</p>
+                    <div class="threat-mitigations">
+                        <div class="threat-mitigations-title">Mitigations:</div>
+                        <ul class="threat-mitigations-list">
+                            <li><strong>Adversarial training</strong> (FGSM, PGD, CW)</li>
+                            <li><strong>Input perturbation detection</strong></li>
+                            <li><strong>Ensemble voting</strong></li>
+                            <li><strong>Input preprocessing</strong> (defenses)</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="threat-card">
+                    <div class="threat-header">
+                        <span class="threat-badge high">HIGH</span>
+                        <h3 class="threat-name">Context Extraction</h3>
+                    </div>
+                    <p class="threat-description">Extraction de données sensibles depuis context LLM</p>
+                    <div class="threat-mitigations">
+                        <div class="threat-mitigations-title">Mitigations:</div>
+                        <ul class="threat-mitigations-list">
+                            <li><strong>Context masking</strong> (redaction, anonymization)</li>
+                            <li><strong>Input/output filtering</strong></li>
+                            <li><strong>Memory scoping</strong> (isolate sensitive context)</li>
+                            <li><strong>Context encryption</strong></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="threat-card">
+                    <div class="threat-header">
+                        <span class="threat-badge high">HIGH</span>
+                        <h3 class="threat-name">Prompt Injection for Data</h3>
+                    </div>
+                    <p class="threat-description">Injection de prompts pour extraire des données</p>
+                    <div class="threat-mitigations">
+                        <div class="threat-mitigations-title">Mitigations:</div>
+                        <ul class="threat-mitigations-list">
+                            <li><strong>Input validation</strong></li>
+                            <li><strong>Prompt filtering</strong></li>
+                            <li><strong>Output sanitization</strong></li>
+                            <li><strong>Prompt injection detection</strong></li>
+                            <li><strong>LLM firewalls</strong></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section class="pricing" id="pricing">
+        <div class="container">
+            <div class="pricing-header">
+                <div class="section-badge">TARIFS</div>
+                <h2 class="section-title">Audit RGPD-IA One-Time</h2>
+                <p class="section-subtitle">
+                    vs Abonnement annuel (OneTrust/Vanta: 5,000-50,000€)
+                </p>
+            </div>
+
+            <div class="pricing-grid">
+                <!-- Startup -->
+                <div class="pricing-card">
+                    <h3 class="pricing-name">🚀 STARTUP</h3>
+                    <div class="pricing-price">
+                        <span class="pricing-price-amount">1500-3000</span>
+                        <span class="pricing-price-currency">€</span>
+                    </div>
+                    <div class="pricing-delay">2 semaines</div>
+                    <p class="pricing-description">Pour petites équipes (5-15 employés)</p>
+                    <ul class="pricing-features">
+                        <li><strong>3 audits complets</strong></li>
+                        <li><strong>OWASP Top 10 + ASVS v4.0</strong></li>
+                        <li><strong>OWASP GenAI Agentic AI</strong></li>
+                        <li><strong>OWASP GenAI Data Security v1.0</strong></li>
+                    </ul>
+                    <a href="#contact-section" class="pricing-cta">Démarrer →</a>
+                </div>
+
+                <!-- Growth (POPULAIRE) -->
+                <div class="pricing-card popular">
+                    <div class="pricing-badge">POPULAIRE</div>
+                    <h3 class="pricing-name">🏆 GROWTH</h3>
+                    <div class="pricing-price">
+                        <span class="pricing-price-amount">3000-5000</span>
+                        <span class="pricing-price-currency">€</span>
+                    </div>
+                    <div class="pricing-delay">3 semaines</div>
+                    <p class="pricing-description">Pour équipes en croissance (16-35 employés)</p>
+                    <ul class="pricing-features">
+                        <li><strong>3 audits complets + support</strong></li>
+                        <li><strong>Délai prioritaire</strong></li>
+                        <li><strong>Mapping AI Act</strong> (Articles 9-16)</li>
+                        <li><strong>Support local</strong> (Français/Allemand/Italien)</li>
+                    </ul>
+                    <a href="#contact-section" class="pricing-cta">Démarrer →</a>
+                </div>
+
+                <!-- Enterprise -->
+                <div class="pricing-card">
+                    <h3 class="pricing-name">🏢 ENTERPRISE</h3>
+                    <div class="pricing-price">
+                        <span class="pricing-price-amount">5000-7500</span>
+                        <span class="pricing-price-currency">€</span>
+                    </div>
+                    <div class="pricing-delay">3-4 semaines</div>
+                    <p class="pricing-description">Pour grandes entreprises (36-50+ employés)</p>
+                    <ul class="pricing-features">
+                        <li><strong>3 audits + support prioritaire</strong></li>
+                        <li><strong>Dashboard personnalisé</strong></li>
+                        <li><strong>Consulting stratégique</strong></li>
+                        <li><strong>Taux préférentiel</strong></li>
+                    </ul>
+                    <a href="#contact-section" class="pricing-cta">Démarrer →</a>
+                </div>
+            </div>
+
+            <!-- Comparison Table -->
+            <div class="comparison">
+                <h3>⚖️ Différenciation vs OneTrust/Vanta</h3>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Critère</th>
+                            <th>OneTrust/Vanta</th>
+                            <th>Cortex Leman</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>OWASP Top 10</td>
+                            <td>Oui (A01-A10)</td>
+                            <td>Oui (A01-A10 + ASVS v4.0)</td>
+                        </tr>
+                        <tr>
+                            <td>OWASP GenAI Agentic AI</td>
+                            <td>Non (9 phases)</td>
+                            <td>Oui (9-Phase SecOps)</td>
+                        </tr>
+                        <tr>
+                            <td>OWASP GenAI Data Security</td>
+                            <td>Non (12 menaces)</td>
+                            <td>Oui (12 menaces v1.0)</td>
+                        </tr>
+                        <tr>
+                            <td>Spécialisé PME FR-CH</td>
+                            <td>Non (Global)</td>
+                            <td>Oui (Local expertise)</td>
+                        </tr>
+                        <tr>
+                            <td>Prix</td>
+                            <td>5,000-50,000€/an (abonnement)</td>
+                            <td>1,500-7,500€ (one-time)</td>
+                        </tr>
+                        <tr>
+                            <td>Délai</td>
+                            <td>6-12 mois (SaaS onboarding)</td>
+                            <td>2-3 semaines (audit intensif)</td>
+                        </tr>
+                        <tr>
+                            <td>Support</td>
+                            <td>Anglais (Global)</td>
+                            <td>Français/Allemand/Italien (Local)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section class="contact" id="contact-section">
+        <div class="container">
+            <div class="section-header">
+                <div class="section-badge">Démarrer un audit</div>
+                <h2 class="section-title">Prêt pour la conformité AI Act ?</h2>
+                <p class="section-subtitle">Remplissez ce formulaire pour un appel découverte gratuit (30 min) et un devis personnalisé.</p>
+            </div>
+            
+            <div class="contact-grid">
+                <div class="contact-info">
+                    <h3 class="contact-info-title">Pourquoi Cortex Leman ?</h3>
+                    <ul class="contact-info-list">
+                        <li>✅ <strong>OWASP GenAI v1.0 complet</strong> - 3 audits intégrés</li>
+                        <li>✅ <strong>Spécialisé PME FR-CH</strong> - Support local FR/DE/IT</li>
+                        <li>✅ <strong>ROI > 4000%</strong> prouvé sur 3 cas clients</li>
+                        <li>✅ <strong>Délai 2-3 semaines</strong> vs 6-12 mois chez les concurrents</li>
+                        <li>✅ <strong>Prix one-time</strong> vs abonnements 5K-50K€/an</li>
+                    </ul>
+                    
+                    <div class="contact-social">
+                        <h3 class="contact-social-title">Contactez-nous</h3>
+                        <div class="contact-social-item">
+                            <span class="contact-social-icon">📧</span>
+                            <span class="contact-social-text">contact@cortex-leman.ch</span>
+                        </div>
+                        <div class="contact-social-item">
+                            <span class="contact-social-icon">📍</span>
+                            <span class="contact-social-text">Lausanne, Suisse (FR-CH)</span>
+                        </div>
+                        <div class="contact-social-item">
+                            <span class="contact-social-icon">🌐</span>
+                            <span class="contact-social-text">cortex-leman.ch</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="contact-form-container">
+                    <form class="contact-form" id="contactForm" action="https://formsubmit.co/contact@cortex-leman.ch" method="POST">
+                        <input type="hidden" name="_captcha" value="false">
+                        <input type="hidden" name="_subject" value="Nouvelle demande audit - Cortex Leman">
+                        <input type="hidden" name="_template" value="table">
+                        <input type="hidden" name="_next" value="">
+                        <div class="form-group">
+                            <label for="name" class="form-label">Nom complet *</label>
+                            <input type="text" id="name" name="name" class="form-input" required placeholder="Jean Dupont">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="email" class="form-label">Email professionnel *</label>
+                            <input type="email" id="email" name="email" class="form-input" required placeholder="jean@entreprise.ch">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="company" class="form-label">Entreprise *</label>
+                            <input type="text" id="company" name="company" class="form-input" required placeholder="Entreprise SA">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="size" class="form-label">Taille de l'équipe *</label>
+                            <select id="size" name="size" class="form-input" required>
+                                <option value="">Sélectionnez...</option>
+                                <option value="1-10">1-10 employés</option>
+                                <option value="11-25">11-25 employés</option>
+                                <option value="26-35">26-35 employés</option>
+                                <option value="36-50">36-50 employés</option>
+                                <option value="50+">50+ employés</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="message" class="form-label">Message (optionnel)</label>
+                            <textarea id="message" name="message" class="form-textarea" rows="4" placeholder="Décrivez votre projet IA et vos besoins de conformité..."></textarea>
+                        </div>
+                        
+                        <button type="submit" class="form-submit">Demander un appel découverte →</button>
+                        
+                        <p class="form-privacy">En soumettant ce formulaire, vous acceptez notre politique de confidentialité.</p>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer id="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    Cortex Leman - Audit RGPD-IA complet avec OWASP GenAI v1.0
+                </div>
+                <div class="footer-text">
+                    Premier audit à couvrir OWASP GenAI (Agentic AI + Data Security) pour les PME FR-CH. · Non substituable à un conseil certifié.
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-XXXXXXXXXX');
+    </script>
+
+    <!-- Contact Form Handler (FormSubmit.co) -->
+    <script>
+    document.getElementById('contactForm').addEventListener('submit', function(event) {
+        event.preventDefault()
+        
+        const btn = this.querySelector('.form-submit')
+        const originalText = btn.textContent
+        
+        // Afficher chargement
+        btn.textContent = '⏳ Envoi en cours...'
+        btn.disabled = true
+        
+        // Récupérer les données du formulaire
+        const formData = new FormData(this)
+        
+        // Envoyer via FormSubmit.co
+        fetch(this.action, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (response.ok) {
+                alert('✅ Message envoyé avec succès !\n\nNous vous répondrons dans les 24h.')
+                this.reset()
+                btn.textContent = '✅ Envoyé !'
+                setTimeout(() => {
+                    btn.textContent = originalText
+                    btn.disabled = false
+                }, 3000)
+            } else {
+                throw new Error('Erreur réseau')
+            }
+        })
+        .catch(error => {
+            alert('❌ Erreur lors de l\'envoi : ' + error.message + '\n\nVeuillez réessayer ou nous contacter directement à contact@cortex-leman.ch')
+            btn.textContent = originalText
+            btn.disabled = false
+        })
+    })
+    </script>
+</body>
+</html>
