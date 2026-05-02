@@ -962,6 +962,289 @@ function SettingsView({ user, onLogout }: { user: any; onLogout: () => void }) {
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   SERMENT NUMÉRIQUE — Par vertical
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+function SermentView({ user }: { user: any }) {
+  const [vertical, setVertical] = useState(user?.primary_vertical || 'comptable')
+  const { data, loading } = useApi(`/api/v1/serment/${vertical}`)
+  const [signed, setSigned] = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
+
+  const serment = data as any
+
+  return (
+    <div style={{ flex: 1, overflow: 'auto', padding: '1.5rem 2rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+        <div>
+          <h1 style={{ fontSize: '1.25rem', fontWeight: 700 }}>🤫 Serment numérique</h1>
+          <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+            Engagement déontologique · Vérifiable · Immuable
+          </p>
+        </div>
+        <select value={vertical} onChange={e => setVertical(e.target.value)} style={{
+          padding: '0.375rem 0.75rem', borderRadius: '0.5rem', fontSize: '0.8125rem',
+          background: 'var(--bg-card-solid)', border: '1px solid var(--border)', color: 'var(--text)',
+        }}>
+          {Object.entries(VERTICAL_CONFIG).map(([k, v]) => (
+            <option key={k} value={k}>{v.icon} {v.label}</option>
+          ))}
+        </select>
+      </div>
+
+      {loading ? <LoadingSpinner /> : serment && !serment.detail ? (
+        <div style={{ maxWidth: 800, margin: '0 auto' }}>
+          {/* Serment card */}
+          <div className="glass" style={{ padding: '2rem', marginBottom: '1.5rem', position: 'relative', overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg, var(--cyan), var(--emerald))' }} />
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
+              <div style={{ fontSize: '2rem' }}>{verticalIcon(vertical)}</div>
+              <div>
+                <div style={{ fontSize: '1rem', fontWeight: 700 }}>{serment.title || `Serment — ${vertical}`}</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>{serment.jurisdiction || 'FR-CH'}</div>
+              </div>
+            </div>
+
+            {/* Principes */}
+            {(serment.principles || serment.principes || []).map((p: any, i: number) => (
+              <div key={i} style={{
+                padding: '1rem', marginBottom: '0.75rem', borderRadius: '0.75rem',
+                background: 'rgba(34,211,238,0.03)', border: '1px solid rgba(34,211,238,0.08)',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                  <span style={{
+                    width: 24, height: 24, borderRadius: '50%',
+                    background: 'rgba(34,211,238,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '0.6875rem', fontWeight: 700, color: 'var(--cyan)',
+                  }}>{i + 1}</span>
+                  <span style={{ fontSize: '0.875rem', fontWeight: 600 }}>{p.title || p.name || `Principe ${i + 1}`}</span>
+                </div>
+                <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', lineHeight: 1.7, paddingLeft: '2rem' }}>
+                  {p.description || p.text || ''}
+                </p>
+                {p.reference && (
+                  <div className="mono" style={{ fontSize: '0.6875rem', color: 'var(--text-dim)', paddingLeft: '2rem', marginTop: '0.375rem' }}>
+                    📎 {p.reference}
+                  </div>
+                )}
+              </div>
+            ))}
+
+            {/* Références légales */}
+            {(serment.references || []).length > 0 && (
+              <div style={{ marginTop: '1rem', padding: '0.75rem 1rem', borderRadius: '0.5rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)' }}>
+                <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-dim)', marginBottom: '0.375rem' }}>Références</div>
+                {(serment.references || []).map((r: string, i: number) => (
+                  <div key={i} style={{ fontSize: '0.6875rem', color: 'var(--text-muted)' }}>• {r}</div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Signature */}
+          <div className="glass" style={{ padding: '1.5rem', textAlign: 'center' }}>
+            {signed ? (
+              <div>
+                <div style={{ fontSize: '2rem', marginBottom: '0.75rem' }}>✅</div>
+                <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--emerald)', marginBottom: '0.5rem' }}>Serment signé</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>
+                  Signé le {new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })} par {user?.full_name || user?.email || 'Admin'}
+                </div>
+                <div className="mono" style={{ fontSize: '0.625rem', color: 'var(--text-dim)', marginTop: '0.5rem' }}>
+                  Vérifiable via GET /api/v1/serment/{vertical}/verify
+                </div>
+              </div>
+            ) : showConfirm ? (
+              <div>
+                <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
+                  En signant ce serment, vous vous engagez à respecter les principes déontologiques ci-dessus dans toute utilisation de l'IA.
+                </p>
+                <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
+                  <button onClick={() => setSigned(true)} className="btn btn-primary" style={{ padding: '0.75rem 2rem' }}>
+                    ✍️ Signer le serment
+                  </button>
+                  <button onClick={() => setShowConfirm(false)} className="btn btn-secondary" style={{ padding: '0.75rem 1.5rem' }}>
+                    Annuler
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button onClick={() => setShowConfirm(true)} className="btn btn-primary" style={{ padding: '0.75rem 2rem' }}>
+                ✍️ Signer ce serment
+              </button>
+            )}
+          </div>
+
+          {/* Intégrité */}
+          <div style={{ marginTop: '1rem', padding: '0.75rem', borderRadius: '0.5rem', background: 'rgba(52,211,153,0.04)', border: '1px solid rgba(52,211,153,0.12)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span style={{ color: 'var(--emerald)', fontSize: '0.75rem' }}>🔒</span>
+            <span className="mono" style={{ fontSize: '0.6875rem', color: 'var(--text-dim)' }}>
+              Intégrité vérifiable · SHA-256 · Horodatage RFC 3161
+            </span>
+          </div>
+        </div>
+      ) : (
+        <div className="glass" style={{ padding: '3rem', textAlign: 'center' }}>
+          <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>🤫</div>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', fontWeight: 500 }}>
+            Serment non disponible pour cette vertical
+          </p>
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   ÉCHÉANCIER RÉGLEMENTAIRE — Calendrier vivant FR-CH
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+function EcheancierView({ user }: { user: any }) {
+  const [vertical, setVertical] = useState(user?.primary_vertical || 'comptable')
+  const [jurisdiction, setJurisdiction] = useState('')
+  const { data, loading } = useApi(`/api/v1/regulatory/calendar?vertical=${vertical}${jurisdiction ? `&jurisdiction=${jurisdiction}` : ''}`)
+  const { data: stats } = useApi(`/api/v1/regulatory/stats?vertical=${vertical}`)
+
+  const deadlines = (data as any)?.deadlines || []
+  const s = stats as any
+
+  const urgencyColor = (u: string) => {
+    if (u === 'overdue') return 'rose'
+    if (u === 'critical') return 'amber'
+    if (u === 'high') return 'cyan'
+    return 'emerald'
+  }
+
+  const urgencyLabel = (u: string) => {
+    if (u === 'overdue') return '🔴 En retard'
+    if (u === 'critical') return '🟠 Cette semaine'
+    if (u === 'high') return '🟡 Ce mois'
+    return '🟢 À venir'
+  }
+
+  const flagForJurisdiction = (j: string) => {
+    if (j === 'FR') return '🇫🇷'
+    if (j === 'CH') return '🇨🇭'
+    return '🇫🇷🇨🇭'
+  }
+
+  return (
+    <div style={{ flex: 1, overflow: 'auto', padding: '1.5rem 2rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+        <div>
+          <h1 style={{ fontSize: '1.25rem', fontWeight: 700 }}>📅 Échéancier réglementaire</h1>
+          <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+            Obligations FR-CH vivantes · {deadlines.length} échéance{deadlines.length !== 1 ? 's' : ''}
+          </p>
+        </div>
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <select value={vertical} onChange={e => setVertical(e.target.value)} style={{
+            padding: '0.375rem 0.75rem', borderRadius: '0.5rem', fontSize: '0.8125rem',
+            background: 'var(--bg-card-solid)', border: '1px solid var(--border)', color: 'var(--text)',
+          }}>
+            {Object.entries(VERTICAL_CONFIG).map(([k, v]) => (
+              <option key={k} value={k}>{v.icon} {v.label}</option>
+            ))}
+          </select>
+          <select value={jurisdiction} onChange={e => setJurisdiction(e.target.value)} style={{
+            padding: '0.375rem 0.75rem', borderRadius: '0.5rem', fontSize: '0.8125rem',
+            background: 'var(--bg-card-solid)', border: '1px solid var(--border)', color: 'var(--text)',
+          }}>
+            <option value="">Toutes juridictions</option>
+            <option value="FR">🇫🇷 France</option>
+            <option value="CH">🇨🇭 Suisse</option>
+            <option value="FR-CH">🇫🇷🇨🇭 FR-CH</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Stats KPIs */}
+      {s && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.75rem', marginBottom: '1.5rem' }}>
+          <KpiCard icon="📋" label="Total" value={String(s.total || 0)} sub="Échéances" color="cyan" />
+          <KpiCard icon="🔴" label="En retard" value={String(s.overdue || 0)} sub="Action immédiate" color="rose" />
+          <KpiCard icon="🟠" label="Cette semaine" value={String(s.this_week || 0)} sub="Urgent" color="amber" />
+          <KpiCard icon="🟡" label="Ce mois" value={String(s.this_month || 0)} sub="Planifier" color="cyan" />
+          <KpiCard icon="📅" label="Prochain trimestre" value={String(s.next_quarter || 0)} sub="Anticiper" color="emerald" />
+        </div>
+      )}
+
+      {/* Overdue alerts */}
+      {s?.overdue_deadlines?.length > 0 && (
+        <div className="glass" style={{ padding: '1rem', marginBottom: '1rem', borderLeft: '3px solid var(--rose)' }}>
+          <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--rose)', marginBottom: '0.75rem' }}>
+            🔴 Échéances en retard
+          </h3>
+          {(s.overdue_deadlines as any[]).map((d: any, i: number) => (
+            <div key={i} style={{
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              padding: '0.5rem 0.75rem', marginBottom: '0.25rem', borderRadius: '0.375rem',
+              background: 'rgba(251,113,133,0.04)', border: '1px solid rgba(251,113,133,0.1)', fontSize: '0.8125rem',
+            }}>
+              <span>{d.label} <span style={{ fontSize: '0.6875rem', color: 'var(--text-dim)' }}>{flagForJurisdiction(d.jurisdiction || '')}</span></span>
+              <span className="mono" style={{ fontSize: '0.6875rem', color: 'var(--rose)' }}>{d.days_overdue}j de retard</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Timeline */}
+      {loading ? <LoadingSpinner /> : deadlines.length === 0 ? (
+        <div className="glass" style={{ padding: '3rem', textAlign: 'center' }}>
+          <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>📅</div>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', fontWeight: 500 }}>Aucune échéance à venir</p>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+          {deadlines.map((d: any, i: number) => {
+            const color = urgencyColor(d.urgency)
+            return (
+              <div key={i} className="glass" style={{
+                padding: '0.875rem 1rem', display: 'grid',
+                gridTemplateColumns: '70px 40px 1fr auto',
+                gap: '0.75rem', alignItems: 'center',
+                borderLeft: `3px solid var(--${color})`,
+              }}>
+                <div>
+                  <div className="mono" style={{ fontSize: '0.75rem', fontWeight: 600, color: `var(--${color})` }}>
+                    {d.days_until < 0 ? `J${d.days_until}` : d.days_until === 0 ? 'Aujourd\'hui' : `J+${d.days_until}`}
+                  </div>
+                  <div style={{ fontSize: '0.625rem', color: 'var(--text-dim)' }}>
+                    {d.next_date ? new Date(d.next_date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }) : ''}
+                  </div>
+                </div>
+                <div style={{ fontSize: '1.25rem', textAlign: 'center' }}>{flagForJurisdiction(d.jurisdiction || '')}</div>
+                <div>
+                  <div style={{ fontSize: '0.8125rem', fontWeight: 500 }}>{d.label}</div>
+                  <div style={{ fontSize: '0.6875rem', color: 'var(--text-dim)', marginTop: '0.125rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {d.description}
+                  </div>
+                  {d.reference && (
+                    <div className="mono" style={{ fontSize: '0.5625rem', color: 'var(--text-dim)', marginTop: '0.25rem' }}>
+                      📎 {d.reference}
+                    </div>
+                  )}
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.25rem' }}>
+                  <span className={`badge badge-${color}`} style={{ fontSize: '0.5625rem' }}>
+                    {urgencyLabel(d.urgency)}
+                  </span>
+                  {d.frequency && (
+                    <span style={{ fontSize: '0.5625rem', color: 'var(--text-dim)' }}>{d.frequency}</span>
+                  )}
+                  {d.auto_intention && (
+                    <span style={{ fontSize: '0.5625rem', color: 'var(--cyan)' }}>🎯 Auto</span>
+                  )}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    SHARED COMPONENTS
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 
