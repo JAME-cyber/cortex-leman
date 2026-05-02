@@ -36,7 +36,9 @@ class NatsBus:
             self._nc = await nats.connect(
                 servers=[settings.nats_url],
                 name=settings.nats_client_id,
+                connect_timeout=3,
                 reconnect_time_wait=2,
+                max_reconnect_attempts=1 if settings.app_env == "development" else 60,
                 error_cb=self._error_handler,
                 disconnected_cb=self._disconnected_handler,
                 reconnected_cb=self._reconnected_handler,

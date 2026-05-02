@@ -1210,7 +1210,6 @@ async def verify_serment(vertical: str):
 async def regulatory_calendar(
     vertical: str = None,
     jurisdiction: str = None,
-    auth: AuthContext = Depends(get_current_user),
 ):
     """Échéancier réglementaire FR-CH vivant"""
     from core.regulatory import get_calendar
@@ -1220,7 +1219,6 @@ async def regulatory_calendar(
 @app.get("/api/v1/regulatory/stats")
 async def regulatory_stats(
     vertical: str = None,
-    auth: AuthContext = Depends(get_current_user),
 ):
     """Statistiques échéancier réglementaire"""
     from core.regulatory import get_deadline_stats
