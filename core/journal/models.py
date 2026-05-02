@@ -43,6 +43,7 @@ class JournalEventType(str, Enum):
     COMPLIANCE_VIOLATION = "compliance.violation"
 
     # Système
+    SYSTEM = "system"
     SYSTEM_START = "system.start"
     SYSTEM_HEALTH = "system.health"
     SYSTEM_ERROR = "system.error"

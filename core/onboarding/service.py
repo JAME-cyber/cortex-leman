@@ -160,7 +160,10 @@ class OnboardingService:
         try:
             journal.append(
                 event_type=JournalEventType.SYSTEM,
+                client_id=result.tenant_id,
+                vertical=vertical,
                 agent_source="onboarding",
+                intention_id=f"tenant-setup-{result.tenant_id}",
                 payload={
                     "action": "tenant.created",
                     "tenant_id": result.tenant_id,
