@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cortex Leman — De l'Orchestration Linéaire au Graphe de Confiance</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'JetBrains Mono', monospace; background: #020617; min-height: 100vh; color: #e2e8f0; line-height: 1.7; }
+    .container { max-width: 960px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+    /* Header */
+    .header { margin-bottom: 3rem; padding-bottom: 1.5rem; border-bottom: 1px solid #1e293b; }
+    .header-row { display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem; }
+    .pulse-dot { width: 12px; height: 12px; background: #22d3ee; border-radius: 50%; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    h1 { font-size: 1.4rem; font-weight: 700; letter-spacing: -0.02em; color: #f1f5f9; }
+    .subtitle { color: #94a3b8; font-size: 0.8rem; margin-top: 0.25rem; }
+    .badge { display: inline-block; padding: 0.1rem 0.5rem; border-radius: 9999px; font-size: 0.65rem; font-weight: 600; margin-left: 0.5rem; }
+    .badge-v5 { background: rgba(34,211,238,0.15); color: #22d3ee; border: 1px solid rgba(34,211,238,0.3); }
+    .badge-score { background: rgba(52,211,153,0.15); color: #34d399; border: 1px solid rgba(52,211,153,0.3); }
+
+    /* TOC */
+    .toc { background: rgba(15,23,42,0.6); border: 1px solid #1e293b; border-radius: 0.75rem; padding: 1.25rem 1.5rem; margin-bottom: 3rem; }
+    .toc-title { font-size: 0.8rem; font-weight: 600; color: #94a3b8; margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .toc ol { list-style: none; counter-reset: toc; }
+    .toc li { counter-increment: toc; padding: 0.25rem 0; }
+    .toc li a { color: #cbd5e1; text-decoration: none; font-size: 0.8rem; transition: color 0.2s; }
+    .toc li a:hover { color: #22d3ee; }
+    .toc li::before { content: counter(toc) "."; color: #475569; margin-right: 0.5rem; font-size: 0.75rem; }
+
+    /* Sections */
+    .section { margin-bottom: 3rem; }
+    h2 { font-size: 1.15rem; font-weight: 700; color: #f1f5f9; margin-bottom: 1.25rem; padding-bottom: 0.5rem; border-bottom: 1px solid #1e293b; display: flex; align-items: center; gap: 0.5rem; }
+    h2 .num { color: #22d3ee; font-size: 0.85rem; font-weight: 600; }
+    h3 { font-size: 0.9rem; font-weight: 600; color: #94a3b8; margin: 1.5rem 0 0.75rem; }
+    h4 { font-size: 0.8rem; font-weight: 600; color: #64748b; margin: 1rem 0 0.5rem; }
+    p { font-size: 0.8rem; color: #cbd5e1; margin-bottom: 0.75rem; }
+    ul, ol { font-size: 0.8rem; color: #cbd5e1; margin: 0.5rem 0 1rem 1.25rem; }
+    li { margin-bottom: 0.35rem; }
+
+    /* Code blocks */
+    pre { background: rgba(15,23,42,0.8); border: 1px solid #1e293b; border-radius: 0.5rem; padding: 1rem; overflow-x: auto; margin: 0.75rem 0 1rem; font-size: 0.72rem; line-height: 1.6; color: #e2e8f0; }
+    code { font-family: 'JetBrains Mono', monospace; }
+    :not(pre) > code { background: rgba(34,211,238,0.1); color: #22d3ee; padding: 0.1rem 0.35rem; border-radius: 0.25rem; font-size: 0.72rem; }
+
+    /* Tables */
+    table { width: 100%; border-collapse: collapse; font-size: 0.75rem; margin: 0.75rem 0 1rem; }
+    th { text-align: left; padding: 0.5rem 0.6rem; background: rgba(30,41,59,0.6); color: #94a3b8; font-weight: 600; border-bottom: 1px solid #334155; font-size: 0.7rem; }
+    td { padding: 0.45rem 0.6rem; border-bottom: 1px solid rgba(30,41,59,0.4); color: #cbd5e1; }
+    tr:hover { background: rgba(15,23,42,0.3); }
+    .ok { color: #34d399; font-weight: 600; }
+    .warn { color: #fbbf24; font-weight: 600; }
+    .crit { color: #fb7185; font-weight: 600; }
+    .dim { color: #64748b; }
+    .hi { color: #22d3ee; }
+
+    /* Diagram box */
+    .diagram { background: rgba(15,23,42,0.5); border: 1px solid #1e293b; border-radius: 0.5rem; padding: 1.25rem; margin: 0.75rem 0 1rem; font-size: 0.72rem; line-height: 1.5; overflow-x: auto; }
+    .diagram .label { color: #22d3ee; font-weight: 600; }
+    .diagram .arrow { color: #475569; }
+    .diagram .agent { color: #34d399; font-weight: 600; }
+    .diagram .danger { color: #fb7185; font-weight: 600; }
+    .diagram .new { color: #fbbf24; font-weight: 600; }
+
+    /* Alert boxes */
+    .alert { border-radius: 0.5rem; padding: 0.75rem 1rem; margin: 0.75rem 0 1rem; font-size: 0.78rem; }
+    .alert-danger { background: rgba(251,113,133,0.08); border: 1px solid rgba(251,113,133,0.2); color: #fda4af; }
+    .alert-danger::before { content: '🔴 '; }
+    .alert-success { background: rgba(52,211,153,0.08); border: 1px solid rgba(52,211,153,0.2); color: #6ee7b7; }
+    .alert-success::before { content: '✅ '; }
+    .alert-warning { background: rgba(251,191,36,0.08); border: 1px solid rgba(251,191,36,0.2); color: #fde68a; }
+    .alert-warning::before { content: '⚠️ '; }
+    .alert-info { background: rgba(34,211,238,0.08); border: 1px solid rgba(34,211,238,0.2); color: #a5f3fc; }
+    .alert-info::before { content: '💡 '; }
+
+    /* Stats row */
+    .stats { display: flex; flex-wrap: wrap; gap: 1.5rem; padding: 1rem; background: rgba(15,23,42,0.5); border: 1px solid #1e293b; border-radius: 0.5rem; margin: 1rem 0; }
+    .stat { text-align: center; min-width: 70px; }
+    .stat-val { font-size: 1.3rem; font-weight: 700; }
+    .stat-label { font-size: 0.6rem; color: #64748b; margin-top: 0.15rem; }
+
+    /* File tree */
+    .tree { font-size: 0.72rem; color: #94a3b8; }
+    .tree .file { color: #cbd5e1; }
+    .tree .comment { color: #64748b; }
+    .tree .dir { color: #22d3ee; font-weight: 600; }
+
+    /* Two column */
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 0.75rem 0; }
+    @media (max-width: 768px) { .two-col { grid-template-columns: 1fr; } }
+
+    /* Footer */
+    .footer { text-align: center; margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid #1e293b; color: #475569; font-size: 0.7rem; }
+    .footer .tagline { color: #22d3ee; font-weight: 600; margin-top: 0.5rem; font-size: 0.75rem; }
+
+    /* Separator */
+    hr { border: none; border-top: 1px solid #1e293b; margin: 2rem 0; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-row">
+      <div class="pulse-dot"></div>
+      <h1>De l'Orchestration Linéaire au Graphe de Confiance</h1>
+      <span class="badge badge-v5">v5.0</span>
+      <span class="badge badge-score">89/89 tests ✅</span>
+    </div>
+    <div class="subtitle">Cortex Leman — Document technique v5.0 &nbsp;|&nbsp; Mis à jour : 24 avril 2026 &nbsp;|&nbsp; Sprint 1 complété</div>
+  </div>
+
+  <!-- TOC -->
+  <div class="toc">
+    <div class="toc-title">Table des matières</div>
+    <ol>
+      <li><a href="#s1">Pourquoi le pipeline a échoué</a></li>
+      <li><a href="#s2">Le nouveau paradigme : Graphe de Confiance</a></li>
+      <li><a href="#s3">Architecture v5 complète</a></li>
+      <li><a href="#s4">Les 5 agents reconfigurés</a></li>
+      <li><a href="#s5">Le Médiateur — composant de sécurité central</a></li>
+      <li><a href="#s6">Scénario de conflit type (validé)</a></li>
+      <li><a href="#s7">Conformité réglementaire</a></li>
+      <li><a href="#s8">Données et datasets réglementaires</a></li>
+      <li><a href="#s9">Skills des agents IA</a></li>
+      <li><a href="#s10">Bilan technique</a></li>
+    </ol>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SECTION 1 -->
+  <!-- ============================================================ -->
+  <div class="section" id="s1">
+    <h2><span class="num">01</span> Pourquoi le pipeline a échoué</h2>
+
+    <h3>Ce qu'était la v4.1</h3>
+    <p>La version 4.1 utilisait un <strong>pipeline séquentiel à 5 étapes</strong> :</p>
+    <div class="diagram">
+<span class="arrow">INTENTION → RECHERCHE → ANALYSE → EXECUTION → VALIDATION</span>
+   ↓           ↓           ↓           ↓           ↓
+<span class="agent">Orchestrateur  Agent Data  Raisonnement  Action    Superviseur</span>
+<span class="dim">  (routeur)     (scan)      (compare)    (exécute)  (valide)</span>
+    </div>
+
+    <h3>Les 5 failles identifiées</h3>
+    <table>
+      <thead><tr><th>#</th><th>Faille</th><th>Conséquence</th><th>Gravité</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>Orchestrateur = simple aiguilleur</td><td>Ne peut pas réviser l'intention en cours</td><td class="warn">HIGH</td></tr>
+        <tr><td>2</td><td>Agent Data en vase clos</td><td>Ne sait pas si Raisonnement a besoin de compléments</td><td class="warn">MEDIUM</td></tr>
+        <tr><td>3</td><td>Raisonnement sans boucle de rétroaction</td><td>Détecte un conflit mais ne peut pas faire réviser</td><td class="warn">HIGH</td></tr>
+        <tr><td>4</td><td>Action sans verrou de sécurité</td><td>Peut exécuter une décision contestée au même moment</td><td class="crit">CRITICAL</td></tr>
+        <tr><td>5</td><td>Superviseur trop tardif</td><td>Ne voit que le résultat final, laisse passer les conflits</td><td class="warn">HIGH</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Exemple concret du risque</h3>
+    <div class="diagram">
+Cabinet comptable → <span class="hi">"Déduire 85 000 CHF R&D"</span>
+
+Pipeline v4.1:
+  <span class="agent">Data</span>       → "Circulaire AFC autorise déduction B1"
+  <span class="agent">Raisonnement</span> → "Mais CA > 500K, B1 exclue"  <span class="dim">← personne n'écoute</span>
+  <span class="agent">Action</span>      → <span class="danger">EXÉCUTE B1 (85K)</span>                    <span class="danger">← DANGER</span>
+  <span class="agent">Superviseur</span> → "Problème détecté"              <span class="dim">← TROP TARD</span>
+
+<span class="danger">Résultat: Redressement fiscal potentiel pour le client.</span>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SECTION 2 -->
+  <!-- ============================================================ -->
+  <div class="section" id="s2">
+    <h2><span class="num">02</span> Le nouveau paradigme : Graphe de Confiance</h2>
+
+    <h3>5 principes fondamentaux</h3>
+    <ol>
+      <li><strong>Pair-à-pair asynchrone</strong> — les agents communiquent via un bus d'événements, pas en chaîne</li>
+      <li><strong>Médiateur transverse</strong> — surveille en continu, peut geler à tout moment</li>
+      <li><strong>Gel préventif</strong> — si conflit détecté, tout s'arrête avant exécution</li>
+      <li><strong>Humain arbitre, pas valideur</strong> — l'expert tranche les exceptions</li>
+      <li><strong>Médiateur = déterministe</strong> — JsonLogic uniquement, <strong>jamais de LLM</strong></li>
+    </ol>
+
+    <h3>La différence visuelle</h3>
+    <div class="two-col">
+      <div class="diagram" style="border-color: rgba(251,113,133,0.3);">
+        <span class="danger">AVANT (v4.1 — pipeline fragile)</span>
+  A → B → C → D → E
+  <span class="dim">• Linéaire, bloquant, sans retour</span>
+      </div>
+      <div class="diagram" style="border-color: rgba(52,211,153,0.3);">
+        <span class="ok">APRÈS (v5 — graphe de confiance)</span>
+       ┌──────────────────────┐
+       │   ORCHESTRATEUR      │
+       │   <span class="new">(hub permanent)</span>    │
+       └──────────┬───────────┘
+                  │ NATS JetStream
+       ┌──────────┼──────────┐
+       ▼          ▼          ▼
+    <span class="agent">DATA</span>    <span class="agent">RAISONN.</span>   <span class="agent">ACTION</span>
+    <span class="new">+compl.</span>  <span class="new">+révision</span>  <span class="new">+gel+saga</span>
+       └──────┬───┴────────┘
+       ┌──────▼────────────────┐
+       │    <span class="danger">MÉDIATEUR</span>          │
+       │  22 règles JsonLogic   │
+       └──────────┬─────────────┘
+       ┌──────────▼────────────┐
+       │  <span class="hi">ARBITRAGE HUMAIN</span>    │
+       │  L'expert décide       │
+       └───────────────────────┘>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SECTION 3 -->
+  <!-- ============================================================ -->
+  <div class="section" id="s3">
+    <h2><span class="num">03</span> Architecture v5 complète</h2>
+
+    <h3>Bus d'événements NATS JetStream — 13 sujets</h3>
+    <div class="two-col">
+      <div>
+        <h4>Intentions</h4>
+        <ul>
+          <li><code>cleman.intention.new</code></li>
+          <li><code>cleman.intention.revise</code></li>
+        </ul>
+        <h4>Agents</h4>
+        <ul>
+          <li><code>cleman.data.query</code></li>
+          <li><code>cleman.reasoning.analyze</code></li>
+          <li><code>cleman.action.execute</code></li>
+          <li><code>cleman.agent.result</code></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Médiateur</h4>
+        <ul>
+          <li><code>cleman.mediator.check</code></li>
+          <li><code>cleman.mediator.conflict</code></li>
+          <li><code>cleman.mediator.freeze</code></li>
+        </ul>
+        <h4>Validation & Arbitrage</h4>
+        <ul>
+          <li><code>cleman.validate.request</code></li>
+          <li><code>cleman.validate.result</code></li>
+          <li><code>cleman.arbitration.request</code></li>
+          <li><code>cleman.arbitration.decision</code></li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>Intention versionnée</h3>
+    <div class="diagram">
+<span class="hi">active</span>    → en cours de traitement
+<span class="danger">frozen</span>    → gelée par le Médiateur (conflit détecté)
+<span class="ok">completed</span> → traitée avec succès
+
+Exemple de cycle complet:
+  v1: <span class="hi">active</span>   → créée par l'Orchestrateur
+  v2: <span class="danger">frozen</span>   → gelée par le Médiateur (conflit data vs raisonnement)
+  v3: <span class="hi">active</span>   → dégelée après arbitrage humain
+  v4: <span class="ok">completed</span> → action exécutée, journal complété
+    </div>
+
+    <h3>Journal WORM</h3>
+    <ul>
+      <li>Append-only, hash-chainé SHA-256</li>
+      <li>Chaque entrée : <code>hash = SHA-256(previous_hash + payload + timestamp)</code></li>
+      <li>Fichiers : <code>data/journal/journal-{date}.jsonl</code></li>
+    </ul>
+
+    <h3>Sécurité multicouche</h3>
+    <table>
+      <thead><tr><th>Couche</th><th>Mécanisme</th><th>Fichier</th></tr></thead>
+      <tbody>
+        <tr><td>Gel</td><td>Médiateur vérifie chaque résultat</td><td><code>core/mediator/mediator.py</code></td></tr>
+        <tr><td>Verrou</td><td>Action vérifie <code>intention.status != "frozen"</code></td><td><code>core/agents/action_agent.py</code></td></tr>
+        <tr><td>Exclusion</td><td>Verrou distribué Redis</td><td><code>core/security/distributed_lock.py</code></td></tr>
+        <tr><td>Transaction</td><td>Saga avec compensation</td><td><code>core/agents/saga/saga_manager.py</code></td></tr>
+        <tr><td>Protection</td><td>Circuit breaker (seuil 5 échecs)</td><td><code>core/security/circuit_breaker.py</code></td></tr>
+        <tr><td>Traçabilité</td><td>Journal WORM immuable</td><td><code>core/journal/append_only_journal.py</code></td></tr>
+        <tr><td>Résidence</td><td>Compliance Gateway</td><td><code>core/compliance/gateway.py</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SECTION 4 -->
+  <!-- ============================================================ -->
+  <div class="section" id="s4">
+    <h2><span class="num">04</span> Les 5 agents reconfigurés</h2>
+
+    <table>
+      <thead><tr><th>Agent</th><th>Avant (v4.1)</th><th>Après (v5)</th><th>LLM ?</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="hi">Orchestrateur</td>
+          <td>Aiguilleur étape 1 seulement</td>
+          <td class="ok">Hub permanent, 6 abonnements bus, intention versionnée</td>
+          <td class="dim">Sprint 2</td>
+        </tr>
+        <tr>
+          <td class="hi">Data</td>
+          <td>Scanne, retourne, ne parle à personne</td>
+          <td class="ok">Asynchrone + écoute demandes de complément</td>
+          <td class="dim">Sprint 3</td>
+        </tr>
+        <tr>
+          <td class="hi">Raisonnement</td>
+          <td>Analyse sans rétroaction</td>
+          <td class="ok">Peut publier INTENTION_REVISE si conflit</td>
+          <td class="dim">Sprint 2</td>
+        </tr>
+        <tr>
+          <td class="hi">Action</td>
+          <td>Exécute sans filet</td>
+          <td class="ok">Vérifie gel + verrou distribué + saga + circuit breaker</td>
+          <td class="crit">JAMAIS</td>
+        </tr>
+        <tr>
+          <td class="hi">Superviseur V2</td>
+          <td>Valideur terminal</td>
+          <td class="ok">Observateur continu, health board temps réel</td>
+          <td class="crit">JAMAIS</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="alert alert-danger">
+      Les agents Action, Médiateur et Superviseur n'utiliseront <strong>jamais</strong> de LLM. Un LLM probabiliste dans un rôle d'exécution ou de sécurité est irresponsable en métier régulé.
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SECTION 5 -->
+  <!-- ============================================================ -->
+  <div class="section" id="s5">
+    <h2><span class="num">05</span> Le Médiateur — composant de sécurité central</h2>
+
+    <h3>Pourquoi il ne doit JAMAIS utiliser de LLM</h3>
+    <table>
+      <thead><tr><th>Raison</th><th>Détail</th></tr></thead>
+      <tbody>
+        <tr><td class="crit">Non-déterminisme</td><td>Un LLM peut ne pas geler une intention qu'il devrait geler</td></tr>
+        <tr><td class="warn">Latence</td><td>Ajoute 500ms–5s par vérification, intercepte CHAQUE résultat</td></tr>
+        <tr><td class="warn">Auditabilité</td><td>JsonLogic est reproductible, un LLM ne l'est pas</td></tr>
+        <tr><td class="crit">Certification</td><td>Aucun auditeur LSTI/SGS/AFNOR n'acceptera un gel probabiliste</td></tr>
+      </tbody>
+    </table>
+
+    <h3>22 règles JsonLogic par verticale</h3>
+    <table>
+      <thead><tr><th>Verticale</th><th>Règles</th><th>Actions clés</th></tr></thead>
+      <tbody>
+        <tr><td>Comptable</td><td class="ok">7</td><td>Gel si déduction &gt; 50K, gel si conflit sources, arbitrage si &gt; 10K</td></tr>
+        <tr><td>Avocat</td><td>4</td><td>Secret professionnel, data residency CH, confiance basse</td></tr>
+        <tr><td>Santé</td><td>3</td><td>Données patient, consentement, diagnostic IA</td></tr>
+        <tr><td>Banque</td><td>3</td><td>Secret bancaire, infrastructure CH, KYC/AML</td></tr>
+        <tr><td>RH</td><td>3</td><td>Anti-discrimination, décision auto, biais</td></tr>
+        <tr><td>Startup</td><td>2</td><td>Transparence IA, DPIA</td></tr>
+      </tbody>
+    </table>
+
+    <div class="alert alert-warning">
+      <strong>Gel par défaut :</strong> Si verticale sensible (comptable, avocat, banque, santé) ET montant ≥ 10K ET aucune règle explicite ne couvre le cas → gel préventif par précaution.
+    </div>
+
+    <h3>Détection de contradictions</h3>
+    <ol>
+      <li><strong>Recommandations divergentes</strong> — Data dit "option A", Raisonnement dit "option B"</li>
+      <li><strong>Écart de confiance</strong> — écart supérieur au seuil entre deux agents</li>
+      <li><strong>Risques non partagés</strong> — un agent signale un risque que l'autre ignore</li>
+    </ol>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SECTION 6 -->
+  <!-- ============================================================ -->
+  <div class="section" id="s6">
+    <h2><span class="num">06</span> Scénario de conflit type (validé)</h2>
+
+    <h3>Situation</h3>
+    <p><strong>Cabinet :</strong> Fiduciaire Léman &amp; Associés, Genève &nbsp;|&nbsp; <strong>Requête :</strong> "Déduire 85 000 CHF R&amp;D"</p>
+
+    <h3>Flux réel dans v5</h3>
+    <div class="diagram">
+<span class="hi">1. Orchestrateur</span>
+   → Intention int-9801 créée (v1, status=active)
+   → Router: {<span class="agent">data</span>: True, <span class="agent">reasoning</span>: True, <span class="dim">action</span>: False, <span class="agent">mediator</span>: True}
+   → Publié sur cleman.data.query ET cleman.reasoning.analyze
+
+<span class="hi">2. Agent Data</span>
+   → "Déduction B1 autorisée si investissement > 80K (Circ. AFC n°42)"
+   → Confiance: 0.92 → publié sur cleman.agent.result
+
+<span class="hi">3. Agent Raisonnement</span>
+   → "CA 520K > seuil 500K, déduction B2 plafonnée 65K"
+   → Confiance: 0.88, risque: threshold_exceeded
+   → <span class="new">Publie INTENTION_REVISE</span> + résultat sur cleman.agent.result
+
+<span class="danger">4. Médiateur (intercepte les deux résultats)</span>
+   → _compare_positions: "Divergence: B1 vs B2"
+   → comptable-006: montant 85000 >= 50000 → <span class="danger">FREEZE</span>
+   → comptable-007: contradiction_count > 0 → <span class="danger">FREEZE</span>
+   → <span class="danger">GEL IMMÉDIAT</span> de l'intention int-9801
+
+<span class="ok">5. Action</span>
+   → <span class="dim">Jamais activé — le Router ne route pas vers Action pour une analyse</span>
+
+<span class="ok">6. Superviseur V2</span>
+   → Health board: confiance=0.90, conflits=1 → observation journalisée
+
+<span class="hi">7. Arbitrage humain</span>
+   → Option A (Data): B1, 85K, confiance 92%
+   → Option B (Raisonnement): B2, 65K, confiance 88%
+   → <span class="ok">Expert choisit B: "Application stricte du seuil, prudence"</span>
+
+<span class="ok">8. Après arbitrage</span>
+   → Dégel → intention v3 active
+   → Nouvelle intention "Exécuter provision 65K" → Action exécute via saga
+    </div>
+
+    <h3>v4.1 vs v5 : comparaison</h3>
+    <table>
+      <thead><tr><th>Étape</th><th>v4.1 (pipeline)</th><th>v5 (graphe)</th></tr></thead>
+      <tbody>
+        <tr><td>Data publie</td><td>Passe au suivant</td><td class="ok">Médiateur intercepte en temps réel</td></tr>
+        <tr><td>Raisonnement contredit</td><td>Personne n'écoute</td><td class="ok">Publie INTENTION_REVISE</td></tr>
+        <tr><td>Action</td><td class="crit">Exécute B1 (85K) ❌</td><td class="ok">Jamais activé (gel + bon routage)</td></tr>
+        <tr><td>Superviseur</td><td>Voit le problème trop tard</td><td class="ok">Observe en continu</td></tr>
+        <tr><td>Expert</td><td>Valide a posteriori</td><td class="ok">Arbitre entre options contradictoires</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SECTION 7 -->
+  <!-- ============================================================ -->
+  <div class="section" id="s7">
+    <h2><span class="num">07</span> Conformité réglementaire</h2>
+
+    <h3>Cadre juridique couvert</h3>
+    <table>
+      <thead><tr><th>Réglementation</th><th>Articles</th><th>Verticales</th></tr></thead>
+      <tbody>
+        <tr><td>RGPD</td><td>Art. 22 (décision auto), Art. 9 (santé), Art. 35 (DPIA)</td><td>Toutes</td></tr>
+        <tr><td>AI Act</td><td>Art. 6 (risque élevé), Art. 52 (transparence)</td><td>Santé, RH, Startup</td></tr>
+        <tr><td>Code pénal CH</td><td>Art. 321 (secret professionnel)</td><td>Avocat</td></tr>
+        <tr><td>Loi bancaire CH</td><td>Art. 47 (secret bancaire)</td><td>Banque</td></tr>
+        <tr><td>LPM</td><td>Données médicales, HDS</td><td>Santé</td></tr>
+        <tr><td>LBA</td><td>Art. 9 (seuil 10K)</td><td>Comptable, Banque</td></tr>
+        <tr><td>nLPD</td><td>Art. 5, 16-19 (transfert)</td><td>Avocat, Santé</td></tr>
+        <tr><td>FINMA</td><td>Circ. 2008/3 (infrastructure CH)</td><td>Banque</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Deux modes de déploiement</h3>
+    <div class="two-col">
+      <div class="alert alert-info">
+        <strong>Standard (Cloud/OpenRouter)</strong><br>
+        LLM via OpenRouter • NATS + Redis cloud<br>
+        Adapté : startup, comptable, RH
+      </div>
+      <div class="alert alert-danger">
+        <strong>Haute Protection (Edge/Ollama)</strong><br>
+        K3s + Ollama local • Zero appel externe<br>
+        <strong>Obligatoire :</strong> avocat (CP 321), banque (LB 47), santé (LPM)
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SECTION 8 -->
+  <!-- ============================================================ -->
+  <div class="section" id="s8">
+    <h2><span class="num">08</span> Données et datasets réglementaires</h2>
+
+    <h3>20 documents réglementaires seed</h3>
+    <table>
+      <thead><tr><th>Verticale</th><th>Docs</th><th>Références</th></tr></thead>
+      <tbody>
+        <tr><td>Comptable</td><td class="ok">5</td><td>RGPD 22, Circ. AFC 42, LBA, NEP, CO 957</td></tr>
+        <tr><td>Avocat</td><td class="ok">4</td><td>CP 321, nLPD 5, nLPD 16-19, Déontologie 12bis</td></tr>
+        <tr><td>Santé</td><td class="ok">3</td><td>LPM 3, RGPD 9 + LPM 7, AI Act 6</td></tr>
+        <tr><td>Banque</td><td class="ok">3</td><td>LB 47, FINMA 2008/3, LBA 3-7</td></tr>
+        <tr><td>Startup</td><td class="ok">2</td><td>AI Act 52, RGPD 35</td></tr>
+        <tr><td>RH</td><td class="ok">3</td><td>AI Act 6/Annexe III, RGPD 22, Loi 2008-496</td></tr>
+      </tbody>
+    </table>
+    <p>Chaque document est lié à ses règles JsonLogic via le champ <code>applicable_rules</code>.</p>
+
+    <div class="alert alert-info">
+      <strong>Pourquoi pas les datasets B2B industry ?</strong> Les datasets firmographics/leads concernent le <em>sales</em>. Cortex Leman est une infrastructure de <em>conformité IA</em>. Notre donnée est réglementaire, pas commerciale.
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SECTION 9 -->
+  <!-- ============================================================ -->
+  <div class="section" id="s9">
+    <h2><span class="num">09</span> Skills des agents IA</h2>
+
+    <h3>3 agents LLM + 3 agents programmatiques</h3>
+    <table>
+      <thead><tr><th>Agent</th><th>Type</th><th>Skill</th><th>LLM ?</th></tr></thead>
+      <tbody>
+        <tr><td>Raisonnement</td><td>LLM</td><td>Juriste-Analyste Lémanique</td><td class="dim">Sprint 2</td></tr>
+        <tr><td>Orchestrateur</td><td>LLM</td><td>Maître de Cérémonie Lémanique</td><td class="dim">Sprint 2</td></tr>
+        <tr><td>Data</td><td>LLM partiel</td><td>Veilleur de Sources / Hermétique CH</td><td class="dim">Sprint 3</td></tr>
+        <tr><td>Action</td><td>Programmatif</td><td>Exécuteur Fidèle</td><td class="crit">JAMAIS</td></tr>
+        <tr><td>Médiateur</td><td>Programmatif</td><td>Œil de Cortex</td><td class="crit">JAMAIS</td></tr>
+        <tr><td>Superviseur</td><td>Programmatif</td><td>Observateur Continu</td><td class="crit">JAMAIS</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Structure d'un skill LLM</h3>
+    <div class="diagram">
+<span class="label"># Skill: Agent Raisonnement — Juriste-Analyste Lémanique</span>
+
+<span class="label">## RÔLE</span>
+Analyste juridico-financier spécialiste du droit franco-suisse.
+
+<span class="label">## TON</span>
+Rigoureux, prudent, nuancé.
+
+<span class="label">## CONNAISSANCES</span>
+- FR: RGPD, AI Act, Code de commerce
+- CH: nLPD, LPM, LB, Code des obligations
+- 6 verticales avec référentiels dédiés
+
+<span class="label">## WORKFLOW</span>
+1. Recevoir faits de Data
+2. Identifier textes applicables
+3. Comparer 2+ options avec base légale
+4. Si incohérence: <span class="new">publier INTENTION_REVISE</span>
+5. Retourner résultat structuré (JSON)
+
+<span class="label">## GARDE-FOUS</span>
+- TOUJOURS citer la base légale
+- TOUJOURS signaler une incertitude
+- JAMAIS de contournement réglementaire
+- Confiance &lt; 0.3 → révision automatique
+    </div>
+
+    <div class="alert alert-success">
+      Chargeur de skills : <code>core/agents/prompts/__init__.py</code> — <code>load_skill()</code>, <code>build_system_prompt()</code>, <code>list_available_skills()</code>. Retourne <code>None</code> pour les agents programmatiques.
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SECTION 10 -->
+  <!-- ============================================================ -->
+  <div class="section" id="s10">
+    <h2><span class="num">10</span> Bilan technique</h2>
+
+    <h3>Chiffres clés</h3>
+    <div class="stats">
+      <div class="stat"><div class="stat-val" style="color:#22d3ee">89</div><div class="stat-label">Fichiers</div></div>
+      <div class="stat"><div class="stat-val" style="color:#a78bfa">6 484</div><div class="stat-label">Lignes Python</div></div>
+      <div class="stat"><div class="stat-val" style="color:#34d399">89/89</div><div class="stat-label">Tests ✅</div></div>
+      <div class="stat"><div class="stat-val" style="color:#fbbf24">22</div><div class="stat-label">Règles</div></div>
+      <div class="stat"><div class="stat-val" style="color:#fb7185">20</div><div class="stat-label">Docs rég.</div></div>
+      <div class="stat"><div class="stat-val" style="color:#60a5fa">6</div><div class="stat-label">Verticales</div></div>
+      <div class="stat"><div class="stat-val" style="color:#22d3ee">28</div><div class="stat-label">Endpoints</div></div>
+      <div class="stat"><div class="stat-val" style="color:#34d399">6</div><div class="stat-label">Skills</div></div>
+    </div>
+
+    <h3>Score de maturité : 6.5 / 10</h3>
+    <table>
+      <thead><tr><th>Domaine</th><th>Score</th><th>Commentaire</th></tr></thead>
+      <tbody>
+        <tr><td>Architecture</td><td class="ok">9/10</td><td>Graphe complet, pas encore prouvé en prod</td></tr>
+        <tr><td>Agents</td><td class="ok">8/10</td><td>Reconfigurés, LLM pas encore branché</td></tr>
+        <tr><td>Sécurité</td><td class="warn">7/10</td><td>22 règles, gel, saga, mais journal disque brisé</td></tr>
+        <tr><td>Tests</td><td class="ok">8/10</td><td>89/89, mais simulés sans vrai bus NATS</td></tr>
+        <tr><td>Intégrations</td><td class="warn">6/10</td><td>Implémentées, pas connectées à de vrais services</td></tr>
+        <tr><td>Frontend</td><td class="warn">5/10</td><td>MVP HTML, pas React, pas d'auth JWT</td></tr>
+        <tr><td>Données</td><td class="crit">4/10</td><td>20 docs seed, pas de base vectorielle</td></tr>
+        <tr><td>Documentation</td><td class="ok">8/10</td><td>4 documents de qualité</td></tr>
+        <tr><td>Ops</td><td class="warn">6/10</td><td>Docker + K3s, jamais testé en prod</td></tr>
+        <tr><td>Skills</td><td class="ok">7/10</td><td>Structurés, pas encore consommés</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Prochaines étapes (Sprint 2)</h3>
+    <ol>
+      <li><strong>Brancher le LLM</strong> dans le Raisonnement (appeler <code>generate_for_agent</code>)</li>
+      <li><strong>Auth JWT</strong> (remplacer les 7 comptes en dur)</li>
+      <li><strong>Persistance Redis</strong> pour IntentionStore</li>
+      <li><strong>React frontend</strong> (remplacer le HTML monolithique)</li>
+      <li><strong>Base vectorielle ChromaDB</strong> dans Knowledge Vault</li>
+    </ol>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <p>Cortex Leman v5 — 89 fichiers • 10K+ lignes • 89/89 tests • 22 règles JsonLogic • 6 verticales FR-CH</p>
+    <div class="tagline">Graphe de confiance. Déterministe là où il faut. Intelligent là où on peut.</div>
+  </div>
+
+</div>
+</body>
+</html>

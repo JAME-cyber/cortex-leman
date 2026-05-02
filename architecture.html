@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cortex Leman v5 — Graphe de Confiance</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'JetBrains Mono', monospace; background: #020617; min-height: 100vh; padding: 2rem; color: white; }
+    .container { max-width: 1600px; margin: 0 auto; }
+    .header { margin-bottom: 2rem; }
+    .header-row { display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem; flex-wrap: wrap; }
+    .pulse-dot { width: 12px; height: 12px; background: #22d3ee; border-radius: 50%; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.025em; }
+    .subtitle { color: #94a3b8; font-size: 0.875rem; margin-left: 1.75rem; }
+    .badge { display: inline-block; padding: 0.125rem 0.5rem; border-radius: 9999px; font-size: 0.7rem; font-weight: 600; }
+    .badge-v5 { background: rgba(34,211,238,0.15); color: #22d3ee; border: 1px solid rgba(34,211,238,0.3); }
+    .badge-score { background: rgba(52,211,153,0.15); color: #34d399; border: 1px solid rgba(52,211,153,0.3); }
+    .badge-new { background: rgba(251,113,133,0.15); color: #fb7185; border: 1px solid rgba(251,113,133,0.3); }
+    .diagram-container { background: rgba(15, 23, 42, 0.5); border-radius: 1rem; border: 1px solid #1e293b; padding: 1.5rem; overflow-x: auto; margin-bottom: 2rem; }
+    svg { width: 100%; min-width: 1300px; display: block; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-top: 2rem; }
+    .card { background: rgba(15, 23, 42, 0.5); border-radius: 0.75rem; border: 1px solid #1e293b; padding: 1.25rem; transition: border-color 0.2s; }
+    .card:hover { border-color: #334155; }
+    .card-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; }
+    .card-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .card-dot.cyan { background: #22d3ee; } .card-dot.emerald { background: #34d399; } .card-dot.violet { background: #a78bfa; }
+    .card-dot.amber { background: #fbbf24; } .card-dot.rose { background: #fb7185; } .card-dot.orange { background: #fb923c; }
+    .card-dot.blue { background: #60a5fa; } .card-dot.lime { background: #a3e635; } .card-dot.pink { background: #f472b6; }
+    .card-dot.teal { background: #2dd4bf; } .card-dot.red { background: #ef4444; }
+    .card h3 { font-size: 0.875rem; font-weight: 600; }
+    .card ul { list-style: none; color: #94a3b8; font-size: 0.75rem; }
+    .card li { margin-bottom: 0.375rem; padding-left: 0.75rem; position: relative; }
+    .card li::before { content: '→'; position: absolute; left: 0; color: #475569; }
+    .card .metric { color: #34d399; font-weight: 600; }
+    .card .warning { color: #fbbf24; font-weight: 600; }
+    .card .critical { color: #fb7185; font-weight: 600; }
+    .card .new-tag { color: #f472b6; font-weight: 600; font-size: 0.65rem; }
+    .section-title { font-size: 1rem; font-weight: 600; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+    .section-title .dot { width: 6px; height: 6px; border-radius: 50%; }
+    .table-section { margin-top: 2rem; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
+    th { text-align: left; padding: 0.5rem 0.75rem; background: rgba(30, 41, 59, 0.5); color: #94a3b8; font-weight: 600; border-bottom: 1px solid #1e293b; }
+    td { padding: 0.5rem 0.75rem; border-bottom: 1px solid rgba(30, 41, 59, 0.3); color: #cbd5e1; }
+    td.ok { color: #34d399; } td.warn { color: #fbbf24; } td.fail { color: #fb7185; } td.new { color: #f472b6; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 2rem; }
+    .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-top: 2rem; }
+    .footer { text-align: center; margin-top: 2rem; color: #475569; font-size: 0.75rem; }
+    .stats-bar { display: flex; gap: 1.5rem; flex-wrap: wrap; margin: 1rem 0 2rem; padding: 1rem; background: rgba(15, 23, 42, 0.5); border-radius: 0.75rem; border: 1px solid #1e293b; }
+    .stat { text-align: center; min-width: 70px; }
+    .stat-value { font-size: 1.35rem; font-weight: 700; }
+    .stat-label { font-size: 0.65rem; color: #64748b; margin-top: 0.25rem; }
+    .stat-value.cyan { color: #22d3ee; } .stat-value.emerald { color: #34d399; } .stat-value.amber { color: #fbbf24; }
+    .stat-value.violet { color: #a78bfa; } .stat-value.rose { color: #fb7185; } .stat-value.blue { color: #60a5fa; }
+    .stat-value.pink { color: #f472b6; } .stat-value.teal { color: #2dd4bf; } .stat-value.lime { color: #a3e635; }
+    .divider { border: none; border-top: 1px solid #1e293b; margin: 2rem 0; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-row">
+      <div class="pulse-dot"></div>
+      <h1>Cortex Leman v5 — Graphe de Confiance</h1>
+      <span class="badge badge-v5">v5.2</span>
+      <span class="badge badge-score">215/215 tests ✅</span>
+      <span class="badge badge-new">RAG + MCP + A2A + Tracing</span>
+    </div>
+    <div class="subtitle">Infrastructure de confiance IA pour professions régulées franco-suisses — 6 verticales, 2 modes de déploiement, 51 endpoints</div>
+  </div>
+
+  <!-- STATS BAR -->
+  <div class="stats-bar">
+    <div class="stat"><div class="stat-value cyan">118</div><div class="stat-label">Fichiers source</div></div>
+    <div class="stat"><div class="stat-value emerald">28K+</div><div class="stat-label">Lignes de code</div></div>
+    <div class="stat"><div class="stat-value amber">22</div><div class="stat-label">Règles JsonLogic</div></div>
+    <div class="stat"><div class="stat-value violet">6</div><div class="stat-label">Verticales métier</div></div>
+    <div class="stat"><div class="stat-value blue">51</div><div class="stat-label">Endpoints API</div></div>
+    <div class="stat"><div class="stat-value rose">31</div><div class="stat-label">Sujets NATS</div></div>
+    <div class="stat"><div class="stat-value pink">215</div><div class="stat-label">Tests ✅</div></div>
+    <div class="stat"><div class="stat-value teal">10</div><div class="stat-label">Fichiers test</div></div>
+    <div class="stat"><div class="stat-value lime">5</div><div class="stat-label">CI/CD Jobs</div></div>
+  </div>
+
+  <!-- ARCHITECTURE DIAGRAM -->
+  <div class="diagram-container">
+    <div class="section-title"><div class="dot" style="background:#22d3ee"></div> Architecture — Graphe de Confiance v5.2</div>
+    <svg viewBox="0 0 1400 780" xmlns="http://www.w3.org/2000/svg">
+      <!-- Background grid -->
+      <defs>
+        <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+          <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(30,41,59,0.3)" stroke-width="0.5"/>
+        </pattern>
+        <marker id="arrow" viewBox="0 0 10 6" refX="10" refY="3" markerWidth="8" markerHeight="6" orient="auto">
+          <path d="M 0 0 L 10 3 L 0 6 z" fill="#475569"/>
+        </marker>
+        <marker id="arrow-cyan" viewBox="0 0 10 6" refX="10" refY="3" markerWidth="8" markerHeight="6" orient="auto">
+          <path d="M 0 0 L 10 3 L 0 6 z" fill="#22d3ee"/>
+        </marker>
+        <marker id="arrow-rose" viewBox="0 0 10 6" refX="10" refY="3" markerWidth="8" markerHeight="6" orient="auto">
+          <path d="M 0 0 L 10 3 L 0 6 z" fill="#fb7185"/>
+        </marker>
+        <marker id="arrow-amber" viewBox="0 0 10 6" refX="10" refY="3" markerWidth="8" markerHeight="6" orient="auto">
+          <path d="M 0 0 L 10 3 L 0 6 z" fill="#fbbf24"/>
+        </marker>
+        <marker id="arrow-pink" viewBox="0 0 10 6" refX="10" refY="3" markerWidth="8" markerHeight="6" orient="auto">
+          <path d="M 0 0 L 10 3 L 0 6 z" fill="#f472b6"/>
+        </marker>
+        <marker id="arrow-teal" viewBox="0 0 10 6" refX="10" refY="3" markerWidth="8" markerHeight="6" orient="auto">
+          <path d="M 0 0 L 10 3 L 0 6 z" fill="#2dd4bf"/>
+        </marker>
+      </defs>
+      <rect width="1400" height="780" fill="url(#grid)"/>
+
+      <!-- CLIENT -->
+      <rect x="40" y="20" width="180" height="60" rx="8" fill="rgba(96,165,250,0.1)" stroke="#60a5fa" stroke-width="1"/>
+      <text x="130" y="45" text-anchor="middle" fill="#60a5fa" font-size="11" font-weight="600">CLIENT PME FR-CH</text>
+      <text x="130" y="62" text-anchor="middle" fill="#94a3b8" font-size="9">Cabinet / Banque / Hôpital</text>
+
+      <!-- FRONTEND REACT -->
+      <rect x="40" y="95" width="180" height="55" rx="8" fill="rgba(96,165,250,0.1)" stroke="#60a5fa" stroke-width="1.2"/>
+      <text x="130" y="115" text-anchor="middle" fill="#60a5fa" font-size="10" font-weight="600">REACT 19 + VITE + TS</text>
+      <text x="130" y="130" text-anchor="middle" fill="#64748b" font-size="8">Landing · Login · Dashboard · Chat</text>
+      <text x="130" y="143" text-anchor="middle" fill="#2dd4bf" font-size="7">Lucide Icons · React Router</text>
+      <line x1="130" y1="80" x2="130" y2="95" stroke="#60a5fa" stroke-width="1" marker-end="url(#arrow)"/>
+
+      <!-- API GATEWAY -->
+      <rect x="40" y="170" width="180" height="55" rx="8" fill="rgba(96,165,250,0.1)" stroke="#60a5fa" stroke-width="1"/>
+      <text x="130" y="192" text-anchor="middle" fill="#60a5fa" font-size="10" font-weight="600">API FastAPI</text>
+      <text x="130" y="207" text-anchor="middle" fill="#64748b" font-size="8">51 endpoints · Pydantic v2</text>
+      <text x="130" y="220" text-anchor="middle" fill="#f472b6" font-size="7">+ MCP · A2A · RAG · Chat</text>
+      <line x1="130" y1="150" x2="130" y2="170" stroke="#60a5fa" stroke-width="1" marker-end="url(#arrow)"/>
+
+      <!-- ORCHESTRATEUR -->
+      <rect x="460" y="40" width="260" height="70" rx="10" fill="rgba(34,211,238,0.1)" stroke="#22d3ee" stroke-width="1.5"/>
+      <text x="590" y="62" text-anchor="middle" fill="#22d3ee" font-size="12" font-weight="700">ORCHESTRATEUR</text>
+      <text x="590" y="78" text-anchor="middle" fill="#94a3b8" font-size="9">Hub conversationnel permanent</text>
+      <text x="590" y="95" text-anchor="middle" fill="#64748b" font-size="8">Intention versionnée • Assemblée dynamique</text>
+      <line x1="220" y1="195" x2="460" y2="75" stroke="#60a5fa" stroke-width="1" stroke-dasharray="4" marker-end="url(#arrow)"/>
+
+      <!-- NATS BUS - CENTRAL -->
+      <rect x="420" y="180" width="340" height="50" rx="25" fill="rgba(34,211,238,0.05)" stroke="#22d3ee" stroke-width="1" stroke-dasharray="6"/>
+      <text x="590" y="202" text-anchor="middle" fill="#22d3ee" font-size="11" font-weight="600">NATS JETSTREAM</text>
+      <text x="590" y="218" text-anchor="middle" fill="#64748b" font-size="8">31 sujets • pair-à-pair asynchrone</text>
+      <line x1="590" y1="110" x2="590" y2="180" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#arrow-cyan)"/>
+
+      <!-- AGENT DATA -->
+      <rect x="80" y="280" width="200" height="80" rx="8" fill="rgba(52,211,153,0.1)" stroke="#34d399" stroke-width="1"/>
+      <text x="180" y="302" text-anchor="middle" fill="#34d399" font-size="11" font-weight="600">AGENT DATA</text>
+      <text x="180" y="318" text-anchor="middle" fill="#94a3b8" font-size="8">Recherche + filtrage</text>
+      <text x="180" y="332" text-anchor="middle" fill="#64748b" font-size="8">Écoute compléments</text>
+      <text x="180" y="348" text-anchor="middle" fill="#34d399" font-size="7">Skill: Veilleur de Sources</text>
+      <line x1="180" y1="280" x2="450" y2="220" stroke="#34d399" stroke-width="1" stroke-dasharray="3" marker-end="url(#arrow)"/>
+
+      <!-- AGENT RAISONNEMENT -->
+      <rect x="330" y="280" width="200" height="80" rx="8" fill="rgba(167,139,250,0.1)" stroke="#a78bfa" stroke-width="1"/>
+      <text x="430" y="302" text-anchor="middle" fill="#a78bfa" font-size="11" font-weight="600">AGENT RAISONNEMENT</text>
+      <text x="430" y="318" text-anchor="middle" fill="#94a3b8" font-size="8">Analyse + comparaison</text>
+      <text x="430" y="332" text-anchor="middle" fill="#64748b" font-size="8">Peut demander révision</text>
+      <text x="430" y="348" text-anchor="middle" fill="#a78bfa" font-size="7">Skill: Juriste-Analyste Lémanique</text>
+      <line x1="430" y1="280" x2="530" y2="230" stroke="#a78bfa" stroke-width="1" stroke-dasharray="3" marker-end="url(#arrow)"/>
+
+      <!-- AGENT ACTION -->
+      <rect x="580" y="280" width="200" height="80" rx="8" fill="rgba(251,191,36,0.1)" stroke="#fbbf24" stroke-width="1"/>
+      <text x="680" y="302" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="600">AGENT ACTION</text>
+      <text x="680" y="318" text-anchor="middle" fill="#94a3b8" font-size="8">Exécution transactionnelle</text>
+      <text x="680" y="332" text-anchor="middle" fill="#fbbf24" font-size="8">⚠ Freeze check + Saga</text>
+      <text x="680" y="348" text-anchor="middle" fill="#fbbf24" font-size="7">PROGRAMMATIQUE — aucun LLM</text>
+      <line x1="680" y1="280" x2="660" y2="230" stroke="#fbbf24" stroke-width="1" stroke-dasharray="3" marker-end="url(#arrow)"/>
+
+      <!-- MEDIATEUR -->
+      <rect x="330" y="420" width="340" height="90" rx="10" fill="rgba(251,113,133,0.1)" stroke="#fb7185" stroke-width="2"/>
+      <text x="500" y="445" text-anchor="middle" fill="#fb7185" font-size="13" font-weight="700">MÉDIATEUR</text>
+      <text x="500" y="462" text-anchor="middle" fill="#94a3b8" font-size="9">22 règles JsonLogic • Gel préventif • Conflits</text>
+      <text x="500" y="478" text-anchor="middle" fill="#fb7185" font-size="8">100% DÉTERMINISTE — aucun LLM</text>
+      <text x="500" y="498" text-anchor="middle" fill="#64748b" font-size="8">Gel par défaut si verticale sensible + montant ≥ 10K</text>
+
+      <!-- Connections agents → médiateur -->
+      <line x1="180" y1="360" x2="380" y2="420" stroke="#fb7185" stroke-width="0.8" stroke-dasharray="2" marker-end="url(#arrow-rose)"/>
+      <line x1="430" y1="360" x2="460" y2="420" stroke="#fb7185" stroke-width="0.8" stroke-dasharray="2" marker-end="url(#arrow-rose)"/>
+      <line x1="680" y1="360" x2="620" y2="420" stroke="#fb7185" stroke-width="0.8" stroke-dasharray="2" marker-end="url(#arrow-rose)"/>
+
+      <!-- SUPERVISEUR V2 -->
+      <rect x="80" y="420" width="200" height="70" rx="8" fill="rgba(163,230,53,0.1)" stroke="#a3e635" stroke-width="1"/>
+      <text x="180" y="442" text-anchor="middle" fill="#a3e635" font-size="11" font-weight="600">SUPERVISEUR V2</text>
+      <text x="180" y="458" text-anchor="middle" fill="#94a3b8" font-size="8">Observateur continu</text>
+      <text x="180" y="474" text-anchor="middle" fill="#64748b" font-size="8">Health board temps réel</text>
+      <text x="180" y="484" text-anchor="middle" fill="#a3e635" font-size="7">PROGRAMMATIQUE</text>
+
+      <!-- ARBITRAGE HUMAIN -->
+      <rect x="330" y="560" width="340" height="80" rx="10" fill="rgba(251,191,36,0.1)" stroke="#fbbf24" stroke-width="1.5"/>
+      <text x="500" y="585" text-anchor="middle" fill="#fbbf24" font-size="12" font-weight="700">ARBITRAGE HUMAIN</text>
+      <text x="500" y="602" text-anchor="middle" fill="#94a3b8" font-size="9">L'expert décide, pas l'IA • Précédents enregistrés</text>
+      <text x="500" y="620" text-anchor="middle" fill="#64748b" font-size="8">Interface de contradiction • Option A vs B</text>
+      <line x1="500" y1="510" x2="500" y2="560" stroke="#fbbf24" stroke-width="1.5" marker-end="url(#arrow-amber)"/>
+
+      <!-- JOURNAL WORM -->
+      <rect x="850" y="280" width="220" height="80" rx="8" fill="rgba(251,191,36,0.08)" stroke="#fbbf24" stroke-width="1"/>
+      <text x="960" y="302" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="600">JOURNAL WORM</text>
+      <text x="960" y="318" text-anchor="middle" fill="#94a3b8" font-size="8">Append-only • Hash-chainé SHA-256</text>
+      <text x="960" y="332" text-anchor="middle" fill="#94a3b8" font-size="8">HMAC signé • Immuable</text>
+      <text x="960" y="348" text-anchor="middle" fill="#fbbf24" font-size="7">Traçabilité complète</text>
+      <line x1="760" y1="205" x2="850" y2="300" stroke="#fbbf24" stroke-width="0.8" stroke-dasharray="3"/>
+
+      <!-- SECURITY STACK -->
+      <rect x="850" y="410" width="220" height="100" rx="8" fill="rgba(251,113,133,0.08)" stroke="#fb7185" stroke-width="1"/>
+      <text x="960" y="432" text-anchor="middle" fill="#fb7185" font-size="11" font-weight="600">SÉCURITÉ</text>
+      <text x="960" y="449" text-anchor="middle" fill="#94a3b8" font-size="8">Circuit Breaker (seuil 5)</text>
+      <text x="960" y="463" text-anchor="middle" fill="#94a3b8" font-size="8">Verrou Distribué (Redis)</text>
+      <text x="960" y="477" text-anchor="middle" fill="#94a3b8" font-size="8">Saga + Compensation</text>
+      <text x="960" y="491" text-anchor="middle" fill="#94a3b8" font-size="8">Compliance Gateway</text>
+      <text x="960" y="505" text-anchor="middle" fill="#f472b6" font-size="7">🔑 Chiffrement Fernet (at-rest)</text>
+
+      <!-- RAG CHROMADB -->
+      <rect x="850" y="170" width="220" height="80" rx="8" fill="rgba(45,212,191,0.1)" stroke="#2dd4bf" stroke-width="1.5"/>
+      <text x="960" y="192" text-anchor="middle" fill="#2dd4bf" font-size="11" font-weight="700">RAG CHROMADB</text>
+      <text x="960" y="208" text-anchor="middle" fill="#94a3b8" font-size="8">Embeddings all-MiniLM-L6-v2</text>
+      <text x="960" y="222" text-anchor="middle" fill="#64748b" font-size="8">Isolation par client (RGPD)</text>
+      <text x="960" y="236" text-anchor="middle" fill="#2dd4bf" font-size="7">Chunking 500 car. · Context injection</text>
+      <line x1="850" y1="205" x2="760" y2="205" stroke="#2dd4bf" stroke-width="1" stroke-dasharray="4" marker-end="url(#arrow-teal)"/>
+
+      <!-- MCP SERVER -->
+      <rect x="1130" y="280" width="220" height="70" rx="8" fill="rgba(244,114,182,0.1)" stroke="#f472b6" stroke-width="1.5"/>
+      <text x="1240" y="302" text-anchor="middle" fill="#f472b6" font-size="11" font-weight="700">MCP SERVER</text>
+      <text x="1240" y="318" text-anchor="middle" fill="#94a3b8" font-size="8">Model Context Protocol</text>
+      <text x="1240" y="332" text-anchor="middle" fill="#64748b" font-size="8">JSON-RPC 2.0 · SSE/stdio</text>
+      <text x="1240" y="342" text-anchor="middle" fill="#f472b6" font-size="7">Claude Desktop · Cursor · etc.</text>
+
+      <!-- A2A ADAPTER -->
+      <rect x="1130" y="370" width="220" height="70" rx="8" fill="rgba(244,114,182,0.1)" stroke="#f472b6" stroke-width="1.5"/>
+      <text x="1240" y="392" text-anchor="middle" fill="#f472b6" font-size="11" font-weight="700">A2A ADAPTER</text>
+      <text x="1240" y="408" text-anchor="middle" fill="#94a3b8" font-size="8">Agent-to-Agent Protocol</text>
+      <text x="1240" y="422" text-anchor="middle" fill="#64748b" font-size="8">Bridge NATS ↔ A2A</text>
+      <text x="1240" y="432" text-anchor="middle" fill="#f472b6" font-size="7">AG2 · CrewAI · agents tiers</text>
+
+      <!-- AUTODEFENSE GUARDRAILS -->
+      <rect x="1130" y="460" width="220" height="70" rx="8" fill="rgba(239,68,68,0.1)" stroke="#ef4444" stroke-width="1.5"/>
+      <text x="1240" y="482" text-anchor="middle" fill="#ef4444" font-size="11" font-weight="700">AUTODEFENSE</text>
+      <text x="1240" y="498" text-anchor="middle" fill="#94a3b8" font-size="8">Multi-Agent LLM Defense</text>
+      <text x="1240" y="512" text-anchor="middle" fill="#64748b" font-size="8">3 validateurs → vote majoritaire</text>
+      <text x="1240" y="522" text-anchor="middle" fill="#ef4444" font-size="7">Anti-jailbreak · Prompt injection</text>
+
+      <!-- MONITORING -->
+      <rect x="1130" y="170" width="220" height="80" rx="8" fill="rgba(167,139,250,0.08)" stroke="#a78bfa" stroke-width="1"/>
+      <text x="1240" y="192" text-anchor="middle" fill="#a78bfa" font-size="10" font-weight="600">MONITORING</text>
+      <text x="1240" y="209" text-anchor="middle" fill="#94a3b8" font-size="8">Prometheus + Grafana</text>
+      <text x="1240" y="224" text-anchor="middle" fill="#64748b" font-size="7">Métriques: /metrics</text>
+      <text x="1240" y="239" text-anchor="middle" fill="#a78bfa" font-size="8">OpenTelemetry Tracing</text>
+      <text x="1240" y="244" text-anchor="middle" fill="#64748b" font-size="7">Distributed spans multi-agents</text>
+
+      <!-- MODE DEPLOIEMENT -->
+      <rect x="1130" y="40" width="220" height="100" rx="8" fill="rgba(15,23,42,0.8)" stroke="#1e293b" stroke-width="1"/>
+      <text x="1240" y="62" text-anchor="middle" fill="#94a3b8" font-size="10" font-weight="600">DÉPLOIEMENT</text>
+      <rect x="1145" y="72" width="190" height="28" rx="6" fill="rgba(34,211,238,0.08)" stroke="#22d3ee" stroke-width="0.5"/>
+      <text x="1240" y="86" text-anchor="middle" fill="#22d3ee" font-size="9" font-weight="600">STANDARD — OpenRouter · Cloud</text>
+      <text x="1240" y="96" text-anchor="middle" fill="#64748b" font-size="7">Startup, RH, Comptable</text>
+      <rect x="1145" y="105" width="190" height="28" rx="6" fill="rgba(251,113,133,0.08)" stroke="#fb7185" stroke-width="0.5"/>
+      <text x="1240" y="119" text-anchor="middle" fill="#fb7185" font-size="9" font-weight="600">HAUTE PROTECTION — Ollama · K3s</text>
+      <text x="1240" y="129" text-anchor="middle" fill="#fb7185" font-size="7">Avocat, Banque, Santé</text>
+
+      <!-- KNOWLEDGE VAULT -->
+      <rect x="1130" y="550" width="220" height="80" rx="8" fill="rgba(52,211,153,0.08)" stroke="#34d399" stroke-width="1"/>
+      <text x="1240" y="572" text-anchor="middle" fill="#34d399" font-size="10" font-weight="600">KNOWLEDGE VAULT</text>
+      <text x="1240" y="588" text-anchor="middle" fill="#94a3b8" font-size="8">6 verticales réglementaires</text>
+      <text x="1240" y="602" text-anchor="middle" fill="#64748b" font-size="8">Isolation par client (RGPD)</text>
+      <text x="1240" y="616" text-anchor="middle" fill="#34d399" font-size="7">20+ docs réglementaires FR-CH</text>
+
+      <!-- CONFORMITÉ -->
+      <rect x="80" y="560" width="200" height="80" rx="8" fill="rgba(251,113,133,0.08)" stroke="#fb7185" stroke-width="1"/>
+      <text x="180" y="582" text-anchor="middle" fill="#fb7185" font-size="10" font-weight="600">CONFORMITÉ</text>
+      <text x="180" y="598" text-anchor="middle" fill="#94a3b8" font-size="8">RGPD • AI Act</text>
+      <text x="180" y="612" text-anchor="middle" fill="#94a3b8" font-size="8">Art. 321 CP • Art. 47 LB</text>
+      <text x="180" y="626" text-anchor="middle" fill="#94a3b8" font-size="8">LPM • LBA • nLPD</text>
+
+      <!-- CI/CD -->
+      <rect x="80" y="660" width="200" height="60" rx="8" fill="rgba(163,230,53,0.08)" stroke="#a3e635" stroke-width="1"/>
+      <text x="180" y="682" text-anchor="middle" fill="#a3e635" font-size="10" font-weight="600">CI/CD GITHUB ACTIONS</text>
+      <text x="180" y="698" text-anchor="middle" fill="#64748b" font-size="7">Backend · Frontend · Docker</text>
+      <text x="180" y="712" text-anchor="middle" fill="#64748b" font-size="7">Security Audit · Deploy</text>
+
+      <!-- DATABASE LAYER -->
+      <rect x="330" y="660" width="340" height="60" rx="8" fill="rgba(96,165,250,0.08)" stroke="#60a5fa" stroke-width="1"/>
+      <text x="500" y="682" text-anchor="middle" fill="#60a5fa" font-size="10" font-weight="600">DATA LAYER</text>
+      <text x="500" y="698" text-anchor="middle" fill="#64748b" font-size="8">PostgreSQL 16 · Alembic migrations · Redis 7</text>
+      <text x="500" y="712" text-anchor="middle" fill="#64748b" font-size="8">ChromaDB (RAG vectoriel) · NATS JetStream</text>
+
+      <!-- INTEGRATIONS -->
+      <rect x="850" y="550" width="220" height="80" rx="8" fill="rgba(167,139,250,0.08)" stroke="#a78bfa" stroke-width="1"/>
+      <text x="960" y="572" text-anchor="middle" fill="#a78bfa" font-size="10" font-weight="600">INTÉGRATIONS</text>
+      <text x="960" y="588" text-anchor="middle" fill="#94a3b8" font-size="8">LLM Provider</text>
+      <text x="960" y="602" text-anchor="middle" fill="#64748b" font-size="7">OpenRouter + Ollama</text>
+      <text x="960" y="616" text-anchor="middle" fill="#94a3b8" font-size="8">n8n Workflows</text>
+      <text x="960" y="626" text-anchor="middle" fill="#64748b" font-size="7">12 workflows prédéfinis</text>
+
+    </svg>
+  </div>
+
+  <!-- AGENT CARDS -->
+  <div class="section-title"><div class="dot" style="background:#34d399"></div> Agents & Composants principaux</div>
+  <div class="cards">
+    <div class="card">
+      <div class="card-header"><div class="card-dot cyan"></div><h3>Orchestrateur</h3></div>
+      <ul>
+        <li>Hub conversationnel permanent</li>
+        <li>Intention versionnée (v1→v2→...)</li>
+        <li>Routage dynamique par contenu</li>
+        <li>Assemblée d'agents dynamique</li>
+        <li>6+ abonnements NATS permanents</li>
+        <li class="metric">Skill: Maître de Cérémonie Lémanique</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-dot emerald"></div><h3>Agent Data</h3></div>
+      <ul>
+        <li>Recherche asynchrone sur le bus</li>
+        <li>Écoute demandes de complément</li>
+        <li>Haute Protection: sources locales</li>
+        <li>Confiance + sources citées</li>
+        <li class="metric">Skill: Veilleur de Sources / Hermétique CH</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-dot violet"></div><h3>Agent Raisonnement</h3></div>
+      <ul>
+        <li>Analyse juridico-financière</li>
+        <li>Compare minimum 2 options</li>
+        <li>Publie INTENTION_REVISE si conflit</li>
+        <li>Références réglementaires FR-CH</li>
+        <li class="metric">Skill: Juriste-Analyste Lémanique</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-dot amber"></div><h3>Agent Action</h3></div>
+      <ul>
+        <li>Vérifie gel AVANT exécution</li>
+        <li>Verrou distribué sur intention</li>
+        <li>Saga avec compensation</li>
+        <li>Circuit breaker contre échecs</li>
+        <li class="warning">PROGRAMMATIQUE — aucun LLM</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-dot rose"></div><h3>Médiateur</h3></div>
+      <ul>
+        <li>22 règles JsonLogic déterministes</li>
+        <li>Gel préventif (montant ≥ 10K)</li>
+        <li>Détecte contradictions entre agents</li>
+        <li>Prépare dossiers d'arbitrage</li>
+        <li class="critical">PROGRAMMATIQUE — aucun LLM</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-dot lime"></div><h3>Superviseur V2</h3></div>
+      <ul>
+        <li>Observateur continu du graphe</li>
+        <li>Health board par intention</li>
+        <li>Alerte si dégradé (confiance &lt; 0.5)</li>
+        <li>4 abonnements bus temps réel</li>
+        <li class="metric">PROGRAMMATIQUE</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- NEW COMPONENTS -->
+  <div class="section-title" style="margin-top:2rem"><div class="dot" style="background:#f472b6"></div> Nouveaux Composants v5.2 <span class="badge badge-new">NEW</span></div>
+  <div class="cards">
+    <div class="card" style="border-color: rgba(45,212,191,0.3);">
+      <div class="card-header"><div class="card-dot teal"></div><h3>RAG ChromaDB</h3></div>
+      <ul>
+        <li>Recherche sémantique vectorielle</li>
+        <li>Embeddings all-MiniLM-L6-v2</li>
+        <li>Isolation par client (RGPD droit à l'oubli)</li>
+        <li>Chunking 500 car. avec overlap</li>
+        <li>Context injection pour agents LLM</li>
+        <li>Textes réglementaires vectorisés</li>
+        <li class="new-tag">5 endpoints: /rag/search, /rag/index, /rag/seed, /rag/stats, /rag/client/{id}</li>
+      </ul>
+    </div>
+    <div class="card" style="border-color: rgba(244,114,182,0.3);">
+      <div class="card-header"><div class="card-dot pink"></div><h3>MCP Server</h3></div>
+      <ul>
+        <li>Model Context Protocol (JSON-RPC 2.0)</li>
+        <li>Expose RAG via protocole standard</li>
+        <li>Compatible Claude Desktop, Cursor, etc.</li>
+        <li>Tools: rag_search, rag_regulatory, rag_stats</li>
+        <li>Transport SSE/stdio</li>
+        <li class="new-tag">1 endpoint: POST /mcp</li>
+      </ul>
+    </div>
+    <div class="card" style="border-color: rgba(244,114,182,0.3);">
+      <div class="card-header"><div class="card-dot pink"></div><h3>A2A Adapter</h3></div>
+      <ul>
+        <li>Agent-to-Agent Protocol</li>
+        <li>Bridge NATS ↔ protocole A2A standard</li>
+        <li>Compatible AG2, CrewAI, agents tiers</li>
+        <li>Messages: discover, send_message, get_status</li>
+        <li class="new-tag">1 endpoint: POST /a2a</li>
+      </ul>
+    </div>
+    <div class="card" style="border-color: rgba(239,68,68,0.3);">
+      <div class="card-header"><div class="card-dot red"></div><h3>AutoDefense Guardrails</h3></div>
+      <ul>
+        <li>Inspiré du paper AG2 AutoDefense</li>
+        <li>3 validateurs indépendants en parallèle</li>
+        <li>Vote majoritaire → block/pass</li>
+        <li>Détection anti-jailbreak</li>
+        <li>Détection prompt injection</li>
+        <li class="new-tag">1 endpoint: POST /guardrails/autodefense</li>
+      </ul>
+    </div>
+    <div class="card" style="border-color: rgba(167,139,250,0.3);">
+      <div class="card-header"><div class="card-dot violet"></div><h3>Monitoring & Tracing</h3></div>
+      <ul>
+        <li>Prometheus metrics sur /metrics</li>
+        <li>Grafana dashboard préconfiguré</li>
+        <li>OpenTelemetry distributed tracing</li>
+        <li>Spans par agent (latence, health)</li>
+        <li>Dégradation gracieuse si OTel absent</li>
+        <li class="new-tag">2 endpoints: GET /health, GET /metrics</li>
+      </ul>
+    </div>
+    <div class="card" style="border-color: rgba(251,113,133,0.3);">
+      <div class="card-header"><div class="card-dot rose"></div><h3>Chiffrement Fernet</h3></div>
+      <ul>
+        <li>Chiffrement at-rest (Fernet/AES)</li>
+        <li>PII et secrets clients protégés</li>
+        <li>Conforme RGPD Art. 32</li>
+        <li>Rotation des clés supportée</li>
+        <li class="new-tag">Module: core/security/encryption.py</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- VERTICALES TABLE -->
+  <div class="table-section">
+    <div class="section-title"><div class="dot" style="background:#a78bfa"></div> Verticales Métier & Règles</div>
+    <table>
+      <thead>
+        <tr><th>Verticale</th><th>Règles</th><th>Secret/Domiciliation</th><th>Mode requis</th><th>Références</th><th>Docs seed</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Comptable</td><td class="ok">7 règles</td><td>Art. 22 RGPD</td><td>Standard / Haute</td><td>RGPD, LBA, AFC, NEP</td><td class="ok">5</td></tr>
+        <tr><td>Avocat</td><td class="warn">4 règles</td><td class="fail">Art. 321 CP</td><td class="fail">Haute Protection</td><td>CP, nLPD, déontologie</td><td class="ok">4</td></tr>
+        <tr><td>Santé</td><td>3 règles</td><td class="fail">LPM + HDS</td><td class="fail">Haute Protection</td><td>RGPD, LPM, FMH</td><td class="ok">3</td></tr>
+        <tr><td>Banque</td><td>3 règles</td><td class="fail">Art. 47 LB</td><td class="fail">Haute Protection</td><td>LB, FINMA, Bâle</td><td class="ok">3</td></tr>
+        <tr><td>Startup</td><td>2 règles</td><td>RGPD standard</td><td>Standard</td><td>AI Act, RGPD</td><td class="ok">2</td></tr>
+        <tr><td>RH</td><td>3 règles</td><td>Anti-discrimination</td><td>Standard / Haute</td><td>AI Act, Code travail</td><td class="ok">3</td></tr>
+        <tr style="border-top: 2px solid #1e293b;"><td colspan="6" style="color:#fbbf24;font-weight:600;text-align:center">TOTAL: 22 règles JsonLogic • 6 verticales • 20+ docs réglementaires</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- FLUX DE CONFIANCE -->
+  <div class="three-col">
+    <div class="table-section">
+      <div class="section-title"><div class="dot" style="background:#22d3ee"></div> Flux Nominal</div>
+      <table>
+        <thead><tr><th>#</th><th>Étape</th><th>Sujet NATS</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Intention créée</td><td><code>cleman.intention.new</code></td></tr>
+          <tr><td>2</td><td>Route → agents</td><td><code>cleman.intention.route</code></td></tr>
+          <tr><td>3</td><td>Résultats agents</td><td><code>cleman.agent.result</code></td></tr>
+          <tr><td>4</td><td>Médiateur vérifie</td><td><code>cleman.mediator.check</code></td></tr>
+          <tr><td>5</td><td>Superviseur observe</td><td>Health board → OK</td></tr>
+          <tr><td>6</td><td>Intention complétée</td><td>Journal WORM ✅</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="table-section">
+      <div class="section-title"><div class="dot" style="background:#fb7185"></div> Flux Conflit (gel)</div>
+      <table>
+        <thead><tr><th>#</th><th>Étape</th><th>Sujet NATS</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Résultats contradictoires</td><td><code>cleman.agent.result</code></td></tr>
+          <tr><td>2</td><td>Médiateur détecte</td><td><code>cleman.mediator.conflict</code></td></tr>
+          <tr><td>3</td><td class="fail">GEL immédiat</td><td><code>cleman.mediator.freeze</code></td></tr>
+          <tr><td>4</td><td>Action bloquée</td><td>Vérifie frozen ✅</td></tr>
+          <tr><td>5</td><td>Arbitrage humain</td><td><code>cleman.arbitration.request</code></td></tr>
+          <tr><td>6</td><td>Décision + précédent</td><td><code>cleman.arbitration.decision</code></td></tr>
+          <tr><td>7</td><td>Dégel + reprise</td><td><code>cleman.intention.revise</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="table-section">
+      <div class="section-title"><div class="dot" style="background:#2dd4bf"></div> Flux RAG + Chat</div>
+      <table>
+        <thead><tr><th>#</th><th>Étape</th><th>Endpoint</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Requête utilisateur</td><td><code>POST /chat</code></td></tr>
+          <tr><td>2</td><td>AutoDefense check</td><td><code>/guardrails/autodefense</code></td></tr>
+          <tr><td>3</td><td>RAG context search</td><td><code>/rag/search</code></td></tr>
+          <tr><td>4</td><td>LLM generate + context</td><td><code>/llm/generate</code></td></tr>
+          <tr><td>5</td><td>Compliance check</td><td><code>/compliance/check</code></td></tr>
+          <tr><td>6</td><td>Journal WORM</td><td>Append immuable ✅</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- API ENDPOINTS TABLE -->
+  <div class="table-section" style="margin-top:2rem">
+    <div class="section-title"><div class="dot" style="background:#60a5fa"></div> Endpoints API (51)</div>
+    <table>
+      <thead>
+        <tr><th>Domaine</th><th>Méthode</th><th>Route</th><th>Description</th></tr>
+      </thead>
+      <tbody>
+        <tr><td rowspan="2" style="color:#60a5fa">Système</td><td>GET</td><td><code>/health</code></td><td>Health check</td></tr>
+        <tr><td>GET</td><td><code>/metrics</code></td><td>Prometheus metrics</td></tr>
+        <tr><td rowspan="7" style="color:#60a5fa">Auth</td><td>POST</td><td><code>/api/v1/auth/login</code></td><td>Login + JWT</td></tr>
+        <tr><td>POST</td><td><code>/api/v1/auth/refresh</code></td><td>Refresh token</td></tr>
+        <tr><td>POST</td><td><code>/api/v1/auth/register</code></td><td>Inscription</td></tr>
+        <tr><td>GET</td><td><code>/api/v1/auth/me</code></td><td>Profil utilisateur</td></tr>
+        <tr><td>POST</td><td><code>/api/v1/auth/api-keys</code></td><td>Créer API key</td></tr>
+        <tr><td>GET</td><td><code>/api/v1/auth/api-keys</code></td><td>Liste API keys</td></tr>
+        <tr><td>DELETE</td><td><code>/api/v1/auth/api-keys/{id}</code></td><td>Révoquer API key</td></tr>
+        <tr><td rowspan="3" style="color:#a3e635">Admin</td><td>GET</td><td><code>/api/v1/admin/users</code></td><td>Liste utilisateurs</td></tr>
+        <tr><td>PATCH</td><td><code>/api/v1/admin/users/{id}</code></td><td>Modifier utilisateur</td></tr>
+        <tr><td>DELETE</td><td><code>/api/v1/admin/users/{id}</code></td><td>Supprimer utilisateur</td></tr>
+        <tr><td rowspan="3" style="color:#22d3ee">Intentions</td><td>POST</td><td><code>/api/v1/intentions</code></td><td>Créer intention</td></tr>
+        <tr><td>GET</td><td><code>/api/v1/intentions</code></td><td>Liste intentions</td></tr>
+        <tr><td>GET</td><td><code>/api/v1/intentions/{id}/history</code></td><td>Historique intention</td></tr>
+        <tr><td rowspan="4" style="color:#fbbf24">Arbitrage</td><td>GET</td><td><code>/api/v1/arbitrations</code></td><td>Liste arbitrages</td></tr>
+        <tr><td>GET</td><td><code>/api/v1/arbitrations/{id}</code></td><td>Détail arbitrage</td></tr>
+        <tr><td>POST</td><td><code>/api/v1/arbitrations/{id}/decide</code></td><td>Décision humaine</td></tr>
+        <tr><td>GET</td><td><code>/api/v1/arbitrations/precedents</code></td><td>Précédents</td></tr>
+        <tr><td rowspan="2" style="color:#fbbf24">Journal</td><td>GET</td><td><code>/api/v1/journal</code></td><td>Consultation journal</td></tr>
+        <tr><td>GET</td><td><code>/api/v1/journal/verify</code></td><td>Vérification intégrité</td></tr>
+        <tr><td rowspan="2" style="color:#34d399">Agents</td><td>GET</td><td><code>/api/v1/agents/status</code></td><td>Statut agents</td></tr>
+        <tr><td class="new">POST</td><td class="new"><code>/api/v1/agents/assemble-team</code></td><td class="new">Assemblée dynamique</td></tr>
+        <tr><td rowspan="3" style="color:#fb7185">Compliance</td><td>GET</td><td><code>/api/v1/compliance/report/daily</code></td><td>Rapport journalier</td></tr>
+        <tr><td>GET</td><td><code>/api/v1/compliance/report/monthly</code></td><td>Rapport mensuel</td></tr>
+        <tr><td>GET</td><td><code>/api/v1/compliance/data-residency</code></td><td>Résidence des données</td></tr>
+        <tr><td rowspan="2" style="color:#fb7185">Médiateur</td><td>GET</td><td><code>/api/v1/mediator/rules</code></td><td>Liste règles</td></tr>
+        <tr><td>GET</td><td><code>/api/v1/mediator/conflicts</code></td><td>Historique conflits</td></tr>
+        <tr><td rowspan="2" style="color:#22d3ee">LLM</td><td>GET</td><td><code>/api/v1/llm/health</code></td><td>Health provider LLM</td></tr>
+        <tr><td>POST</td><td><code>/api/v1/llm/generate</code></td><td>Génération LLM</td></tr>
+        <tr><td rowspan="3" style="color:#a78bfa">n8n</td><td>GET</td><td><code>/api/v1/n8n/health</code></td><td>Health n8n</td></tr>
+        <tr><td>GET</td><td><code>/api/v1/n8n/workflows</code></td><td>Liste workflows</td></tr>
+        <tr><td>POST</td><td><code>/api/v1/n8n/trigger</code></td><td>Déclencher workflow</td></tr>
+        <tr><td rowspan="5" style="color:#34d399">Vault</td><td>POST</td><td><code>/api/v1/vault/clients</code></td><td>Créer client vault</td></tr>
+        <tr><td>POST</td><td><code>/api/v1/vault/documents</code></td><td>Ajouter document</td></tr>
+        <tr><td>GET</td><td><code>/api/v1/vault/documents</code></td><td>Liste documents</td></tr>
+        <tr><td>GET</td><td><code>/api/v1/vault/search</code></td><td>Recherche vault</td></tr>
+        <tr><td>GET</td><td><code>/api/v1/vault/stats</code></td><td>Statistiques vault</td></tr>
+        <tr><td class="new" rowspan="5" style="color:#2dd4bf">RAG ✦</td><td class="new">GET</td><td class="new"><code>/api/v1/rag/search</code></td><td class="new">Recherche sémantique</td></tr>
+        <tr><td class="new">POST</td><td class="new"><code>/api/v1/rag/index</code></td><td class="new">Indexer document</td></tr>
+        <tr><td class="new">POST</td><td class="new"><code>/api/v1/rag/regulatory/seed</code></td><td class="new">Seed textes réglementaires</td></tr>
+        <tr><td class="new">GET</td><td class="new"><code>/api/v1/rag/stats</code></td><td class="new">Stats RAG</td></tr>
+        <tr><td class="new">DELETE</td><td class="new"><code>/api/v1/rag/client/{id}</code></td><td class="new">Droit à l'oubli (RGPD)</td></tr>
+        <tr><td class="new" rowspan="4" style="color:#f472b6">Chat + Protocols ✦</td><td class="new">POST</td><td class="new"><code>/api/v1/chat</code></td><td class="new">Chat conversationnel</td></tr>
+        <tr><td class="new">POST</td><td class="new"><code>/mcp</code></td><td class="new">MCP Server (JSON-RPC)</td></tr>
+        <tr><td class="new">POST</td><td class="new"><code>/a2a</code></td><td class="new">A2A Protocol adapter</td></tr>
+        <tr><td class="new">POST</td><td class="new"><code>/api/v1/guardrails/autodefense</code></td><td class="new">AutoDefense check</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- NATS SUBJECTS TABLE -->
+  <div class="table-section">
+    <div class="section-title"><div class="dot" style="background:#22d3ee"></div> Sujets NATS (31)</div>
+    <table>
+      <thead>
+        <tr><th>Domaine</th><th>Sujet</th><th>Description</th></tr>
+      </thead>
+      <tbody>
+        <tr><td rowspan="4" style="color:#22d3ee">Intention</td><td><code>cleman.intention.new</code></td><td>Nouvelle intention</td></tr>
+        <tr><td><code>cleman.intention.revise</code></td><td>Révision d'intention</td></tr>
+        <tr><td><code>cleman.intention.cancel</code></td><td>Annulation</td></tr>
+        <tr><td><code>cleman.intention.route</code></td><td>Routage vers agents</td></tr>
+        <tr><td rowspan="1" style="color:#94a3b8">Agent</td><td><code>cleman.agent.result</code></td><td>Résultat générique</td></tr>
+        <tr><td rowspan="4" style="color:#34d399">Data</td><td><code>cleman.data.query</code></td><td>Requête data</td></tr>
+        <tr><td><code>cleman.data.result</code></td><td>Résultat data</td></tr>
+        <tr><td><code>cleman.data.scan.internal</code></td><td>Scan interne</td></tr>
+        <tr><td><code>cleman.data.scan.external</code></td><td>Scan externe</td></tr>
+        <tr><td rowspan="4" style="color:#a78bfa">Raisonnement</td><td><code>cleman.reasoning.analyze</code></td><td>Analyse</td></tr>
+        <tr><td><code>cleman.reasoning.result</code></td><td>Résultat analyse</td></tr>
+        <tr><td><code>cleman.reasoning.compare</code></td><td>Comparaison</td></tr>
+        <tr><td><code>cleman.reasoning.recommend</code></td><td>Recommandation</td></tr>
+        <tr><td rowspan="4" style="color:#fbbf24">Action</td><td><code>cleman.action.execute</code></td><td>Exécuter</td></tr>
+        <tr><td><code>cleman.action.result</code></td><td>Résultat action</td></tr>
+        <tr><td><code>cleman.action.compensate</code></td><td>Compensation saga</td></tr>
+        <tr><td><code>cleman.action.notify</code></td><td>Notification</td></tr>
+        <tr><td rowspan="2" style="color:#a3e635">Validation</td><td><code>cleman.validate.request</code></td><td>Demande validation</td></tr>
+        <tr><td><code>cleman.validate.result</code></td><td>Résultat validation</td></tr>
+        <tr><td rowspan="4" style="color:#fb7185">Médiateur</td><td><code>cleman.mediator.check</code></td><td>Vérification</td></tr>
+        <tr><td><code>cleman.mediator.conflict</code></td><td>Conflit détecté</td></tr>
+        <tr><td><code>cleman.mediator.freeze</code></td><td>Gel intention</td></tr>
+        <tr><td><code>cleman.mediator.unfreeze</code></td><td>Dégel</td></tr>
+        <tr><td rowspan="3" style="color:#fbbf24">Arbitrage</td><td><code>cleman.arbitration.request</code></td><td>Demande arbitrage</td></tr>
+        <tr><td><code>cleman.arbitration.decision</code></td><td>Décision humaine</td></tr>
+        <tr><td><code>cleman.arbitration.precedent</code></td><td>Précédent enregistré</td></tr>
+        <tr><td rowspan="3" style="color:#64748b">Système</td><td><code>cleman.system.health</code></td><td>Health global</td></tr>
+        <tr><td><code>cleman.system.error</code></td><td>Erreur système</td></tr>
+        <tr><td><code>cleman.system.audit</code></td><td>Événement audit</td></tr>
+        <tr><td rowspan="2" style="color:#f472b6">Compliance</td><td><code>cleman.compliance.check</code></td><td>Vérification compliance</td></tr>
+        <tr><td><code>cleman.compliance.report</code></td><td>Rapport compliance</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- TECHNOLOGY STACK -->
+  <div class="section-title" style="margin-top:2rem"><div class="dot" style="background:#22d3ee"></div> Stack Technologique</div>
+  <div class="cards">
+    <div class="card">
+      <div class="card-header"><div class="card-dot cyan"></div><h3>Stack Backend</h3></div>
+      <ul>
+        <li>Python 3.12 + FastAPI + Pydantic v2</li>
+        <li>NATS JetStream (bus événementiel)</li>
+        <li>Redis 7 (cache + verrous distribués)</li>
+        <li>PostgreSQL 16 + Alembic (migrations)</li>
+        <li>JsonLogic (moteur de règles)</li>
+        <li>Docker Compose (5 services)</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-dot emerald"></div><h3>LLM & Edge</h3></div>
+      <ul>
+        <li>OpenRouter (mode Standard)</li>
+        <li>Ollama (mode Haute Protection)</li>
+        <li>K3s (déploiement Edge)</li>
+        <li>Skills Markdown structurés</li>
+        <li>Chargeur + system prompt builder</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-dot amber"></div><h3>Sécurité</h3></div>
+      <ul>
+        <li>Journal WORM SHA-256 + HMAC</li>
+        <li>Circuit Breaker (seuil 5 échecs)</li>
+        <li>Verrou distribué Redis</li>
+        <li>Saga avec compensation</li>
+        <li>Compliance Gateway</li>
+        <li class="new-tag">🔑 Chiffrement Fernet (at-rest)</li>
+        <li class="new-tag">🛡️ AutoDefense multi-validateurs</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-dot violet"></div><h3>Frontend</h3></div>
+      <ul>
+        <li>React 19 + Vite 8 + TypeScript 6</li>
+        <li>React Router DOM v6</li>
+        <li>Lucide React (icônes)</li>
+        <li>Landing Page + Login + Dashboard</li>
+        <li>Chat Panel + Market Section</li>
+        <li class="new-tag">✅ Déjà migré (plus MVP monolithique)</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-dot teal"></div><h3>RAG & Vectoriel</h3></div>
+      <ul>
+        <li>ChromaDB (vector store persistant)</li>
+        <li>Embeddings all-MiniLM-L6-v2</li>
+        <li>Chunking 500 car. + overlap 50</li>
+        <li>Context injection pour agents LLM</li>
+        <li>Isolation par client (RGPD)</li>
+        <li class="new-tag">Droit à l'oubli: DELETE /rag/client/{id}</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-dot pink"></div><h3>Protocoles & Monitoring</h3></div>
+      <ul>
+        <li>MCP Server (JSON-RPC 2.0)</li>
+        <li>A2A Adapter (Agent-to-Agent)</li>
+        <li>Prometheus + Grafana</li>
+        <li>OpenTelemetry Tracing</li>
+        <li>CI/CD GitHub Actions (5 jobs)</li>
+        <li class="new-tag">Trivy security scan + pip-audit</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- TEST SUITE -->
+  <div class="table-section" style="margin-top:2rem">
+    <div class="section-title"><div class="dot" style="background:#34d399"></div> Suite de Tests (215 tests)</div>
+    <table>
+      <thead>
+        <tr><th>Fichier</th><th>Tests</th><th>Couverture</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>test_ag2_insights.py</td><td class="ok">39</td><td>AG2: MCP, A2A, AutoDefense, Tracing</td></tr>
+        <tr><td>test_auth.py</td><td class="ok">41</td><td>JWT, API keys, RBAC, registration</td></tr>
+        <tr><td>test_e2e_trust_graph.py</td><td class="ok">42</td><td>Flux complets end-to-end</td></tr>
+        <tr><td>test_hardening.py</td><td class="ok">17</td><td>Sécurité, encryption, guardrails</td></tr>
+        <tr><td>test_integrations.py</td><td class="ok">15</td><td>LLM, n8n, vault, RAG</td></tr>
+        <tr><td>test_journal.py</td><td class="ok">8</td><td>Journal WORM, intégrité, hash</td></tr>
+        <tr><td>test_llm_rag.py</td><td class="ok">21</td><td>LLM provider, RAG ChromaDB, search</td></tr>
+        <tr><td>test_mediator.py</td><td class="ok">10</td><td>22 règles JsonLogic, gel, conflits</td></tr>
+        <tr><td>test_orchestrator.py</td><td class="ok">9</td><td>Intention, routage, versioning</td></tr>
+        <tr><td>test_saga.py</td><td class="ok">13</td><td>Saga manager, compensation</td></tr>
+        <tr style="border-top: 2px solid #1e293b;"><td style="font-weight:600;color:#34d399">TOTAL</td><td style="font-weight:700;color:#34d399">215</td><td style="color:#34d399">10 fichiers • Coverage ≥ 60%</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- CI/CD PIPELINE -->
+  <div class="table-section" style="margin-top:2rem">
+    <div class="section-title"><div class="dot" style="background:#a3e635"></div> Pipeline CI/CD GitHub Actions</div>
+    <table>
+      <thead>
+        <tr><th>Job</th><th>Trigger</th><th>Actions</th><th>Services</th></tr>
+      </thead>
+      <tbody>
+        <tr><td style="color:#60a5fa">Backend</td><td>Push + PR</td><td>8 matrix groups × pytest + coverage</td><td>PostgreSQL 16 + Redis 7</td></tr>
+        <tr><td style="color:#a78bfa">Frontend</td><td>Push + PR</td><td>npm ci → tsc → build → artifact</td><td>—</td></tr>
+        <tr><td style="color:#fbbf24">Docker</td><td>Push main</td><td>Build image + Trivy security scan</td><td>—</td></tr>
+        <tr><td style="color:#fb7185">Security</td><td>Push + PR</td><td>pip-audit + npm audit (HIGH/CRITICAL)</td><td>—</td></tr>
+        <tr><td style="color:#a3e635">Deploy</td><td>Push main</td><td>Deploy preview → staging</td><td>—</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <hr class="divider">
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <p>Cortex Leman v5.2 — Graphe de Confiance • 118 fichiers • 28K+ lignes • 215/215 tests ✅ • 51 endpoints • 31 sujets NATS • 22 règles JsonLogic</p>
+    <p style="margin-top:0.5rem">Graphe de confiance. Déterministe là où il faut. Intelligent là où on peut. RAG + MCP + A2A + Tracing.</p>
+    <p style="margin-top:0.5rem;color:#334155">React 19 • Vite 8 • TypeScript 6 • FastAPI • ChromaDB • PostgreSQL 16 • NATS • Redis 7 • Prometheus • OpenTelemetry</p>
+  </div>
+
+</div>
+</body>
+</html>

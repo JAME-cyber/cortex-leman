@@ -1,0 +1,292 @@
+# Cortex Leman v5 — Manifests K3s
+# Déploiement des 5 agents + NATS + Ollama
+
+---
+# Namespace isolé par client
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cortex-leman
+  labels:
+    app: cortex-leman
+    mode: haute-protection
+
+---
+# Network Policy — Isolation stricte
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-all-ingress
+  namespace: cortex-leman
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              app: cortex-leman
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              app: cortex-leman
+    - to:
+        - podSelector:
+            matchLabels:
+              app: nats
+    - to:
+        - podSelector:
+            matchLabels:
+              app: ollama
+
+---
+# NATS JetStream
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nats
+  namespace: cortex-leman
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nats
+  template:
+    metadata:
+      labels:
+        app: nats
+    spec:
+      containers:
+        - name: nats
+          image: nats:2.10-alpine
+          args:
+            - "--jetstream"
+            - "--store_dir=/data"
+            - "--max_mem_store=256MB"
+            - "--max_file_store=10GB"
+          ports:
+            - containerPort: 4222
+            - containerPort: 8222
+          resources:
+            requests:
+              cpu: 256m
+              memory: 256Mi
+            limits:
+              cpu: 512m
+              memory: 512Mi
+          volumeMounts:
+            - name: nats-data
+              mountPath: /data
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8222
+            initialDelaySeconds: 10
+            periodSeconds: 30
+      volumes:
+        - name: nats-data
+          hostPath:
+            path: /opt/cortex-leman/data/nats
+            type: DirectoryOrCreate
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nats
+  namespace: cortex-leman
+spec:
+  selector:
+    app: nats
+  ports:
+    - port: 4222
+      targetPort: 4222
+      name: client
+    - port: 8222
+      targetPort: 8222
+      name: monitor
+
+---
+# Orchestrateur
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orchestrator
+  namespace: cortex-leman
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: orchestrator
+  template:
+    metadata:
+      labels:
+        app: orchestrator
+    spec:
+      containers:
+        - name: orchestrator
+          image: cortex-leman/orchestrator:v5.0.0
+          envFrom:
+            - secretRef:
+                name: cortex-secrets
+          env:
+            - name: NATS_URL
+              value: "nats://nats:4222"
+            - name: APP_MODE
+              value: "haute_protection"
+          resources:
+            requests:
+              cpu: 512m
+              memory: 1Gi
+            limits:
+              cpu: "1"
+              memory: 2Gi
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 30
+
+---
+# Agent Data
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agent-data
+  namespace: cortex-leman
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: agent-data
+  template:
+    metadata:
+      labels:
+        app: agent-data
+    spec:
+      containers:
+        - name: agent-data
+          image: cortex-leman/agent-data:v5.0.0
+          envFrom:
+            - secretRef:
+                name: cortex-secrets
+          resources:
+            requests:
+              cpu: 512m
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+
+---
+# Agent Raisonnement
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agent-reasoning
+  namespace: cortex-leman
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: agent-reasoning
+  template:
+    metadata:
+      labels:
+        app: agent-reasoning
+    spec:
+      containers:
+        - name: agent-reasoning
+          image: cortex-leman/agent-reasoning:v5.0.0
+          envFrom:
+            - secretRef:
+                name: cortex-secrets
+          resources:
+            requests:
+              cpu: "1"
+              memory: 1Gi
+            limits:
+              cpu: "2"
+              memory: 2Gi
+
+---
+# Agent Action
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agent-action
+  namespace: cortex-leman
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: agent-action
+  template:
+    metadata:
+      labels:
+        app: agent-action
+    spec:
+      containers:
+        - name: agent-action
+          image: cortex-leman/agent-action:v5.0.0
+          envFrom:
+            - secretRef:
+                name: cortex-secrets
+          resources:
+            requests:
+              cpu: 256m
+              memory: 256Mi
+            limits:
+              cpu: 512m
+              memory: 512Mi
+
+---
+# Médiateur
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mediator
+  namespace: cortex-leman
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mediator
+  template:
+    metadata:
+      labels:
+        app: mediator
+    spec:
+      containers:
+        - name: mediator
+          image: cortex-leman/mediator:v5.0.0
+          envFrom:
+            - secretRef:
+                name: cortex-secrets
+          resources:
+            requests:
+              cpu: 256m
+              memory: 512Mi
+            limits:
+              cpu: 512m
+              memory: 1Gi
+
+---
+# Secrets (à remplacer par Vault en production)
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cortex-secrets
+  namespace: cortex-leman
+type: Opaque
+stringData:
+  NATS_URL: "nats://nats:4222"
+  APP_MODE: "haute_protection"
+  LLM_PROVIDER: "ollama"
+  LLM_BASE_URL: "http://ollama:11434"
+  JOURNAL_SIGNING_KEY: "CHANGE_ME"
+  SECRET_KEY: "CHANGE_ME"

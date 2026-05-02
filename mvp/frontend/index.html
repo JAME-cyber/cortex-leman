@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cortex Leman v5 — Graphe de Confiance</title>
+  <meta name="description" content="Infrastructure de confiance IA pour professions régulées FR-CH. Orchestration multi-agents conforme RGPD-IA.">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #020617;
+      --bg-card: rgba(15, 23, 42, 0.6);
+      --border: #1e293b;
+      --border-hover: #334155;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --text-dim: #475569;
+      --cyan: #22d3ee;
+      --emerald: #34d399;
+      --amber: #fbbf24;
+      --violet: #a78bfa;
+      --rose: #fb7185;
+      --orange: #fb923c;
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* NAV */
+    nav {
+      position: fixed; top:0; left:0; right:0; z-index:1000;
+      background: rgba(2,6,23,0.88);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+    }
+    .nav-inner {
+      max-width: 1400px; margin:0 auto;
+      display:flex; align-items:center; justify-content:space-between;
+      height: 60px;
+    }
+    .nav-brand {
+      display:flex; align-items:center; gap:10px;
+      font-weight:700; font-size:1.1rem;
+    }
+    .nav-brand .dot {
+      width:10px; height:10px; border-radius:50%;
+      background:var(--cyan);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+    .nav-links { display:flex; gap:8px; }
+    .nav-links a {
+      color: var(--text-muted); text-decoration:none; font-size:.85rem;
+      padding: 6px 14px; border-radius:6px;
+      transition: all .2s;
+    }
+    .nav-links a:hover, .nav-links a.active {
+      color: var(--text); background: rgba(255,255,255,.06);
+    }
+    .nav-status {
+      display:flex; align-items:center; gap:6px;
+      font-size:.75rem; color:var(--emerald);
+      font-family:'JetBrains Mono',monospace;
+    }
+    .nav-status .live-dot {
+      width:6px; height:6px; border-radius:50%;
+      background:var(--emerald);
+    }
+
+    /* LAYOUT */
+    .main { max-width:1400px; margin:0 auto; padding: 76px 2rem 3rem; }
+
+    /* HERO */
+    .hero {
+      text-align:center; padding: 3rem 0 2rem;
+    }
+    .hero-badge {
+      display:inline-flex; align-items:center; gap:6px;
+      background: rgba(34,211,238,.08); border:1px solid rgba(34,211,238,.2);
+      color:var(--cyan); font-size:.75rem; font-weight:600;
+      padding:4px 14px; border-radius:20px; margin-bottom:1.2rem;
+    }
+    .hero h1 {
+      font-size: 2.5rem; font-weight:800;
+      letter-spacing:-.03em; margin-bottom:.8rem;
+    }
+    .hero h1 span { color:var(--cyan); }
+    .hero p {
+      color:var(--text-muted); font-size:1.05rem;
+      max-width:640px; margin:0 auto 2rem;
+    }
+
+    /* STATS */
+    .stats {
+      display:grid; grid-template-columns:repeat(4,1fr); gap:1rem;
+      margin-bottom:2.5rem;
+    }
+    .stat-card {
+      background:var(--bg-card); border:1px solid var(--border);
+      border-radius:var(--radius); padding:1.2rem; text-align:center;
+    }
+    .stat-card .value {
+      font-size:1.8rem; font-weight:700;
+      font-family:'JetBrains Mono',monospace;
+    }
+    .stat-card .label {
+      font-size:.75rem; color:var(--text-muted); margin-top:2px;
+    }
+
+    /* GRID */
+    .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-bottom:2rem; }
+    .grid-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; margin-bottom:2rem; }
+
+    /* CARD */
+    .card {
+      background:var(--bg-card); border:1px solid var(--border);
+      border-radius:var(--radius); padding:1.5rem;
+      transition: border-color .2s;
+    }
+    .card:hover { border-color:var(--border-hover); }
+    .card-header {
+      display:flex; align-items:center; gap:8px; margin-bottom:1rem;
+    }
+    .card-dot {
+      width:8px; height:8px; border-radius:50%;
+    }
+    .card h3 {
+      font-size:.9rem; font-weight:600;
+    }
+    .card h3 small {
+      font-weight:400; color:var(--text-muted); font-size:.75rem;
+      margin-left:8px;
+    }
+
+    /* PIPELINE VISUAL */
+    .pipeline {
+      display:flex; align-items:stretch; gap:0; margin:1.5rem 0;
+      position:relative;
+    }
+    .pipeline-step {
+      flex:1; text-align:center; padding:1rem .5rem;
+      background:var(--bg-card); border:1px solid var(--border);
+      position:relative;
+    }
+    .pipeline-step:first-child { border-radius:var(--radius) 0 0 var(--radius); }
+    .pipeline-step:last-child { border-radius:0 var(--radius) var(--radius) 0; }
+    .pipeline-step .step-num {
+      font-size:1.4rem; font-weight:700;
+      font-family:'JetBrains Mono',monospace;
+      margin-bottom:4px;
+    }
+    .pipeline-step .step-name {
+      font-size:.75rem; font-weight:600; margin-bottom:4px;
+    }
+    .pipeline-step .step-agent {
+      font-size:.65rem; color:var(--text-muted);
+    }
+    .pipeline-step .step-gain {
+      font-size:.65rem; font-weight:600; margin-top:6px;
+      padding:2px 8px; border-radius:4px; display:inline-block;
+    }
+    .pipeline-arrow {
+      display:flex; align-items:center; font-size:1.2rem;
+      color:var(--text-dim); padding:0 .1rem;
+    }
+
+    /* FORM */
+    .form-group { margin-bottom:1rem; }
+    .form-group label {
+      display:block; font-size:.8rem; font-weight:600;
+      color:var(--text-muted); margin-bottom:4px;
+    }
+    .form-group select, .form-group input, .form-group textarea {
+      width:100%; padding:10px 14px;
+      background: rgba(15,23,42,.8); border:1px solid var(--border);
+      border-radius:var(--radius-sm); color:var(--text);
+      font-family:inherit; font-size:.85rem;
+      transition: border-color .2s;
+    }
+    .form-group select:focus, .form-group input:focus, .form-group textarea:focus {
+      outline:none; border-color:var(--cyan);
+    }
+    .form-group textarea { resize:vertical; min-height:80px; }
+
+    /* BUTTONS */
+    .btn {
+      display:inline-flex; align-items:center; gap:6px;
+      padding:10px 20px; border-radius:var(--radius-sm);
+      font-size:.85rem; font-weight:600; cursor:pointer;
+      border:none; transition:all .2s; font-family:inherit;
+    }
+    .btn-primary {
+      background:var(--cyan); color:var(--bg);
+    }
+    .btn-primary:hover { opacity:.9; transform:translateY(-1px); }
+    .btn-secondary {
+      background:transparent; border:1px solid var(--border);
+      color:var(--text);
+    }
+    .btn-secondary:hover { border-color:var(--text-muted); }
+    .btn-danger {
+      background:rgba(251,113,133,.15); border:1px solid rgba(251,113,133,.3);
+      color:var(--rose);
+    }
+    .btn-success {
+      background:rgba(52,211,153,.15); border:1px solid rgba(52,211,153,.3);
+      color:var(--emerald);
+    }
+    .btn-amber {
+      background:rgba(251,191,36,.15); border:1px solid rgba(251,191,36,.3);
+      color:var(--amber);
+    }
+
+    /* LIVE FEED */
+    .feed {
+      max-height:400px; overflow-y:auto;
+      font-family:'JetBrains Mono',monospace;
+      font-size:.7rem; line-height:1.8;
+    }
+    .feed::-webkit-scrollbar { width:4px; }
+    .feed::-webkit-scrollbar-thumb { background:var(--border); border-radius:4px; }
+    .feed-entry {
+      display:flex; gap:8px; padding:3px 0;
+      border-bottom:1px solid rgba(30,41,59,.3);
+    }
+    .feed-time { color:var(--text-dim); white-space:nowrap; }
+    .feed-tag {
+      padding:1px 6px; border-radius:3px; font-weight:600;
+      font-size:.6rem; white-space:nowrap;
+    }
+    .feed-msg { color:var(--text-muted); flex:1; }
+
+    /* ARBITRATION */
+    .arb-positions {
+      display:grid; grid-template-columns:1fr 1fr; gap:1rem;
+      margin:1rem 0;
+    }
+    .arb-pos {
+      background:rgba(15,23,42,.8); border:1px solid var(--border);
+      border-radius:var(--radius-sm); padding:1rem;
+      cursor:pointer; transition:all .2s;
+    }
+    .arb-pos:hover { border-color:var(--cyan); }
+    .arb-pos.selected { border-color:var(--emerald); background:rgba(52,211,153,.05); }
+    .arb-pos .pos-agent { font-weight:700; font-size:.85rem; margin-bottom:4px; }
+    .arb-pos .pos-rec { font-size:.8rem; color:var(--text-muted); }
+    .arb-pos .pos-conf {
+      font-family:'JetBrains Mono',monospace;
+      font-size:.75rem; margin-top:6px;
+    }
+
+    /* RULES TABLE */
+    .rules-table { width:100%; border-collapse:collapse; font-size:.75rem; }
+    .rules-table th {
+      text-align:left; padding:8px 10px; font-weight:600;
+      color:var(--text-muted); border-bottom:1px solid var(--border);
+      font-size:.7rem; text-transform:uppercase; letter-spacing:.05em;
+    }
+    .rules-table td {
+      padding:8px 10px; border-bottom:1px solid rgba(30,41,59,.3);
+    }
+    .severity-badge {
+      display:inline-block; padding:2px 8px; border-radius:4px;
+      font-size:.65rem; font-weight:600;
+    }
+
+    /* SECTION HEADERS */
+    .section-title {
+      font-size:.85rem; font-weight:700; margin-bottom:1rem;
+      display:flex; align-items:center; gap:8px;
+    }
+    .section-title .line { flex:1; height:1px; background:var(--border); }
+
+    /* FOOTER */
+    footer {
+      text-align:center; padding:2rem; color:var(--text-dim);
+      font-size:.75rem; border-top:1px solid var(--border);
+      margin-top:2rem;
+    }
+
+    /* RESPONSIVE */
+    @media(max-width:900px) {
+      .grid-2,.stats { grid-template-columns:1fr 1fr; }
+      .grid-3 { grid-template-columns:1fr; }
+      .pipeline { flex-direction:column; }
+      .pipeline-step { border-radius:var(--radius-sm)!important; }
+      .pipeline-arrow { justify-content:center; transform:rotate(90deg); padding:.3rem 0; }
+      .hero h1 { font-size:1.8rem; }
+    }
+    @media(max-width:600px) {
+      .stats { grid-template-columns:1fr; }
+      .nav-links { display:none; }
+    }
+
+    /* TOAST */
+    .toast {
+      position:fixed; bottom:2rem; right:2rem; z-index:9999;
+      padding:12px 20px; border-radius:var(--radius-sm);
+      font-size:.85rem; font-weight:500;
+      transform:translateY(100px); opacity:0;
+      transition:all .3s;
+    }
+    .toast.show { transform:translateY(0); opacity:1; }
+    .toast.success { background:rgba(52,211,153,.15); border:1px solid var(--emerald); color:var(--emerald); }
+    .toast.error { background:rgba(251,113,133,.15); border:1px solid var(--rose); color:var(--rose); }
+    .toast.info { background:rgba(34,211,238,.15); border:1px solid var(--cyan); color:var(--cyan); }
+
+    /* LOGIN */
+    #login-overlay {
+      position:fixed; top:0; left:0; right:0; bottom:0; z-index:9999;
+      background:var(--bg);
+      display:flex; align-items:center; justify-content:center;
+      transition: opacity .4s;
+    }
+    #login-overlay.hidden { opacity:0; pointer-events:none; }
+    .login-card {
+      width:440px; max-width:92vw;
+      background:var(--bg-card); border:1px solid var(--border);
+      border-radius:var(--radius); padding:2.5rem;
+      text-align:center;
+    }
+    .login-card .login-logo {
+      width:52px; height:52px; border-radius:14px;
+      background:linear-gradient(135deg, var(--cyan), var(--violet));
+      display:flex; align-items:center; justify-content:center;
+      font-size:1.4rem; font-weight:800; color:var(--bg);
+      margin:0 auto 1.2rem;
+    }
+    .login-card h2 { font-size:1.3rem; font-weight:700; margin-bottom:.3rem; }
+    .login-card .login-sub { font-size:.85rem; color:var(--text-muted); margin-bottom:2rem; }
+    .login-card .lfg { text-align:left; margin-bottom:1.2rem; }
+    .login-card .lfg label { font-size:.8rem; font-weight:600; color:var(--text-muted); display:block; margin-bottom:4px; }
+    .login-card .lfg input {
+      width:100%; padding:12px 14px;
+      background:rgba(15,23,42,.8); border:1px solid var(--border);
+      border-radius:var(--radius-sm); color:var(--text);
+      font-family:inherit; font-size:.9rem; transition: border-color .2s;
+    }
+    .login-card .lfg input:focus { outline:none; border-color:var(--cyan); }
+    .login-card .btn-login {
+      width:100%; padding:12px; margin-top:.5rem;
+      background:var(--cyan); color:var(--bg);
+      font-size:.9rem; font-weight:700;
+      border:none; border-radius:var(--radius-sm); cursor:pointer; transition:all .2s;
+    }
+    .login-card .btn-login:hover { opacity:.9; }
+    .login-error { color:var(--rose); font-size:.8rem; margin-top:.8rem; display:none; }
+    .login-demo {
+      margin-top:1.5rem; padding-top:1.2rem;
+      border-top:1px solid var(--border);
+      font-size:.72rem; color:var(--text-dim);
+      text-align:left;
+    }
+    .login-demo code {
+      background:rgba(15,23,42,.8); padding:1px 5px;
+      border-radius:3px; color:var(--text-muted); font-size:.65rem;
+    }
+    .demo-account {
+      padding:3px 0; cursor:pointer; transition:color .2s;
+    }
+    .demo-account:hover { color:var(--text); }
+    .user-badge { display:flex; align-items:center; gap:8px; font-size:.8rem; color:var(--text-muted); }
+    .user-avatar {
+      width:28px; height:28px; border-radius:50%;
+      display:flex; align-items:center; justify-content:center;
+      font-weight:700; font-size:.7rem; color:var(--bg);
+    }
+    .user-logout {
+      cursor:pointer; color:var(--rose); font-size:.7rem;
+      margin-left:4px; border:none; background:none; font-family:inherit;
+    }
+    .user-logout:hover { text-decoration:underline; }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN OVERLAY -->
+<div id="login-overlay">
+  <div class="login-card">
+    <div class="login-logo">CL</div>
+    <h2>Cortex Leman</h2>
+    <p class="login-sub">Infrastructure de confiance v5 — Connexion sécurisée</p>
+    <form onsubmit="return handleLogin(event)">
+      <div class="lfg">
+        <label>Email</label>
+        <input type="text" id="login-email" placeholder="email@cabinet.com" autocomplete="username">
+      </div>
+      <div class="lfg">
+        <label>Mot de passe</label>
+        <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <button type="submit" class="btn-login">Connexion</button>
+      <div class="login-error" id="login-error">❌ Identifiants incorrects</div>
+      <div id="login-debug" style="display:none;margin-top:12px;padding:10px;background:rgba(15,23,42,.8);border:1px solid var(--amber);border-radius:6px;text-align:left;font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--amber)"></div>
+    </form>
+    <div class="login-demo">
+      <strong>Comptes démo :</strong><br><br>
+      <div class="demo-account" onclick="fillDemo('admin@cortex-leman.com','admin')">🛡️ <strong>Admin</strong> &nbsp;<code>admin@cortex-leman.com</code> / <code>admin</code></div>
+      <div class="demo-account" onclick="fillDemo('expert@dupont-comptable.fr','comptable')">📊 <strong>Comptable</strong> &nbsp;<code>expert@dupont-comptable.fr</code> / <code>comptable</code></div>
+      <div class="demo-account" onclick="fillDemo('avocat@martin-avocat.ch','avocat')">⚖️ <strong>Avocat</strong> &nbsp;<code>avocat@martin-avocat.ch</code> / <code>avocat</code></div>
+      <div class="demo-account" onclick="fillDemo('medecin@hopital-geneve.ch','sante')">🏥 <strong>Santé</strong> &nbsp;<code>medecin@hopital-geneve.ch</code> / <code>sante</code></div>
+      <div class="demo-account" onclick="fillDemo('analyste@ubank.ch','banque')">🏦 <strong>Banque</strong> &nbsp;<code>analyste@ubank.ch</code> / <code>banque</code></div>
+      <div class="demo-account" onclick="fillDemo('cto@startup-paris.fr','startup')">🚀 <strong>Startup</strong> &nbsp;<code>cto@startup-paris.fr</code> / <code>startup</code></div>
+      <div class="demo-account" onclick="fillDemo('drh@groupe-rh.fr','rh')">👥 <strong>RH</strong> &nbsp;<code>drh@groupe-rh.fr</code> / <code>rh</code></div>
+    </div>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <div class="nav-brand">
+      <div class="dot"></div>
+      Cortex Leman v5
+    </div>
+    <div class="nav-links">
+      <a href="#dashboard" class="active" onclick="showSection('dashboard')">Dashboard</a>
+      <a href="#pipeline" onclick="showSection('pipeline')">Pipeline</a>
+      <a href="#mediator" onclick="showSection('mediator')">Médiateur</a>
+      <a href="#arbitrage" onclick="showSection('arbitrage')">Arbitrage</a>
+      <a href="#journal" onclick="showSection('journal')">Journal</a>
+      <a href="#settings" onclick="showSection('settings')">Settings</a>
+    </div>
+    <div class="user-badge" id="user-badge" style="display:none">
+      <div class="user-avatar" id="user-avatar" style="background:var(--cyan)">A</div>
+      <span id="user-name">Admin</span>
+      <button class="user-logout" onclick="handleLogout()">Déconnexion</button>
+    </div>
+    <div class="nav-status">
+      <div class="live-dot"></div>
+      <span id="entry-count">0</span> evt
+    </div>
+  </div>
+</nav>
+
+<div class="main">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-badge">⬡ GRAPHE DE CONFIANCE v5.0</div>
+    <h1>Infrastructure de confiance<br>pour <span>professions régulées</span></h1>
+    <p>Orchestration multi-agents conforme RGPD-IA. L'humain reste décideur, chaque action est tracée, le secret professionnel est garanti.</p>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats">
+    <div class="stat-card">
+      <div class="value" style="color:var(--cyan)" id="stat-intentions">0</div>
+      <div class="label">Intentions traitées</div>
+    </div>
+    <div class="stat-card">
+      <div class="value" style="color:var(--emerald)" id="stat-agents">5</div>
+      <div class="label">Agents actifs</div>
+    </div>
+    <div class="stat-card">
+      <div class="value" style="color:var(--amber)" id="stat-conflicts">0</div>
+      <div class="label">Conflits détectés</div>
+    </div>
+    <div class="stat-card">
+      <div class="value" style="color:var(--violet)" id="stat-arbitrations">0</div>
+      <div class="label">Arbitrages résolus</div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="section-dashboard">
+
+    <!-- NOUVELLE INTENTION -->
+    <div class="section-title">
+      <span style="color:var(--cyan)">▶</span> Soumettre une intention
+      <div class="line"></div>
+    </div>
+    <div class="card" style="margin-bottom:2rem">
+      <div style="display:grid;grid-template-columns:1fr 2fr;gap:1rem">
+        <div>
+          <div class="form-group">
+            <label>Verticale</label>
+            <select id="vertical">
+              <option value="comptable">📊 Comptable</option>
+              <option value="avocat">⚖️ Avocat</option>
+              <option value="sante">🏥 Santé</option>
+              <option value="banque">🏦 Banque</option>
+              <option value="startup">🚀 Startup</option>
+              <option value="rh">👥 RH</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Client ID</label>
+            <input type="text" id="client-id" value="cabinet-demo" placeholder="cabinet-dupont">
+          </div>
+          <button class="btn btn-primary" onclick="submitIntention()" id="btn-submit">
+            ⚡ Envoyer
+          </button>
+        </div>
+        <div>
+          <div class="form-group">
+            <label>Décrivez votre demande</label>
+            <textarea id="query" placeholder="Ex: Analyse le bilan fiscal 2025 du cabinet et recommande les optimisations possibles">Analyse le bilan fiscal 2025 et recommande les optimisations conformes RGPD</textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LIVE FEED + STATUS -->
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-dot" style="background:var(--emerald)"></div>
+          <h3>Flux temps réel <small>Journal d'audit</small></h3>
+        </div>
+        <div class="feed" id="feed"></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-dot" style="background:var(--violet)"></div>
+          <h3>Statut des agents <small>Circuit breakers</small></h3>
+        </div>
+        <div id="agents-status">
+          <div style="display:grid;gap:.6rem" id="agents-list"></div>
+        </div>
+        <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border)">
+          <div class="card-header">
+            <div class="card-dot" style="background:var(--amber)"></div>
+            <h3>Conflits actifs <small>Médiateur</small></h3>
+          </div>
+          <div id="conflicts-list" style="font-size:.8rem;color:var(--text-muted)">
+            Aucun conflit actif
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PIPELINE -->
+  <div id="section-pipeline" style="display:none">
+    <div class="section-title">
+      <span style="color:var(--emerald)">▶</span> Pipeline 5 étapes B2B
+      <div class="line"></div>
+    </div>
+    <div class="card" style="margin-bottom:2rem">
+      <div class="pipeline">
+        <div class="pipeline-step" style="border-left:2px solid var(--cyan)">
+          <div class="step-num" style="color:var(--cyan)">1</div>
+          <div class="step-name" style="color:var(--cyan)">INTENTION</div>
+          <div class="step-agent">Orchestrateur</div>
+          <div class="step-gain" style="background:rgba(34,211,238,.1);color:var(--cyan)">Route & comprend</div>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-step" style="border-left:2px solid var(--emerald)">
+          <div class="step-num" style="color:var(--emerald)">2</div>
+          <div class="step-name" style="color:var(--emerald)">RECHERCHE</div>
+          <div class="step-agent">Agent Data</div>
+          <div class="step-gain" style="background:rgba(52,211,153,.1);color:var(--emerald)">-50% temps</div>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-step" style="border-left:2px solid var(--amber)">
+          <div class="step-num" style="color:var(--amber)">3</div>
+          <div class="step-name" style="color:var(--amber)">ANALYSE</div>
+          <div class="step-agent">Agent Raisonnement</div>
+          <div class="step-gain" style="background:rgba(251,191,36,.1);color:var(--amber)">+30% précision</div>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-step" style="border-left:2px solid var(--violet)">
+          <div class="step-num" style="color:var(--violet)">4</div>
+          <div class="step-name" style="color:var(--violet)">EXÉCUTION</div>
+          <div class="step-agent">Agent Action (Saga)</div>
+          <div class="step-gain" style="background:rgba(167,139,250,.1);color:var(--violet)">60% auto</div>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-step" style="border-left:2px solid var(--rose)">
+          <div class="step-num" style="color:var(--rose)">5</div>
+          <div class="step-name" style="color:var(--rose)">VALIDATION</div>
+          <div class="step-agent">Superviseur</div>
+          <div class="step-gain" style="background:rgba(251,113,133,.1);color:var(--rose)">-80% erreurs</div>
+        </div>
+      </div>
+      <p style="text-align:center;color:var(--text-dim);font-size:.75rem;margin-top:1rem">
+        ↻ Boucle feedback continue — Amélioration itérative — Médiateur transverse à chaque étape
+      </p>
+    </div>
+
+    <div class="grid-3">
+      <div class="card">
+        <div class="card-header"><div class="card-dot" style="background:var(--cyan)"></div><h3>Bus NATS</h3></div>
+        <ul style="list-style:none;color:var(--text-muted);font-size:.8rem">
+          <li>✓ JetStream activé</li>
+          <li>✓ Topics par client</li>
+          <li>✓ Append-only ledger</li>
+          <li>✓ Pair-à-pair asynchrone</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-dot" style="background:var(--amber)"></div><h3>Saga Pattern</h3></div>
+        <ul style="list-style:none;color:var(--text-muted);font-size:.8rem">
+          <li>✓ Compensation automatique</li>
+          <li>✓ Rollback par étapes</li>
+          <li>✓ Journalisation chaque step</li>
+          <li>✓ Circuit breakers intégrés</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-dot" style="background:var(--rose)"></div><h3>Edge Hybride</h3></div>
+        <ul style="list-style:none;color:var(--text-muted);font-size:.8rem">
+          <li>✓ K3s appliance (3 nœuds)</li>
+          <li>✓ Ollama LLM local</li>
+          <li>✓ Zéro appel externe</li>
+          <li>✓ Art. 321 CP / Art. 47 LB</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- MEDIATEUR -->
+  <div id="section-mediator" style="display:none">
+    <div class="section-title">
+      <span style="color:var(--rose)">▶</span> Agent Médiateur — Règles métier
+      <div class="line"></div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-dot" style="background:var(--rose)"></div>
+        <h3>Règles de conformité <small id="rules-vertical-label">comptable</small></h3>
+      </div>
+      <div style="margin-bottom:1rem">
+        <select id="rules-vertical" onchange="loadRules()" style="padding:6px 12px;background:rgba(15,23,42,.8);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.8rem">
+          <option value="comptable">📊 Comptable</option>
+          <option value="avocat">⚖️ Avocat</option>
+          <option value="sante">🏥 Santé</option>
+          <option value="banque">🏦 Banque</option>
+          <option value="startup">🚀 Startup</option>
+          <option value="rh">👥 RH</option>
+        </select>
+      </div>
+      <table class="rules-table" id="rules-table">
+        <thead>
+          <tr><th>ID</th><th>Règle</th><th>Sévérité</th><th>Action</th><th>Référence</th></tr>
+        </thead>
+        <tbody id="rules-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ARBITRAGE -->
+  <div id="section-arbitrage" style="display:none">
+    <div class="section-title">
+      <span style="color:var(--amber)">▶</span> Arbitrage humain
+      <div class="line"></div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-dot" style="background:var(--amber)"></div>
+        <h3>Arbitrages en attente <small id="arb-pending-count">0</small></h3>
+      </div>
+      <div id="arb-list">
+        <p style="color:var(--text-dim);font-size:.85rem;text-align:center;padding:2rem">
+          Aucun arbitrage en attente. Soumettez une intention pour voir le flux.
+        </p>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:1.5rem">
+      <div class="card-header">
+        <div class="card-dot" style="background:var(--emerald)"></div>
+        <h3>Précédents d'arbitrage <small>Historique des décisions</small></h3>
+      </div>
+      <div id="precedents-list" style="font-size:.8rem;color:var(--text-muted)">
+        Chargement...
+      </div>
+    </div>
+  </div>
+
+  <!-- JOURNAL -->
+  <div id="section-journal" style="display:none">
+    <div class="section-title">
+      <span style="color:var(--violet)">▶</span> Journal d'audit immuable
+      <div class="line"></div>
+    </div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+        <div class="card-header" style="margin-bottom:0">
+          <div class="card-dot" style="background:var(--emerald)"></div>
+          <h3>Intégrité <small id="journal-valid">vérification...</small></h3>
+        </div>
+        <button class="btn btn-secondary" onclick="verifyJournal()">🔍 Vérifier intégrité</button>
+      </div>
+      <div class="feed" id="journal-feed" style="max-height:500px"></div>
+    </div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div id="section-settings" style="display:none">
+    <div class="section-title">
+      <span style="color:var(--orange)">▶</span> Configuration MVP
+      <div class="line"></div>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-header"><div class="card-dot" style="background:var(--cyan)"></div><h3>Mode de déploiement</h3></div>
+        <div class="form-group">
+          <label>Mode</label>
+          <select id="setting-mode">
+            <option value="standard">Standard (Cloud)</option>
+            <option value="haute_protection">Haute Protection (Edge/K3s)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>LLM Provider</label>
+          <select id="setting-llm">
+            <option value="openrouter">OpenRouter (externe)</option>
+            <option value="ollama">Ollama (local)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Data Residency</label>
+          <select id="setting-residency">
+            <option value="EU">EU (RGPD)</option>
+            <option value="CH">Suisse (LFPD + secrets)</option>
+          </select>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-dot" style="background:var(--emerald)"></div><h3>API Backend</h3></div>
+        <div class="form-group">
+          <label>API URL</label>
+          <input type="text" id="api-url" value="http://localhost:8001">
+        </div>
+        <button class="btn btn-primary" onclick="testConnection()">🔌 Tester connexion</button>
+        <span id="api-status" style="margin-left:10px;font-size:.8rem"></span>
+        <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border)">
+          <button class="btn btn-secondary" onclick="loadComplianceReport()">📊 Rapport compliance</button>
+          <button class="btn btn-secondary" onclick="loadVaultStats()" style="margin-left:8px">🗄️ Vault stats</button>
+        </div>
+        <div id="settings-info" style="margin-top:1rem;font-size:.8rem;color:var(--text-muted)"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<footer>
+  Cortex Leman v5 — Graphe de Confiance — Conforme RGPD-IA pour PME FR-CH — 2026
+</footer>
+
+<script>
+// ============================================================
+// AUTH
+// ============================================================
+const ACCOUNTS = {
+  'admin@cortex-leman.com':    { password:'admin',     role:'admin',      name:'Admin Cortex',      vertical:'all',      color:'var(--violet)' },
+  'expert@dupont-comptable.fr':{ password:'comptable', role:'expert',     name:'Marie Dupont',      vertical:'comptable',color:'var(--cyan)' },
+  'avocat@martin-avocat.ch':   { password:'avocat',    role:'avocat',     name:'Me Jacques Martin', vertical:'avocat',   color:'var(--amber)' },
+  'medecin@hopital-geneve.ch': { password:'sante',     role:'medecin',    name:'Dr Sophie Favre',   vertical:'sante',    color:'var(--emerald)' },
+  'analyste@ubank.ch':         { password:'banque',    role:'analyste',   name:'Thomas Aubert',     vertical:'banque',   color:'var(--orange)' },
+  'cto@startup-paris.fr':      { password:'startup',   role:'cto',        name:'Léa Bernard',       vertical:'startup',  color:'var(--cyan)' },
+  'drh@groupe-rh.fr':          { password:'rh',        role:'drh',        name:'Pierre Morel',      vertical:'rh',       color:'var(--violet)' },
+};
+
+var currentUser = null;
+
+function fillDemo(email, password) {
+  document.getElementById('login-email').value = email;
+  document.getElementById('login-password').value = password;
+}
+
+function handleLogin(e) {
+  if (e) e.preventDefault();
+  var dbg = document.getElementById('login-debug');
+  function log(msg) {
+    console.log('[LOGIN] ' + msg);
+    if (dbg) { dbg.style.display = 'block'; dbg.innerHTML += msg + '<br>'; }
+  }
+  try {
+    log('handleLogin called');
+    var emailEl = document.getElementById('login-email');
+    var passEl = document.getElementById('login-password');
+    if (!emailEl) { log('ERROR: login-email element NOT FOUND'); return false; }
+    if (!passEl) { log('ERROR: login-password element NOT FOUND'); return false; }
+    log('DOM elements found OK');
+
+    var email = emailEl.value.trim().toLowerCase();
+    var password = passEl.value;
+    log('email="' + email + '" password="' + password + '"');
+    log('ACCOUNTS has ' + Object.keys(ACCOUNTS).length + ' entries');
+    log('ACCOUNTS["admin@cortex-leman.com"] = ' + (ACCOUNTS['admin@cortex-leman.com'] ? 'EXISTS' : 'MISSING'));
+
+    var account = ACCOUNTS[email];
+    log('account lookup: ' + (account ? account.name : 'NULL'));
+
+    if (account && account.password === password) {
+      currentUser = { email: email, password: account.password, role: account.role, name: account.name, vertical: account.vertical, color: account.color };
+      log('LOGIN SUCCESS: ' + currentUser.name);
+      document.getElementById('login-overlay').classList.add('hidden');
+      document.getElementById('user-badge').style.display = 'flex';
+      document.getElementById('user-avatar').textContent = account.name.charAt(0);
+      document.getElementById('user-avatar').style.background = account.color;
+      document.getElementById('user-name').textContent = account.name;
+
+      if (account.vertical !== 'all') {
+        var vSel = document.getElementById('vertical');
+        var cId = document.getElementById('client-id');
+        if (vSel) vSel.value = account.vertical;
+        if (cId) cId.value = email.split('@')[1].split('.')[0];
+      }
+      try { loadRules(); } catch(ex) { log('loadRules: ' + ex.message); }
+      try { addFeedEntry('AUTH', 'var(--emerald)', account.name + ' connecte'); } catch(ex) { log('feed: ' + ex.message); }
+      try { showToast('Bienvenue, ' + account.name, 'success'); } catch(ex) { log('toast: ' + ex.message); }
+    } else {
+      log('FAIL: bad credentials for "' + email + '"');
+      var errEl = document.getElementById('login-error');
+      errEl.style.display = 'block';
+      setTimeout(function() { errEl.style.display = 'none'; }, 3000);
+    }
+  } catch(ex) {
+    log('EXCEPTION: ' + ex.message);
+  }
+  return false;
+}
+
+function handleLogout() {
+  currentUser = null;
+  document.getElementById('login-overlay').classList.remove('hidden');
+  document.getElementById('user-badge').style.display = 'none';
+  document.getElementById('login-password').value = '';
+  addFeedEntry('AUTH', 'var(--rose)', 'Déconnexion');
+}
+
+// ============================================================
+// STATE
+// ============================================================
+const state = {
+  apiUrl: 'http://localhost:8001',
+  feedEntries: [],
+  intentions: 0,
+  conflicts: 0,
+  arbitrations: 0,
+  pendingArbitrations: [],
+  journalEntries: [],
+  rules: {},
+  connected: false,
+};
+
+const AGENTS = [
+  { name:'orchestrator', color:'var(--cyan)', label:'Orchestrateur' },
+  { name:'data', color:'var(--emerald)', label:'Agent Data' },
+  { name:'reasoning', color:'var(--amber)', label:'Agent Raisonnement' },
+  { name:'action', color:'var(--violet)', label:'Agent Action' },
+  { name:'supervisor', color:'var(--rose)', label:'Superviseur' },
+  { name:'mediator', color:'var(--orange)', label:'Médiateur' },
+];
+
+const RULES_DATA = {
+  comptable: [
+    { id:'comptable-001', name:'Aucune décision fiscale auto', severity:'critical', action:'freeze', ref:'Art. 22 RGPD' },
+    { id:'comptable-002', name:'Données client en EU', severity:'high', action:'block', ref:'Data Residency' },
+    { id:'comptable-003', name:'Montant > 10K€ validation', severity:'high', action:'arbitrate', ref:'Anti-blanchiment' },
+    { id:'comptable-004', name:'Anti-biais vérification', severity:'medium', action:'warn', ref:'RGPD Art. 22' },
+    { id:'comptable-005', name:'Audit trail obligatoire', severity:'critical', action:'require_audit', ref:'Norme comptable' },
+  ],
+  avocat: [
+    { id:'avocat-001', name:'Secret professionnel absolu', severity:'critical', action:'block', ref:'Art. 321 CP' },
+    { id:'avocat-002', name:'LLM local obligatoire', severity:'critical', action:'block', ref:'Secret professionnel' },
+    { id:'avocat-003', name:'Validation conclusions', severity:'high', action:'arbitrate', ref:'Déontologie' },
+    { id:'avocat-004', name:'Data Residency CH stricte', severity:'critical', action:'block', ref:'Art. 321 CP' },
+  ],
+  sante: [
+    { id:'sante-001', name:'Hébergement certifié HDS', severity:'critical', action:'block', ref:'LPM/HDS' },
+    { id:'sante-002', name:'Aucun diagnostic auto', severity:'critical', action:'block', ref:'AI Act High Risk' },
+    { id:'sante-003', name:'Consentement patient', severity:'high', action:'arbitrate', ref:'RGPD Art. 9' },
+  ],
+  banque: [
+    { id:'banque-001', name:'Secret bancaire absolu', severity:'critical', action:'block', ref:'Art. 47 LB' },
+    { id:'banque-002', name:'Infrastructure CH', severity:'critical', action:'block', ref:'FINMA' },
+    { id:'banque-003', name:'KYC > 15K CHF', severity:'high', action:'arbitrate', ref:'Anti-blanchiment' },
+  ],
+  startup: [
+    { id:'startup-001', name:'Consentement cookies', severity:'medium', action:'warn', ref:'RGPD' },
+    { id:'startup-002', name:'DPIA si profiling', severity:'high', action:'arbitrate', ref:'RGPD Art. 35' },
+  ],
+  rh: [
+    { id:'rh-001', name:'Pas de décision RH auto', severity:'critical', action:'freeze', ref:'AI Act + RGPD' },
+    { id:'rh-002', name:'Anti-discrimination embauche', severity:'critical', action:'freeze', ref:'Loi anti-discrim.' },
+    { id:'rh-003', name:'Données sensibles consentement', severity:'high', action:'block', ref:'RGPD Art. 9' },
+  ],
+};
+
+// ============================================================
+// HELPERS
+// ============================================================
+function showToast(msg, type='info') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + type + ' show';
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function timeNow() {
+  return new Date().toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+}
+
+function addFeedEntry(tag, tagColor, msg) {
+  const feed = document.getElementById('feed');
+  const entry = document.createElement('div');
+  entry.className = 'feed-entry';
+  entry.innerHTML = `
+    <span class="feed-time">${timeNow()}</span>
+    <span class="feed-tag" style="background:${tagColor}20;color:${tagColor}">${tag}</span>
+    <span class="feed-msg">${msg}</span>
+  `;
+  feed.insertBefore(entry, feed.firstChild);
+  state.feedEntries.unshift({ time: timeNow(), tag, msg });
+  if (feed.children.length > 200) feed.removeChild(feed.lastChild);
+}
+
+async function api(method, path, body=null) {
+  const opts = {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+  };
+  if (body) opts.body = JSON.stringify(body);
+  try {
+    const r = await fetch(state.apiUrl + path, opts);
+    return await r.json();
+  } catch(e) {
+    return null;
+  }
+}
+
+function updateStats() {
+  document.getElementById('stat-intentions').textContent = state.intentions;
+  document.getElementById('stat-conflicts').textContent = state.conflicts;
+  document.getElementById('stat-arbitrations').textContent = state.arbitrations;
+  document.getElementById('entry-count').textContent = state.feedEntries.length;
+}
+
+function severityColor(s) {
+  return s === 'critical' ? 'var(--rose)' : s === 'high' ? 'var(--amber)' : 'var(--text-muted)';
+}
+
+function severityBg(s) {
+  return s === 'critical' ? 'rgba(251,113,133,.12)' : s === 'high' ? 'rgba(251,191,36,.12)' : 'rgba(148,163,184,.1)';
+}
+
+// ============================================================
+// SECTIONS
+// ============================================================
+function showSection(name) {
+  document.querySelectorAll('[id^="section-"]').forEach(el => el.style.display = 'none');
+  document.getElementById('section-' + name).style.display = 'block';
+  document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+  document.querySelector(`.nav-links a[href="#${name}"]`)?.classList.add('active');
+  if (name === 'journal') loadJournal();
+  if (name === 'arbitrage') loadArbitrations();
+}
+
+// ============================================================
+// AGENTS STATUS
+// ============================================================
+function renderAgents() {
+  const list = document.getElementById('agents-list');
+  list.innerHTML = AGENTS.map(a => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:rgba(15,23,42,.4);border-radius:6px;border-left:3px solid ${a.color}">
+      <span style="font-size:.8rem;font-weight:600;color:${a.color}">${a.label}</span>
+      <span style="font-size:.7rem;color:var(--emerald);font-family:'JetBrains Mono',monospace">● CLOSED</span>
+    </div>
+  `).join('');
+}
+
+// ============================================================
+// RULES
+// ============================================================
+function loadRules() {
+  const v = document.getElementById('rules-vertical').value;
+  document.getElementById('rules-vertical-label').textContent = v;
+  const rules = RULES_DATA[v] || [];
+  const tbody = document.getElementById('rules-tbody');
+  tbody.innerHTML = rules.map(r => `
+    <tr>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--text-dim)">${r.id}</td>
+      <td>${r.name}</td>
+      <td><span class="severity-badge" style="background:${severityBg(r.severity)};color:${severityColor(r.severity)}">${r.severity}</span></td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:.7rem">${r.action}</td>
+      <td style="font-size:.7rem;color:var(--text-dim)">${r.ref}</td>
+    </tr>
+  `).join('');
+}
+
+// ============================================================
+// SUBMIT INTENTION
+// ============================================================
+async function submitIntention() {
+  const btn = document.getElementById('btn-submit');
+  btn.disabled = true;
+  btn.textContent = '⏳ Traitement...';
+
+  const vertical = document.getElementById('vertical').value;
+  const clientId = document.getElementById('client-id').value;
+  const query = document.getElementById('query').value;
+
+  state.intentions++;
+  updateStats();
+
+  addFeedEntry('INTENTION', 'var(--cyan)', `Nouvelle intention: "${query.substring(0,50)}..." (${vertical})`);
+
+  // Simulate agent pipeline
+  await simulatePipeline(vertical, clientId, query);
+
+  btn.disabled = false;
+  btn.textContent = '⚡ Envoyer';
+  showToast('Intention traitée avec succès', 'success');
+}
+
+async function simulatePipeline(vertical, clientId, query) {
+  const steps = [
+    { agent:'orchestrator', color:'var(--cyan)', tag:'ROUTE', delay:400,
+      msg:`Routing → agents: data, reasoning, supervisor, mediator` },
+    { agent:'data', color:'var(--emerald)', tag:'DATA', delay:800,
+      msg:`3 sources trouvées (confiance: 0.85)` },
+    { agent:'mediator', color:'var(--orange)', tag:'CHECK', delay:300,
+      msg:`Règles évaluées: ${RULES_DATA[vertical]?.length || 0} → 0 déclenchées` },
+    { agent:'reasoning', color:'var(--amber)', tag:'REASONING', delay:600,
+      msg:`Analyse complète — confiance: 0.78` },
+  ];
+
+  // Check if any rules would be triggered
+  const rules = RULES_DATA[vertical] || [];
+  const hasCritical = rules.some(r => r.severity === 'critical' && r.action === 'freeze');
+
+  for (const step of steps) {
+    await new Promise(r => setTimeout(r, step.delay));
+    addFeedEntry(step.tag, step.color, step.msg);
+  }
+
+  // Detect conflict (simulate divergence)
+  const hasConflict = Math.random() > 0.5;
+  if (hasConflict) {
+    state.conflicts++;
+    await new Promise(r => setTimeout(r, 400));
+    addFeedEntry('CONFLIT', 'var(--rose)', `Divergence détectée: data vs reasoning — GEL de l'intention`);
+
+    // Create pending arbitration
+    const arbId = 'arb-' + Date.now().toString(36);
+    state.pendingArbitrations.push({
+      id: arbId,
+      intention_id: 'int-' + Date.now().toString(36),
+      vertical,
+      positions: {
+        data: { recommendation: 'data_collected', confidence: 0.85 },
+        reasoning: { recommendation: 'proceed', confidence: 0.78 },
+      },
+      reason: 'Divergence de recommandations entre agents',
+    });
+    renderArbitrations();
+    updateStats();
+  } else {
+    await new Promise(r => setTimeout(r, 400));
+    addFeedEntry('SUPERVISOR', 'var(--rose)', `Validation: ✅ approuvé (confiance: 0.9)`);
+  }
+}
+
+// ============================================================
+// ARBITRATION
+// ============================================================
+function renderArbitrations() {
+  const list = document.getElementById('arb-list');
+  document.getElementById('arb-pending-count').textContent = state.pendingArbitrations.length;
+
+  if (state.pendingArbitrations.length === 0) {
+    list.innerHTML = '<p style="color:var(--text-dim);font-size:.85rem;text-align:center;padding:2rem">Aucun arbitrage en attente.</p>';
+    return;
+  }
+
+  list.innerHTML = state.pendingArbitrations.map(arb => `
+    <div style="margin-bottom:1.5rem;padding:1rem;background:rgba(251,191,36,.03);border:1px solid rgba(251,191,36,.2);border-radius:var(--radius)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem">
+        <span style="font-weight:700;font-size:.85rem;color:var(--amber)">⚠️ ${arb.id}</span>
+        <span style="font-size:.7rem;color:var(--text-dim)">${arb.vertical}</span>
+      </div>
+      <p style="font-size:.8rem;color:var(--text-muted);margin-bottom:1rem">${arb.reason}</p>
+      <div class="arb-positions">
+        ${Object.entries(arb.positions).map(([agent, pos]) => `
+          <div class="arb-pos" id="arb-pos-${arb.id}-${agent}" onclick="selectPosition('${arb.id}','${agent}')">
+            <div class="pos-agent" style="color:${agent==='data'?'var(--emerald)':'var(--amber)'}">${agent.toUpperCase()}</div>
+            <div class="pos-rec">Recommandation: ${pos.recommendation}</div>
+            <div class="pos-conf">Confiance: ${(pos.confidence*100).toFixed(0)}%</div>
+          </div>
+        `).join('')}
+      </div>
+      <div class="form-group" style="margin-top:.8rem">
+        <label>Justification (obligatoire)</label>
+        <textarea id="arb-justify-${arb.id}" rows="2" placeholder="Motivation de votre décision..."></textarea>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:.8rem">
+        <button class="btn btn-success" onclick="resolveArbitration('${arb.id}','approve')">✅ Approuver</button>
+        <button class="btn btn-danger" onclick="resolveArbitration('${arb.id}','reject')">❌ Rejeter</button>
+        <button class="btn btn-amber" onclick="resolveArbitration('${arb.id}','modify')">✏️ Modifier</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+let selectedPositions = {};
+function selectPosition(arbId, agent) {
+  selectedPositions[arbId] = agent;
+  document.querySelectorAll(`[id^="arb-pos-${arbId}-"]`).forEach(el => el.classList.remove('selected'));
+  document.getElementById(`arb-pos-${arbId}-${agent}`).classList.add('selected');
+}
+
+async function resolveArbitration(arbId, decision) {
+  const justify = document.getElementById(`arb-justify-${arbId}`)?.value;
+  if (!justify) {
+    showToast('Justification obligatoire pour tout arbitrage', 'error');
+    return;
+  }
+
+  const arb = state.pendingArbitrations.find(a => a.id === arbId);
+  if (!arb) return;
+
+  // Try API
+  try {
+    const r = await api('POST', `/api/v1/arbitrations/${arbId}/decide`, {
+      arbiter_id: 'demo-user',
+      arbiter_name: 'Expert Demo',
+      decision,
+      justification: justify,
+      selected_position: selectedPositions[arbId] || 'data',
+    });
+  } catch(e) {}
+
+  state.pendingArbitrations = state.pendingArbitrations.filter(a => a.id !== arbId);
+  state.arbitrations++;
+  updateStats();
+  renderArbitrations();
+
+  addFeedEntry('ARBITRAGE', 'var(--amber)', `Décision: ${decision} par Expert Demo — "${justify.substring(0,50)}..."`);
+  showToast(`Arbitrage résolu: ${decision}`, 'success');
+}
+
+function loadArbitrations() {
+  renderArbitrations();
+  // Try loading from API
+  api('GET', '/api/v1/arbitrations').then(r => {
+    if (r?.arbitrations?.length) {
+      r.arbitrations.forEach(a => {
+        if (!state.pendingArbitrations.find(x => x.id === a.arbitration_id)) {
+          state.pendingArbitrations.push({
+            id: a.arbitration_id,
+            intention_id: a.intention_id,
+            vertical: a.vertical || 'unknown',
+            positions: a.positions || {},
+            reason: a.conflict_reason || '',
+          });
+        }
+      });
+      renderArbitrations();
+    }
+  });
+}
+
+// ============================================================
+// JOURNAL
+// ============================================================
+async function loadJournal() {
+  const r = await api('GET', '/api/v1/journal?limit=50');
+  if (r?.entries?.length) {
+    const feed = document.getElementById('journal-feed');
+    feed.innerHTML = r.entries.reverse().map(e => `
+      <div class="feed-entry">
+        <span class="feed-time">${e.timestamp?.substring(11,19) || ''}</span>
+        <span class="feed-tag" style="background:rgba(167,139,250,.15);color:var(--violet)">#${e.sequence}</span>
+        <span class="feed-tag" style="background:rgba(34,211,238,.1);color:var(--cyan)">${e.event_type}</span>
+        <span class="feed-msg">${e.agent_source} → ${e.intention_id?.substring(0,8) || ''}... ${e.client_id || ''}</span>
+      </div>
+    `).join('');
+  }
+}
+
+async function verifyJournal() {
+  const r = await api('GET', '/api/v1/journal/verify');
+  if (r) {
+    const el = document.getElementById('journal-valid');
+    if (r.valid) {
+      el.innerHTML = '✅ Chaîne valide';
+      el.style.color = 'var(--emerald)';
+      showToast('Journal: intégrité validée ✓', 'success');
+    } else {
+      el.innerHTML = `❌ ${r.errors?.length || 0} erreurs`;
+      el.style.color = 'var(--rose)';
+      showToast(`Journal: ${r.errors?.length || 0} erreurs d'intégrité`, 'error');
+    }
+  } else {
+    showToast('API non connectée — mode demo', 'info');
+    document.getElementById('journal-valid').innerHTML = '⚡ Mode demo';
+    document.getElementById('journal-valid').style.color = 'var(--amber)';
+  }
+}
+
+// ============================================================
+// SETTINGS / CONNECTION
+// ============================================================
+async function testConnection() {
+  state.apiUrl = document.getElementById('api-url').value;
+  const r = await api('GET', '/health');
+  const el = document.getElementById('api-status');
+  if (r?.status === 'healthy') {
+    el.innerHTML = '✅ Connecté';
+    el.style.color = 'var(--emerald)';
+    state.connected = true;
+    showToast('API connectée !', 'success');
+  } else {
+    el.innerHTML = '❌ Non connecté (mode demo)';
+    el.style.color = 'var(--rose)';
+    state.connected = false;
+    showToast('API non disponible — mode demo actif', 'info');
+  }
+}
+
+async function loadComplianceReport() {
+  const r = await api('GET', '/api/v1/compliance/report/daily');
+  if (r) {
+    document.getElementById('settings-info').innerHTML = `
+      <div style="padding:1rem;background:rgba(15,23,42,.4);border-radius:8px;border:1px solid var(--border)">
+        <strong>Rapport quotidien:</strong><br>
+        Événements: ${r.metrics?.total_events || 0} |
+        Conflits: ${r.metrics?.conflicts_detected || 0} |
+        Violations: ${r.metrics?.compliance_violations || 0}<br>
+        Statut: <span style="color:${r.compliance_status?.status==='compliant'?'var(--emerald)':'var(--amber)}'}">${r.compliance_status?.status || 'N/A'}</span>
+      </div>
+    `;
+  } else {
+    showToast('API non disponible', 'error');
+  }
+}
+
+async function loadVaultStats() {
+  const r = await api('GET', '/api/v1/vault/stats');
+  if (r) {
+    document.getElementById('settings-info').innerHTML = `
+      <div style="padding:1rem;background:rgba(15,23,42,.4);border-radius:8px;border:1px solid var(--border)">
+        <strong>Knowledge Vault:</strong><br>
+        Clients: ${r.clients} | Documents: ${r.documents} | Taille: ${r.total_size_mb} MB
+      </div>
+    `;
+  }
+}
+
+// ============================================================
+// INIT
+// ============================================================
+function init() {
+  renderAgents();
+  loadRules();
+  addFeedEntry('SYSTEM', 'var(--emerald)', 'Cortex Leman v5 démarré — 5 agents actifs');
+  addFeedEntry('BUS', 'var(--cyan)', 'NATS JetStream connecté (stream: CLEMAN_INTENTIONS)');
+  addFeedEntry('JOURNAL', 'var(--violet)', 'Journal WORM initialisé — hash-chainage SHA-256');
+  addFeedEntry('MEDIATEUR', 'var(--orange)', '6 verticales chargées (19 règles actives)');
+
+  // Auto-test connection
+  testConnection();
+}
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,105 @@
+# Cortex Leman v5 — Docker Compose (Mode Standard / Développement)
+# Pour le mode Haute Protection, utiliser edge/k3s-install.sh
+
+version: "3.8"
+
+services:
+  # === Infrastructure ===
+  nats:
+    image: nats:2.10-alpine
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+    command:
+      - "--jetstream"
+      - "--store_dir=/data"
+      - "-m"
+      - "8222"
+    volumes:
+      - nats-data:/data
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8222/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # === Base de données ===
+  postgres:
+    image: postgres:16-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: cortex_leman
+      POSTGRES_USER: cortex
+      POSTGRES_PASSWORD: cortex_dev_2024
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cortex -d cortex_leman"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # === API Gateway ===
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "${API_PORT:-8000}:8000"
+    env_file: .env
+    environment:
+      - NATS_URL=nats://nats:4222
+      - REDIS_HOST=redis
+      - DATABASE_URL=postgresql://cortex:cortex_dev_2024@postgres:5432/cortex_leman
+    depends_on:
+      nats:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    volumes:
+      - journal-data:/app/data/journal
+      - reports-data:/app/data/reports
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # === Ollama (Mode local) ===
+  # Décommenter pour mode Haute Protection local
+  # ollama:
+  #   image: ollama/ollama:latest
+  #   ports:
+  #     - "11434:11434"
+  #   volumes:
+  #     - ollama-data:/root/.ollama
+  #   deploy:
+  #     resources:
+  #       reservations:
+  #         devices:
+  #           - driver: nvidia
+  #             count: 1
+  #             capabilities: [gpu]
+
+volumes:
+  nats-data:
+  redis-data:
+  postgres-data:
+  journal-data:
+  reports-data:
+  # ollama-data:

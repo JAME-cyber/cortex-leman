@@ -1,0 +1,39 @@
+{
+  "vertical": "sante",
+  "description": "Règles de conformité pour établissements de santé FR-CH (LPM, HDS)",
+  "rules": [
+    {
+      "id": "sante-001",
+      "name": "Données de santé: hébergement certifié",
+      "severity": "critical",
+      "condition": {
+        "and": [
+          { "==": [{"var": "data_category"}, "donnees_sante"] },
+          { "!": [{"var": "hosting_certified_hds"}] }
+        ]
+      },
+      "action": "block",
+      "message": "LPM/HDS: Les données de santé doivent être hébergées chez un hébergeur certifié HDS."
+    },
+    {
+      "id": "sante-002",
+      "name": "Aucun diagnostic automatique",
+      "severity": "critical",
+      "condition": {
+        "==": [{"var": "action.type"}, "diagnostic"]
+      },
+      "action": "block",
+      "message": "AI Act High Risk + LPM: Aucun diagnostic médical automatisé. Le médecin reste décisionnaire."
+    },
+    {
+      "id": "sante-003",
+      "name": "Consentement patient requis",
+      "severity": "high",
+      "condition": {
+        "!": [{"var": "patient_consent"}]
+      },
+      "action": "arbitrate",
+      "message": "RGPD Art. 9 + LPM: Consentement explicite du patient requis pour tout traitement de données de santé."
+    }
+  ]
+}

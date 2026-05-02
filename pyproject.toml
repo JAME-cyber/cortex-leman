@@ -1,0 +1,10 @@
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+pythonpath = ["."]
+
+[project]
+name = "cortex-leman-v5"
+version = "5.0.0"
+description = "Cortex Leman v5 — Graphe de Confiance pour professions régulées FR-CH"
+requires-python = ">=3.11"

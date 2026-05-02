@@ -1,0 +1,45 @@
+{
+  "vertical": "banque",
+  "description": "Règles de conformité pour établissements bancaires CH (Art. 47 LB, FINMA)",
+  "rules": [
+    {
+      "id": "banque-001",
+      "name": "Secret bancaire absolu",
+      "severity": "critical",
+      "condition": {
+        "and": [
+          { "==": [{"var": "action.type"}, "data_transfer"] },
+          { "==": [{"var": "data_category"}, "compte_bancaire"] }
+        ]
+      },
+      "action": "block",
+      "message": "Art. 47 LB: Secret bancaire — Aucun transfert de données de compte hors infrastructure CH."
+    },
+    {
+      "id": "banque-002",
+      "name": "Infrastructure CH obligatoire",
+      "severity": "critical",
+      "condition": {
+        "and": [
+          { "!=": [{"var": "infrastructure.in_switzerland"}, null] },
+          { "!": [{"var": "infrastructure.in_switzerland"}] }
+        ]
+      },
+      "action": "block",
+      "message": "FINMA/Art. 47 LB: Toute infrastructure traitant des données bancaires doit être en Suisse."
+    },
+    {
+      "id": "banque-003",
+      "name": "Opération > 15K CHF: KYC renforcé",
+      "severity": "high",
+      "condition": {
+        "and": [
+          { "!=": [{"var": "payload.montant_chf"}, null] },
+          { ">=": [{"var": "payload.montant_chf"}, 15000] }
+        ]
+      },
+      "action": "arbitrate",
+      "message": "Anti-blanchiment: Opération >= 15K CHF. KYC renforcé et validation hiérarchique requise."
+    }
+  ]
+}

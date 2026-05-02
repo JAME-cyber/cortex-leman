@@ -1,0 +1,117 @@
+{
+  "vertical": "assurance",
+  "description": "Règles de conformité pour compagnies d'assurance suisses (ISA, FINMA, LPM, OFSP)",
+  "rules": [
+    {
+      "id": "assu-001",
+      "name": "Données de santé assurances — protection absolue",
+      "severity": "critical",
+      "condition": {
+        "and": [
+          { "==": [{"var": "data_category"}, "donnees_sante_assurance"] },
+          { "!=": [{"var": "infrastructure.in_switzerland"}, true] }
+        ]
+      },
+      "action": "block",
+      "message": "LPM/ISA: Les données de santé collectées dans le cadre d'assurances doivent être traitées sur infrastructure suisse. Art. 321bis CP."
+    },
+    {
+      "id": "assu-002",
+      "name": "LLM externe interdit pour données sinistres",
+      "severity": "critical",
+      "condition": {
+        "and": [
+          { "==": [{"var": "action.type"}, "llm_query"] },
+          { "==": [{"var": "llm_provider"}, "external"] },
+          { "in": [{"var": "data_category"}, [
+            {"var": "donnees_sinistre"},
+            {"var": "donnees_sante_assurance"},
+            {"var": "donnees_client_assurance"}
+          ] }
+        ]
+      },
+      "action": "block",
+      "message": "Secret professionnel assurance: Aucune donnée sinistre ou santé client ne peut être envoyée à un LLM externe (cloud). Ollama local obligatoire."
+    },
+    {
+      "id": "assu-003",
+      "name": "Infrastructure CH obligatoire",
+      "severity": "critical",
+      "condition": {
+        "and": [
+          { "!=": [{"var": "infrastructure.in_switzerland"}, null] },
+          { "!": [{"var": "infrastructure.in_switzerland"}] }
+        ]
+      },
+      "action": "block",
+      "message": "FINMA/ISA: Toute infrastructure traitant des données d'assurance suisses doit être en Suisse."
+    },
+    {
+      "id": "assu-004",
+      "name": "Sinistre > 50K CHF — validation hiérarchique",
+      "severity": "high",
+      "condition": {
+        "and": [
+          { "!=": [{"var": "payload.montant_sinistre_chf"}, null] },
+          { ">=": [{"var": "payload.montant_sinistre_chf"}, 50000] }
+        ]
+      },
+      "action": "arbitrate",
+      "message": "Sinistre ≥ 50K CHF: Validation hiérarchique requise. Expertise possible. Arbitrage du responsable sinistres."
+    },
+    {
+      "id": "assu-005",
+      "name": "Souscription > 100K CHF — conformité renforcée",
+      "severity": "high",
+      "condition": {
+        "and": [
+          { "!=": [{"var": "payload.capital_assure_chf"}, null] },
+          { ">=": [{"var": "payload.capital_assure_chf"}, 100000] }
+        ]
+      },
+      "action": "arbitrate",
+      "message": "Capital assuré ≥ 100K CHF: Conformité renforcée. Vérification LBA/KYC et validation hiérarchique obligatoires."
+    },
+    {
+      "id": "assu-006",
+      "name": "Anti-blanchiment — transaction suspecte",
+      "severity": "critical",
+      "condition": {
+        "and": [
+          { "==": [{"var": "action.type"}, "transaction_assurance"] },
+          { ">=": [{"var": "payload.montant_chf"}, 15000] },
+          { "==": [{"var": "payload.kyc_verified"}, false] }
+        ]
+      },
+      "action": "block",
+      "message": "LBA Art. 9: Transaction assurance ≥ 15K CHF sans KYC vérifié. Blocage immédiat. Signalement MROS si suspect."
+    },
+    {
+      "id": "assu-007",
+      "name": "Transfert données hors CH — blocage",
+      "severity": "critical",
+      "condition": {
+        "and": [
+          { "==": [{"var": "action.type"}, "data_transfer"] },
+          { "==": [{"var": "destination_jurisdiction"}, "non_CH"] },
+          { "in": [{"var": "data_category"}, [
+            {"var": "donnees_client_assurance"},
+            {"var": "donnees_sinistre"},
+            {"var": "donnees_sante_assurance"}
+          ] }
+        ]
+      },
+      "action": "block",
+      "message": "ISA/FINMA: Transfert de données client/sinistre/santé hors Suisse interdit sans accord explicite du client et conformité nLPD."
+    },
+    {
+      "id": "assu-008",
+      "name": "Résiliation — vérification préavis légal",
+      "severity": "medium",
+      "condition": {
+        "==": [{"var": "action.type"}, "resiliation_police"] },
+      "action": "arbitrate",
+      "message": "Résiliation police: Vérification automatique du respect des préavis légaux (ISA Art. 39-41) et des motifs admis. Validation expert requise."
+    }
+  ]
+}

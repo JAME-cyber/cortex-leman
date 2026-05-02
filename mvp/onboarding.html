@@ -1,0 +1,1366 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cortex Leman v5 — Onboarding</title>
+  <meta name="description" content="Configurez votre infrastructure de confiance IA en 5 minutes. Professions régulées FR-CH.">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #020617;
+      --bg-card: rgba(15, 23, 42, 0.6);
+      --bg-card-solid: #0f172a;
+      --border: #1e293b;
+      --border-hover: #334155;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --text-dim: #475569;
+      --cyan: #22d3ee;
+      --emerald: #34d399;
+      --amber: #fbbf24;
+      --violet: #a78bfa;
+      --rose: #fb7185;
+      --orange: #fb923c;
+      --blue: #60a5fa;
+      --lime: #a3e635;
+      --teal: #2dd4bf;
+      --pink: #f472b6;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+    code, .mono { font-family: 'JetBrains Mono', monospace; }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top:0; left:0; right:0; z-index:1000;
+      background: rgba(2,6,23,0.92);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+    }
+    .nav-inner {
+      max-width: 1400px; margin:0 auto;
+      display:flex; align-items:center; justify-content:space-between;
+      height: 56px;
+    }
+    .nav-brand {
+      display:flex; align-items:center; gap:10px;
+      font-weight:700; font-size:0.9375rem;
+    }
+    .pulse-dot {
+      width:10px; height:10px; border-radius:50%;
+      background:var(--cyan);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+    .nav-brand span { font-family: 'JetBrains Mono', monospace; letter-spacing: -0.025em; }
+    .badge {
+      display:inline-flex; align-items:center; gap:4px;
+      padding: 2px 8px; border-radius:9999px;
+      font-size:0.625rem; font-weight:600;
+    }
+    .badge-cyan { background:rgba(34,211,238,0.1); color:var(--cyan); border:1px solid rgba(34,211,238,0.2); }
+    .badge-emerald { background:rgba(52,211,153,0.1); color:var(--emerald); border:1px solid rgba(52,211,153,0.2); }
+    .badge-violet { background:rgba(167,139,250,0.1); color:var(--violet); border:1px solid rgba(167,139,250,0.2); }
+    .badge-amber { background:rgba(251,191,36,0.1); color:var(--amber); border:1px solid rgba(251,191,36,0.2); }
+    .badge-rose { background:rgba(251,113,133,0.1); color:var(--rose); border:1px solid rgba(251,113,133,0.2); }
+    .nav-actions { display:flex; gap:8px; align-items:center; }
+    .nav-actions a {
+      font-size:0.8125rem; color:var(--text-muted); text-decoration:none;
+      padding: 6px 12px; border-radius:6px; transition: all 0.2s;
+    }
+    .nav-actions a:hover { color:var(--text); background:rgba(255,255,255,0.03); }
+    .btn {
+      display:inline-flex; align-items:center; gap:6px;
+      padding: 8px 16px; border-radius:8px;
+      font-weight:600; font-size:0.8125rem;
+      transition: all 0.2s; cursor:pointer; border:none;
+      text-decoration:none;
+    }
+    .btn-primary { background:var(--cyan); color:var(--bg); }
+    .btn-primary:hover { background:#06b6d4; transform:translateY(-1px); box-shadow:0 8px 30px rgba(34,211,238,0.3); }
+    .btn-secondary { background:transparent; color:var(--text); border:1px solid var(--border); }
+    .btn-secondary:hover { border-color:var(--text-dim); background:rgba(255,255,255,0.03); }
+
+    /* ── GRID BG ── */
+    .grid-bg {
+      position:fixed; top:0; left:0; right:0; bottom:0;
+      background-image:
+        linear-gradient(rgba(34,211,238,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(34,211,238,0.03) 1px, transparent 1px);
+      background-size:60px 60px;
+      pointer-events:none; z-index:0;
+    }
+
+    /* ── GLOW ── */
+    .glow-orb {
+      position:absolute; border-radius:50%;
+      filter:blur(80px); pointer-events:none; z-index:0;
+    }
+    .glow-orb.cyan { width:400px; height:400px; background:rgba(34,211,238,0.08); }
+    .glow-orb.violet { width:300px; height:300px; background:rgba(167,139,250,0.06); }
+    .glow-orb.emerald { width:350px; height:350px; background:rgba(52,211,153,0.06); }
+
+    /* ── GLASS CARD ── */
+    .glass {
+      background: var(--bg-card);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: 1rem;
+    }
+    .glass:hover { border-color: var(--border-hover); }
+
+    /* ── STEPPER ── */
+    .stepper {
+      display:flex; align-items:center; justify-content:center;
+      gap:0; padding: 2rem 0; margin-top: 56px;
+      position: relative; z-index:1;
+    }
+    .step-item {
+      display:flex; align-items:center; gap:8px;
+      cursor:pointer; padding: 8px 16px;
+      border-radius:8px; transition: all 0.3s;
+    }
+    .step-item:hover { background:rgba(255,255,255,0.02); }
+    .step-num {
+      width:32px; height:32px; border-radius:50%;
+      display:flex; align-items:center; justify-content:center;
+      font-size:0.75rem; font-weight:700;
+      font-family:'JetBrains Mono',monospace;
+      border: 2px solid var(--border);
+      color: var(--text-dim);
+      transition: all 0.3s;
+    }
+    .step-item.active .step-num {
+      border-color: var(--cyan); color:var(--cyan);
+      background: rgba(34,211,238,0.1);
+      box-shadow: 0 0 20px rgba(34,211,238,0.15);
+    }
+    .step-item.done .step-num {
+      border-color: var(--emerald); color:var(--bg);
+      background: var(--emerald);
+    }
+    .step-label {
+      font-size:0.8125rem; font-weight:500; color:var(--text-dim);
+      transition: color 0.3s;
+    }
+    .step-item.active .step-label { color:var(--text); }
+    .step-item.done .step-label { color:var(--emerald); }
+    .step-line {
+      width:60px; height:2px; background:var(--border);
+      transition: background 0.3s;
+    }
+    .step-line.done { background: var(--emerald); }
+
+    /* ── PHASE CONTAINERS ── */
+    .phase {
+      max-width: 1200px; margin: 0 auto;
+      padding: 2rem 2rem 4rem;
+      display: none;
+      position: relative; z-index:1;
+    }
+    .phase.visible { display:block; animation: fadeUp 0.5s ease-out; }
+    @keyframes fadeUp {
+      from { opacity:0; transform:translateY(20px); }
+      to { opacity:1; transform:translateY(0); }
+    }
+
+    /* ── PHASE 0: DEMO ── */
+    .hero-text { text-align:center; margin-bottom:2rem; }
+    .hero-text h2 {
+      font-size:2rem; font-weight:800; letter-spacing:-0.025em;
+      margin-bottom:0.75rem;
+    }
+    .hero-text h2 span {
+      background: linear-gradient(135deg, var(--cyan), var(--emerald));
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    }
+    .hero-text p { color:var(--text-muted); font-size:1rem; max-width:600px; margin:0 auto; }
+
+    .demo-container {
+      background:rgba(2,6,23,0.8); border-radius:1rem;
+      border:1px solid var(--border); overflow:hidden;
+    }
+    .demo-header {
+      padding:12px 20px; border-bottom:1px solid var(--border);
+      display:flex; justify-content:space-between; align-items:center;
+    }
+    .demo-header .title {
+      font-family:'JetBrains Mono',monospace;
+      font-size:0.75rem; font-weight:600; color:var(--text-muted);
+      display:flex; align-items:center; gap:8px;
+    }
+    .demo-dots { display:flex; gap:6px; }
+    .demo-dots span {
+      width:10px; height:10px; border-radius:50%;
+    }
+    .demo-body { padding:1.5rem; }
+
+    /* Agent flow animation */
+    .agent-flow {
+      display:flex; align-items:center; justify-content:center;
+      gap:12px; padding:1rem 0; position:relative;
+      overflow:hidden;
+    }
+    .agent-node {
+      display:flex; flex-direction:column; align-items:center; gap:6px;
+      padding:12px 16px; border-radius:12px;
+      border:1px solid var(--border);
+      background:rgba(15,23,42,0.8);
+      transition: all 0.4s ease;
+      min-width:90px;
+    }
+    .agent-node .icon { font-size:1.5rem; }
+    .agent-node .name {
+      font-size:0.6875rem; font-weight:600;
+      font-family:'JetBrains Mono',monospace;
+    }
+    .agent-node .status {
+      font-size:0.5625rem; font-weight:700;
+      text-transform:uppercase; letter-spacing:0.05em;
+    }
+    .agent-node.highlight-cyan { border-color:var(--cyan); box-shadow:0 0 20px rgba(34,211,238,0.15); }
+    .agent-node.highlight-cyan .name { color:var(--cyan); }
+    .agent-node.highlight-amber { border-color:var(--amber); box-shadow:0 0 20px rgba(251,191,36,0.15); }
+    .agent-node.highlight-amber .name { color:var(--amber); }
+    .agent-node.highlight-rose { border-color:var(--rose); box-shadow:0 0 20px rgba(251,113,133,0.15); }
+    .agent-node.highlight-rose .name { color:var(--rose); }
+    .agent-node.highlight-emerald { border-color:var(--emerald); box-shadow:0 0 20px rgba(52,211,153,0.15); }
+    .agent-node.highlight-emerald .name { color:var(--emerald); }
+    .agent-node.frozen {
+      border-color:var(--rose); background:rgba(251,113,133,0.05);
+      box-shadow:0 0 20px rgba(251,113,133,0.15);
+    }
+    .agent-node.frozen .name { color:var(--rose); }
+    .agent-node.frozen .status { color:var(--rose); }
+
+    .flow-arrow {
+      width:40px; height:2px; background:var(--border);
+      position:relative; transition: background 0.3s;
+    }
+    .flow-arrow.active { background:var(--cyan); }
+    .flow-arrow.active::after {
+      content:''; position:absolute; right:-4px; top:-3px;
+      border-left:6px solid var(--cyan);
+      border-top:4px solid transparent;
+      border-bottom:4px solid transparent;
+    }
+    .flow-arrow.frozen { background:var(--rose); }
+    .flow-arrow.frozen::after { border-left-color:var(--rose); }
+
+    /* Event log */
+    .event-log {
+      margin-top:1rem;
+      max-height:200px; overflow-y:auto;
+    }
+    .event-item {
+      display:flex; gap:12px; padding:8px 12px;
+      border-radius:6px; margin-bottom:4px;
+      font-size:0.75rem;
+      font-family:'JetBrains Mono',monospace;
+      animation: fadeUp 0.3s ease-out;
+    }
+    .event-item .time { color:var(--text-dim); min-width:65px; }
+    .event-item .tag {
+      padding:1px 6px; border-radius:4px;
+      font-size:0.625rem; font-weight:700;
+    }
+    .tag-info { background:rgba(34,211,238,0.1); color:var(--cyan); }
+    .tag-warn { background:rgba(251,191,36,0.1); color:var(--amber); }
+    .tag-freeze { background:rgba(251,113,133,0.15); color:var(--rose); }
+    .tag-ok { background:rgba(52,211,153,0.1); color:var(--emerald); }
+    .event-item .msg { color:var(--text-muted); }
+
+    /* ── PHASE 1: QUIZ ── */
+    .quiz-container { max-width:700px; margin:0 auto; }
+    .quiz-question {
+      margin-bottom:2rem;
+    }
+    .quiz-question h3 {
+      font-size:1rem; font-weight:700; margin-bottom:1rem;
+      display:flex; align-items:center; gap:8px;
+    }
+    .quiz-question h3 .q-num {
+      width:24px; height:24px; border-radius:50%;
+      background:rgba(34,211,238,0.1); color:var(--cyan);
+      display:flex; align-items:center; justify-content:center;
+      font-size:0.75rem; font-weight:700;
+      font-family:'JetBrains Mono',monospace;
+    }
+    .quiz-options {
+      display:grid; grid-template-columns:1fr 1fr; gap:10px;
+    }
+    .quiz-option {
+      padding:14px 18px; border-radius:10px;
+      border:1px solid var(--border);
+      background:rgba(15,23,42,0.5);
+      cursor:pointer; transition: all 0.2s;
+      display:flex; align-items:center; gap:10px;
+    }
+    .quiz-option:hover { border-color:var(--text-dim); background:rgba(15,23,42,0.8); }
+    .quiz-option.selected { border-color:var(--cyan); background:rgba(34,211,238,0.05); }
+    .quiz-option .opt-icon { font-size:1.25rem; }
+    .quiz-option .opt-text { font-size:0.875rem; font-weight:500; }
+    .quiz-option .opt-sub { font-size:0.6875rem; color:var(--text-dim); margin-top:2px; }
+    .quiz-option.selected .opt-text { color:var(--cyan); }
+
+    /* ── PHASE 2: SKILL CARDS ── */
+    .skills-grid {
+      display:grid; grid-template-columns:repeat(3,1fr); gap:1rem;
+    }
+    .skill-card {
+      padding:1.5rem; border-radius:1rem;
+      border:1px solid var(--border);
+      background:rgba(15,23,42,0.5);
+      transition:all 0.3s;
+      position:relative; overflow:hidden;
+    }
+    .skill-card::before {
+      content:''; position:absolute; top:0; left:0; right:0;
+      height:3px; opacity:0; transition:opacity 0.3s;
+    }
+    .skill-card:hover::before { opacity:1; }
+    .skill-card:hover { transform:translateY(-4px); }
+    .skill-card.cyan::before { background:linear-gradient(90deg, transparent, var(--cyan), transparent); }
+    .skill-card.cyan:hover { border-color:rgba(34,211,238,0.3); }
+    .skill-card.emerald::before { background:linear-gradient(90deg, transparent, var(--emerald), transparent); }
+    .skill-card.emerald:hover { border-color:rgba(52,211,153,0.3); }
+    .skill-card.violet::before { background:linear-gradient(90deg, transparent, var(--violet), transparent); }
+    .skill-card.violet:hover { border-color:rgba(167,139,250,0.3); }
+    .skill-card .skill-icon { font-size:2rem; margin-bottom:0.75rem; }
+    .skill-card h4 { font-size:0.9375rem; font-weight:700; margin-bottom:0.5rem; }
+    .skill-card p { font-size:0.8125rem; color:var(--text-muted); margin-bottom:1rem; line-height:1.6; }
+    .skill-card .skill-tags { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:1rem; }
+    .skill-tag {
+      padding:2px 8px; border-radius:4px;
+      font-size:0.625rem; font-weight:600;
+      background:rgba(255,255,255,0.03); color:var(--text-dim);
+      border:1px solid rgba(255,255,255,0.05);
+    }
+    .skill-toggle {
+      display:flex; align-items:center; justify-content:space-between;
+      padding-top:0.75rem; border-top:1px solid var(--border);
+    }
+    .skill-toggle .label { font-size:0.75rem; color:var(--text-dim); }
+    .toggle-switch {
+      width:40px; height:22px; border-radius:11px;
+      background:var(--border); cursor:pointer;
+      position:relative; transition:background 0.3s;
+    }
+    .toggle-switch.on { background:var(--cyan); }
+    .toggle-switch::after {
+      content:''; position:absolute;
+      width:16px; height:16px; border-radius:50%;
+      background:white; top:3px; left:3px;
+      transition:transform 0.3s;
+    }
+    .toggle-switch.on::after { transform:translateX(18px); }
+
+    /* ── PHASE 3: CONFIG RESULT ── */
+    .config-result {
+      display:grid; grid-template-columns:1fr 1fr; gap:1.5rem;
+    }
+    .config-panel {
+      padding:1.5rem; border-radius:1rem;
+      background:rgba(15,23,42,0.5);
+      border:1px solid var(--border);
+    }
+    .config-panel h4 {
+      font-size:0.875rem; font-weight:700; margin-bottom:1rem;
+      display:flex; align-items:center; gap:8px;
+    }
+    .config-panel h4 .dot {
+      width:8px; height:8px; border-radius:50%;
+    }
+    .config-line {
+      display:flex; justify-content:space-between;
+      padding:8px 0; border-bottom:1px solid rgba(30,41,59,0.3);
+      font-size:0.75rem;
+    }
+    .config-line:last-child { border-bottom:none; }
+    .config-line .key { color:var(--text-dim); }
+    .config-line .val { color:var(--cyan); font-family:'JetBrains Mono',monospace; }
+    .config-line .val.emerald { color:var(--emerald); }
+    .config-line .val.amber { color:var(--amber); }
+    .config-line .val.rose { color:var(--rose); }
+
+    .rules-list { margin-top:0.5rem; }
+    .rule-item {
+      display:flex; align-items:center; gap:8px;
+      padding:8px 10px; border-radius:6px; margin-bottom:4px;
+      font-size:0.75rem;
+      border:1px solid rgba(30,41,59,0.3);
+    }
+    .rule-item .rule-id {
+      font-family:'JetBrains Mono',monospace;
+      font-size:0.625rem; font-weight:700; color:var(--text-dim);
+    }
+    .rule-item .rule-name { color:var(--text-muted); flex:1; }
+    .rule-item input[type="checkbox"] {
+      width:16px; height:16px; accent-color:var(--cyan); cursor:pointer;
+    }
+    .rule-item .rule-action {
+      padding:1px 6px; border-radius:3px;
+      font-size:0.5625rem; font-weight:700;
+    }
+    .rule-action.block { background:rgba(251,113,133,0.1); color:var(--rose); }
+    .rule-action.arbitrate { background:rgba(251,191,36,0.1); color:var(--amber); }
+
+    /* ── PHASE 4: DEPLOY ── */
+    .deploy-options {
+      display:grid; grid-template-columns:1fr 1fr; gap:1.5rem;
+      max-width:900px; margin:0 auto;
+    }
+    .deploy-card {
+      padding:2rem; border-radius:1rem;
+      border:1px solid var(--border);
+      background:rgba(15,23,42,0.5);
+      text-align:center; cursor:pointer;
+      transition:all 0.3s; position:relative;
+    }
+    .deploy-card:hover { transform:translateY(-4px); }
+    .deploy-card.selected { border-color:var(--cyan); background:rgba(34,211,238,0.03); }
+    .deploy-card .deploy-icon { font-size:3rem; margin-bottom:1rem; }
+    .deploy-card h4 { font-size:1.125rem; font-weight:700; margin-bottom:0.5rem; }
+    .deploy-card p { font-size:0.8125rem; color:var(--text-muted); margin-bottom:1rem; }
+    .deploy-card .price {
+      font-family:'JetBrains Mono',monospace;
+      font-size:1.75rem; font-weight:800; color:var(--cyan);
+    }
+    .deploy-card .price sub { font-size:0.875rem; color:var(--text-dim); font-weight:400; }
+    .deploy-card ul {
+      list-style:none; text-align:left;
+      margin:1rem 0; font-size:0.8125rem;
+    }
+    .deploy-card li {
+      padding:4px 0; color:var(--text-muted);
+      display:flex; align-items:center; gap:6px;
+    }
+    .deploy-card li .check { color:var(--emerald); font-size:0.75rem; }
+    .deploy-card .popular {
+      position:absolute; top:-10px; left:50%; transform:translateX(-50%);
+    }
+
+    /* ── CTA FOOTER ── */
+    .cta-bar {
+      text-align:center; padding:3rem 2rem;
+      position:relative; z-index:1;
+    }
+    .cta-bar .glass {
+      padding:2.5rem; position:relative; overflow:hidden;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top:1px solid var(--border);
+      padding:1.5rem 2rem; text-align:center;
+      font-size:0.6875rem; color:var(--text-dim);
+      position:relative; z-index:1;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width:768px) {
+      .skills-grid { grid-template-columns:1fr; }
+      .config-result { grid-template-columns:1fr; }
+      .deploy-options { grid-template-columns:1fr; }
+      .quiz-options { grid-template-columns:1fr; }
+      .step-label { display:none; }
+      .agent-flow { gap:4px; flex-wrap:wrap; }
+      .agent-node { min-width:70px; padding:8px 10px; }
+      .flow-arrow { width:20px; }
+    }
+
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar { width:4px; }
+    ::-webkit-scrollbar-track { background:transparent; }
+    ::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+  </style>
+</head>
+<body>
+<div class="grid-bg"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <div class="nav-brand">
+      <div class="pulse-dot"></div>
+      <span>Cortex Leman</span>
+      <span class="badge badge-cyan">v5.2</span>
+    </div>
+    <div class="nav-actions">
+      <a href="architecture.html">Architecture</a>
+      <a href="docs/playbook-integration.html">Playbook</a>
+      <a href="#" class="btn btn-primary" onclick="return false">Essai gratuit →</a>
+    </div>
+  </div>
+</nav>
+
+<!-- STEPPER -->
+<div class="stepper" id="stepper">
+  <div class="step-item active" data-step="0" onclick="goToStep(0)">
+    <div class="step-num">0</div>
+    <div class="step-label">Quick Start</div>
+  </div>
+  <div class="step-line" id="line-0-1"></div>
+  <div class="step-item" data-step="1" onclick="goToStep(1)">
+    <div class="step-num">1</div>
+    <div class="step-label">Votre métier</div>
+  </div>
+  <div class="step-line" id="line-1-2"></div>
+  <div class="step-item" data-step="2" onclick="goToStep(2)">
+    <div class="step-num">2</div>
+    <div class="step-label">Skills</div>
+  </div>
+  <div class="step-line" id="line-2-3"></div>
+  <div class="step-item" data-step="3" onclick="goToStep(3)">
+    <div class="step-num">3</div>
+    <div class="step-label">Configuration</div>
+  </div>
+  <div class="step-line" id="line-3-4"></div>
+  <div class="step-item" data-step="4" onclick="goToStep(4)">
+    <div class="step-num">4</div>
+    <div class="step-label">Déployer</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     PHASE 0 : DÉMO IMMÉDIATE (30 secondes)
+     Scénario pré-enregistré : conflit comptable + gel + arbitrage
+     ═══════════════════════════════════════════════════════════ -->
+<div class="phase visible" id="phase-0">
+  <div class="hero-text">
+    <h2>Observez le <span>Graphe de Confiance</span> en action</h2>
+    <p>Tapez une intention réelle de votre cabinet. Cortex Leman la traite, détecte les conflits, gèle, et arbitre. Sous vos yeux.</p>
+  </div>
+
+  <!-- Intention input (inspiration Palantir : données réelles du client) -->
+  <div style="max-width:700px; margin:0 auto 1.5rem; display:flex; gap:10px;">
+    <input type="text" id="user-intention" placeholder="Ex : Vérifier conformité TVA client Dupont — 82 000 CHF" style="
+      flex:1; padding:12px 16px; border-radius:10px;
+      background:rgba(15,23,42,0.8); border:1px solid var(--border);
+      color:var(--text); font-size:0.875rem; font-family:'Inter',sans-serif;
+      outline:none; transition: border-color 0.2s;
+    " onfocus="this.style.borderColor='var(--cyan)'" onblur="this.style.borderColor='var(--border)'" />
+    <button class="btn btn-primary" style="padding:12px 20px; white-space:nowrap;" onclick="playWithIntention()">▶ Lancer</button>
+  </div>
+
+  <div class="demo-container">
+    <div class="demo-header">
+      <div class="title">
+        <div class="demo-dots">
+          <span style="background:#fb7185"></span>
+          <span style="background:#fbbf24"></span>
+          <span style="background:#34d399"></span>
+        </div>
+        Dashboard Cortex Leman — Scénario démo
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button class="btn btn-secondary" style="padding:4px 12px; font-size:0.75rem;" onclick="resetDemo()">↺ Reset</button>
+        <button class="btn btn-primary" style="padding:4px 12px; font-size:0.75rem;" id="demo-play-btn" onclick="playDemo()">▶ Play</button>
+      </div>
+    </div>
+    <div class="demo-body">
+      <!-- Intention display -->
+      <div id="intention-display" style="
+        padding:10px 16px; border-radius:8px; margin-bottom:1rem;
+        background:rgba(34,211,238,0.05); border:1px solid rgba(34,211,238,0.15);
+        font-size:0.8125rem; color:var(--cyan);
+        font-family:'JetBrains Mono',monospace;
+        display:none;
+      "></div>
+
+      <!-- Agent flow -->
+      <div class="agent-flow" id="agent-flow">
+        <div class="agent-node" id="node-orchestrator">
+          <div class="icon">🎯</div>
+          <div class="name">Orchestrateur</div>
+          <div class="status" id="status-orchestrator">—</div>
+        </div>
+        <div class="flow-arrow" id="arrow-0-1"></div>
+        <div class="agent-node" id="node-data">
+          <div class="icon">📡</div>
+          <div class="name">Data</div>
+          <div class="status" id="status-data">—</div>
+        </div>
+        <div class="flow-arrow" id="arrow-1-2"></div>
+        <div class="agent-node" id="node-reasoning">
+          <div class="icon">🧠</div>
+          <div class="name">Raisonnement</div>
+          <div class="status" id="status-reasoning">—</div>
+        </div>
+        <div class="flow-arrow" id="arrow-2-3"></div>
+        <div class="agent-node" id="node-mediator">
+          <div class="icon">🛡️</div>
+          <div class="name">Médiateur</div>
+          <div class="status" id="status-mediator">—</div>
+        </div>
+        <div class="flow-arrow" id="arrow-3-4"></div>
+        <div class="agent-node" id="node-action">
+          <div class="icon">⚡</div>
+          <div class="name">Action</div>
+          <div class="status" id="status-action">—</div>
+        </div>
+      </div>
+
+      <!-- Event log -->
+      <div class="event-log" id="event-log"></div>
+    </div>
+  </div>
+
+  <div style="text-align:center; margin-top:2rem;">
+    <button class="btn btn-primary" style="padding:12px 32px; font-size:0.9375rem;" onclick="goToStep(1)">
+      Configurer mon cabinet →
+    </button>
+    <div style="margin-top:0.75rem; font-size:0.75rem; color:var(--text-dim);">5 minutes, aucune carte bancaire</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     PHASE 1 : QUIZ MÉTIER (inspiration Manus auto-onboarding)
+     4 questions → configuration automatique
+     ═══════════════════════════════════════════════════════════ -->
+<div class="phase" id="phase-1">
+  <div class="hero-text">
+    <h2>Décrivez votre <span>activité</span></h2>
+    <p>4 questions pour configurer automatiquement vos règles de conformité, seuils de gel et mode de déploiement.</p>
+  </div>
+
+  <div class="quiz-container">
+    <!-- Q1: Métier -->
+    <div class="quiz-question" id="q1">
+      <h3><span class="q-num">1</span> Quelle est votre profession ?</h3>
+      <div class="quiz-options">
+        <div class="quiz-option" onclick="selectQuiz(this, 'q1', 'comptable')">
+          <div class="opt-icon">📊</div>
+          <div><div class="opt-text">Expert-Comptable</div><div class="opt-sub">TVA, seuils, AFC, plan comptable</div></div>
+        </div>
+        <div class="quiz-option" onclick="selectQuiz(this, 'q1', 'avocat')">
+          <div class="opt-icon">⚖️</div>
+          <div><div class="opt-text">Avocat</div><div class="opt-sub">Secret professionnel Art. 321 CP</div></div>
+        </div>
+        <div class="quiz-option" onclick="selectQuiz(this, 'q1', 'sante')">
+          <div class="opt-icon">🏥</div>
+          <div><div class="opt-text">Santé</div><div class="opt-sub">LPM, HDS, consentement éclairé</div></div>
+        </div>
+        <div class="quiz-option" onclick="selectQuiz(this, 'q1', 'banque')">
+          <div class="opt-icon">🏦</div>
+          <div><div class="opt-text">Banque / Finance</div><div class="opt-sub">Secret bancaire Art. 47 LB, KYC</div></div>
+        </div>
+        <div class="quiz-option" onclick="selectQuiz(this, 'q1', 'assurance')">
+          <div class="opt-icon">🛡️</div>
+          <div><div class="opt-text">Assurance</div><div class="opt-sub">FINMA, LPM, LBA, secret professionnel</div></div>
+        </div>
+        <div class="quiz-option" onclick="selectQuiz(this, 'q1', 'rh')">
+          <div class="opt-icon">👥</div>
+          <div><div class="opt-text">Ressources Humaines</div><div class="opt-sub">Anti-discrimination, Art. 22 RGPD</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Q2: Taille -->
+    <div class="quiz-question" id="q2">
+      <h3><span class="q-num">2</span> Taille de votre cabinet ?</h3>
+      <div class="quiz-options">
+        <div class="quiz-option" onclick="selectQuiz(this, 'q2', 'solo')">
+          <div class="opt-icon">👤</div>
+          <div><div class="opt-text">Indépendant</div><div class="opt-sub">1-3 personnes</div></div>
+        </div>
+        <div class="quiz-option" onclick="selectQuiz(this, 'q2', 'small')">
+          <div class="opt-icon">👥</div>
+          <div><div class="opt-text">Petit cabinet</div><div class="opt-sub">4-15 personnes</div></div>
+        </div>
+        <div class="quiz-option" onclick="selectQuiz(this, 'q2', 'medium')">
+          <div class="opt-icon">🏢</div>
+          <div><div class="opt-text">Cabinet moyen</div><div class="opt-sub">15-50 personnes</div></div>
+        </div>
+        <div class="quiz-option" onclick="selectQuiz(this, 'q2', 'large')">
+          <div class="opt-icon">🏛️</div>
+          <div><div class="opt-text">Grand cabinet / Groupe</div><div class="opt-sub">50+ personnes</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Q3: Mode de déploiement (fusion juridiction + protection, inspiration OpenClaw) -->
+    <div class="quiz-question" id="q3">
+      <h3><span class="q-num">3</span> Quel mode de déploiement ?</h3>
+      <div class="quiz-options">
+        <div class="quiz-option" onclick="selectQuiz(this, 'q3', 'standard-fr')">
+          <div class="opt-icon">🇫🇷☁️</div>
+          <div><div class="opt-text">Standard — France</div><div class="opt-sub">Cloud EU, RGPD + AI Act, OpenRouter</div></div>
+        </div>
+        <div class="quiz-option" onclick="selectQuiz(this, 'q3', 'standard-ch')">
+          <div class="opt-icon">🇨🇭☁️</div>
+          <div><div class="opt-text">Standard — Suisse</div><div class="opt-sub">Cloud CH, nLPD + FINMA, OpenRouter</div></div>
+        </div>
+        <div class="quiz-option" onclick="selectQuiz(this, 'q3', 'haute-ch')">
+          <div class="opt-icon">🇨🇭🔒</div>
+          <div><div class="opt-text">Haute Protection — Suisse</div><div class="opt-sub">Ollama local, zero fuite, Art. 321 CP + LB 47</div></div>
+        </div>
+        <div class="quiz-option" onclick="selectQuiz(this, 'q3', 'haute-frch')">
+          <div class="opt-icon">🇫🇷🇨🇭🔒</div>
+          <div><div class="opt-text">Haute Protection — FR-CH</div><div class="opt-sub">Edge K3s, transfrontalier, secret professionnel</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align:center; margin-top:1.5rem;">
+      <button class="btn btn-primary" style="padding:12px 32px;" id="quiz-next-btn" onclick="goToStep(2)" disabled>
+        Former mon assistant IA →
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     PHASE 2 : SKILL CARDS (inspiration Manus modular skills)
+     3 compétences activables indépendamment
+     ═══════════════════════════════════════════════════════════ -->
+<div class="phase" id="phase-2">
+  <div class="hero-text">
+    <h2>Vos <span>compétences IA</span> recommandées</h2>
+    <p>Basé sur vos réponses, Cortex Leman recommande ces Skills. Activez ou désactivez selon vos besoins.</p>
+  </div>
+
+  <div class="skills-grid">
+    <!-- Skill 1: Hermétique CH -->
+    <div class="skill-card cyan" id="skill-hermetique">
+      <div class="skill-icon">🔒</div>
+      <h4 style="color:var(--cyan)">Hermétique CH</h4>
+      <p>Mode air-gap complet. Aucune donnée ne quitte votre infrastructure. Pour avocats, banques et santé soumis au secret professionnel suisse.</p>
+      <div class="skill-tags">
+        <span class="skill-tag">Art. 321 CP</span>
+        <span class="skill-tag">Art. 47 LB</span>
+        <span class="skill-tag">LPM</span>
+        <span class="skill-tag">Ollama local</span>
+        <span class="skill-tag">Zero réseau sortant</span>
+      </div>
+      <div class="skill-toggle">
+        <div class="label">Activer cette compétence</div>
+        <div class="toggle-switch on" id="toggle-hermetique" onclick="toggleSkill(this)"></div>
+      </div>
+    </div>
+
+    <!-- Skill 2: Juriste-Analyste Lémanique -->
+    <div class="skill-card violet" id="skill-juriste">
+      <div class="skill-icon">⚖️</div>
+      <h4 style="color:var(--violet)">Juriste-Analyste Lémanique</h4>
+      <p>Analyse juridique FR-CH approfondie. RAG sur 20+ textes réglementaires vectorisés. Références exactes dans chaque réponse.</p>
+      <div class="skill-tags">
+        <span class="skill-tag">RGPD</span>
+        <span class="skill-tag">AI Act</span>
+        <span class="skill-tag">nLPD</span>
+        <span class="skill-tag">RAG ChromaDB</span>
+        <span class="skill-tag">20+ textes</span>
+      </div>
+      <div class="skill-toggle">
+        <div class="label">Activer cette compétence</div>
+        <div class="toggle-switch on" id="toggle-juriste" onclick="toggleSkill(this)"></div>
+      </div>
+    </div>
+
+    <!-- Skill 3: Œil de Cortex -->
+    <div class="skill-card emerald" id="skill-oeil">
+      <div class="skill-icon">👁️</div>
+      <h4 style="color:var(--emerald)">Œil de Cortex</h4>
+      <p>Supervision et détection d'anomalies en temps réel. Monitoring du journal WORM, alertes de conformité, métriques d'audit.</p>
+      <div class="skill-tags">
+        <span class="skill-tag">WORM Monitor</span>
+        <span class="skill-tag">Anomalies</span>
+        <span class="skill-tag">Alertes</span>
+        <span class="skill-tag">Dashboard</span>
+        <span class="skill-tag">Métriques</span>
+      </div>
+      <div class="skill-toggle">
+        <div class="label">Activer cette compétence</div>
+        <div class="toggle-switch on" id="toggle-oeil" onclick="toggleSkill(this)"></div>
+      </div>
+    </div>
+  </div>
+
+  <div style="text-align:center; margin-top:2rem;">
+    <button class="btn btn-primary" style="padding:12px 32px;" onclick="generateConfig(); goToStep(3)">
+      Générer ma configuration →
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     PHASE 3 : "VOTRE PREMIER JOUR" (inspiration Databricks "new hire")
+     Métaphore : Cortex est votre nouveau collaborateur. Vous venez de le former.
+     ═══════════════════════════════════════════════════════════ -->
+<div class="phase" id="phase-3">
+  <div class="hero-text">
+    <h2>Votre premier jour avec <span>Cortex</span></h2>
+    <p>Comme un nouveau collaborateur que vous venez de former, Cortex est prêt. Voici son profil de compétences et son poste de travail.</p>
+  </div>
+
+  <!-- Pre-built scenario preview (inspiration Microsoft : 80% pré-configuré) -->
+  <div id="scenario-preview" style="
+    max-width:700px; margin:0 auto 1.5rem; padding:16px 20px;
+    border-radius:12px; background:rgba(34,211,238,0.05); border:1px solid rgba(34,211,238,0.15);
+    display:none;
+  ">
+    <div style="font-size:0.75rem; font-weight:700; color:var(--cyan); margin-bottom:8px; font-family:'JetBrains Mono',monospace;">
+      📦 SCÉNARIO PRÉCONFIGURÉ
+    </div>
+    <div id="scenario-content" style="font-size:0.8125rem; color:var(--text-muted); line-height:1.6;"></div>
+  </div>
+
+  <div class="config-result">
+    <!-- Left: Parameters -->
+    <div class="config-panel">
+      <h4><div class="dot" style="background:var(--cyan)"></div> Paramètres de déploiement</h4>
+      <div class="config-line"><span class="key">Verticale</span><span class="val" id="cfg-vertical">—</span></div>
+      <div class="config-line"><span class="key">Mode</span><span class="val" id="cfg-mode">—</span></div>
+      <div class="config-line"><span class="key">Juridiction</span><span class="val" id="cfg-jurisdiction">—</span></div>
+      <div class="config-line"><span class="key">Taille cabinet</span><span class="val" id="cfg-size">—</span></div>
+      <div class="config-line"><span class="key">Seuil de gel</span><span class="val amber" id="cfg-threshold">—</span></div>
+      <div class="config-line"><span class="key">Chaîne d'escalade</span><span class="val" id="cfg-escalation">—</span></div>
+      <div class="config-line"><span class="key">Horodatage</span><span class="val emerald" id="cfg-timestamp">—</span></div>
+      <div class="config-line"><span class="key">LLM</span><span class="val" id="cfg-llm">—</span></div>
+      <div class="config-line"><span class="key">Data residency</span><span class="val" id="cfg-residency">—</span></div>
+      <div class="config-line"><span class="key">Journal</span><span class="val emerald">WORM SHA-256 + HMAC</span></div>
+    </div>
+
+    <!-- Right: Rules -->
+    <div class="config-panel">
+      <h4><div class="dot" style="background:var(--amber)"></div> Règles JsonLogic recommandées</h4>
+      <div class="rules-list" id="cfg-rules">
+        <!-- Filled by JS -->
+      </div>
+    </div>
+  </div>
+
+  <div style="text-align:center; margin-top:2rem;">
+    <button class="btn btn-secondary" style="margin-right:8px;" onclick="goToStep(2)">← Modifier les Skills</button>
+    <button class="btn btn-primary" style="padding:12px 32px;" onclick="goToStep(4)">Choisir le déploiement →</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     PHASE 4 : LAUNCH CHECKLIST + CERTIFICAT (inspiration Anthropic)
+     Checklist de 20 points réels + Certificat de Conformité Cortex
+     ═══════════════════════════════════════════════════════════ -->
+<div class="phase" id="phase-4">
+  <div class="hero-text">
+    <h2>Launch <span>Checklist</span></h2>
+    <p>20 points de vérification avant la mise en production. Le compliance officer coche, le certificat se génère.</p>
+  </div>
+
+  <div style="max-width:900px; margin:0 auto;">
+    <!-- Checklist -->
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem;" id="checklist-grid">
+
+      <!-- Category 1: Infrastructure -->
+      <div class="config-panel">
+        <h4><div class="dot" style="background:var(--cyan)"></div> Infrastructure</h4>
+        <div id="cat-infra">
+          <label class="rule-item" style="cursor:pointer;"><input type="checkbox" onchange="updateChecklist()" class="cl-check" /> <span class="rule-name">Docker Compose démarré</span></label>
+          <label class="rule-item" style="cursor:pointer;"><input type="checkbox" onchange="updateChecklist()" class="cl-check" /> <span class="rule-name">NATS JetStream connecté</span></label>
+          <label class="rule-item" style="cursor:pointer;"><input type="checkbox" onchange="updateChecklist()" class="cl-check" /> <span class="rule-name">PostgreSQL accessible</span></label>
+          <label class="rule-item" style="cursor:pointer;"><input type="checkbox" onchange="updateChecklist()" class="cl-check" /> <span class="rule-name">Redis connecté</span></label>
+          <label class="rule-item" style="cursor:pointer;"><input type="checkbox" onchange="updateChecklist()" class="cl-check" /> <span class="rule-name">Health checks verts (GET /health)</span></label>
+        </div>
+      </div>
+
+      <!-- Category 2: Sécurité -->
+      <div class="config-panel">
+        <h4><div class="dot" style="background:var(--rose)"></div> Sécurité</h4>
+        <div id="cat-security">
+          <label class="rule-item" style="cursor:pointer;"><input type="checkbox" onchange="updateChecklist()" class="cl-check" /> <span class="rule-name">Chiffrement Fernet actif (at-rest)</span></label>
+          <label class="rule-item" style="cursor:pointer;"><input type="checkbox" onchange="updateChecklist()" class="cl-check" /> <span class="rule-name">JWT auth configuré</span></label>
+          <label class="rule-item" style="cursor:pointer;"><input type="checkbox" onchange="updateChecklist()" class="cl-check" /> <span class="rule-name">Isolation réseau vérifiée</span></label>
+          <label class="rule-item" style="cursor:pointer;"><input type="checkbox" onchange="updateChecklist()" class="cl-check" /> <span class="rule-name">PII detection guardrails testé</span></label>
+          <label class="rule-item" style="cursor:pointer;"><input type="checkbox" onchange="updateChecklist()" class="cl-check" /> <span class="rule-name">Data residency conforme</span></label>
+        </div>
+      </div>
+
+      <!-- Category 3: Règles -->
+      <div class="config-panel">
+        <h4><div class="dot" style="background:var(--amber)"></div> Règles Médiateur</h4>
+        <div id="cat-rules">
+          <label class="rule-item" style="cursor:pointer;"><input type="checkbox" onchange="updateChecklist()" class="cl-check" /> <span class="rule-name">Règles JsonLogic chargées</span></label>
+          <label class="rule-item" style="cursor:pointer;"><input type="checkbox" onchange="updateChecklist()" class="cl-check" /> <span class="rule-name">Seuils de gel vérifiés</span></label>
+          <label class="rule-item" style="cursor:pointer;"><input type="checkbox" onchange="updateChecklist()" class="cl-check" /> <span class="rule-name">Test conflit → gel OK</span></label>
+          <label class="rule-item" style="cursor:pointer;"><input type="checkbox" onchange="updateChecklist()" class="cl-check" /> <span class="rule-name">Escalade timer configuré</span></label>
+          <label class="rule-item" style="cursor:pointer;"><input type="checkbox" onchange="updateChecklist()" class="cl-check" /> <span class="rule-name">Mode dégradé testé</span></label>
+        </div>
+      </div>
+
+      <!-- Category 4: Journal + Audit -->
+      <div class="config-panel">
+        <h4><div class="dot" style="background:var(--emerald)"></div> Journal & Audit</h4>
+        <div id="cat-audit">
+          <label class="rule-item" style="cursor:pointer;"><input type="checkbox" onchange="updateChecklist()" class="cl-check" /> <span class="rule-name">Journal WORM accessible</span></label>
+          <label class="rule-item" style="cursor:pointer;"><input type="checkbox" onchange="updateChecklist()" class="cl-check" /> <span class="rule-name">SHA-256 chain verify OK</span></label>
+          <label class="rule-item" style="cursor:pointer;"><input type="checkbox" onchange="updateChecklist()" class="cl-check" /> <span class="rule-name">Horodatage RFC 3161 testé</span></label>
+          <label class="rule-item" style="cursor:pointer;"><input type="checkbox" onchange="updateChecklist()" class="cl-check" /> <span class="rule-name">Arbitrage humain testé</span></label>
+          <label class="rule-item" style="cursor:pointer;"><input type="checkbox" onchange="updateChecklist()" class="cl-check" /> <span class="rule-name">Rapport audit généré (GET /compliance/report)</span></label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Progress -->
+    <div style="margin-top:1.5rem; padding:1rem; border-radius:10px; background:rgba(15,23,42,0.5); border:1px solid var(--border); display:flex; align-items:center; gap:1rem;">
+      <div style="flex:1;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+          <span style="font-size:0.75rem; color:var(--text-dim);">Progression</span>
+          <span style="font-size:0.75rem; color:var(--cyan); font-family:'JetBrains Mono',monospace;" id="cl-progress">0 / 20</span>
+        </div>
+        <div style="height:6px; background:var(--border); border-radius:3px; overflow:hidden;">
+          <div style="height:100%; background:var(--cyan); border-radius:3px; transition:width 0.3s; width:0%" id="cl-bar"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Certificate (appears when 20/20) -->
+    <div id="certificate-container" style="display:none; margin-top:2rem;">
+      <div style="
+        padding:2.5rem; border-radius:1rem;
+        background:linear-gradient(135deg, rgba(34,211,238,0.05), rgba(52,211,153,0.05));
+        border:2px solid rgba(34,211,238,0.3);
+        text-align:center; position:relative; overflow:hidden;
+      ">
+        <div style="font-size:0.75rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.15em; margin-bottom:0.5rem;">Cortex Leman v5.2</div>
+        <div style="font-size:1.5rem; font-weight:800; margin-bottom:0.25rem;">
+          <span style="color:var(--cyan)">Certificat</span> de Conformité
+        </div>
+        <div style="font-size:0.875rem; color:var(--text-muted); margin-bottom:1.5rem;">
+          Déploiement vérifié — <span id="cert-date" style="color:var(--cyan)"></span>
+        </div>
+        <div style="font-size:1.25rem; font-weight:700; margin-bottom:0.5rem;" id="cert-vertical"></div>
+        <div style="font-size:0.8125rem; color:var(--text-dim); margin-bottom:1.5rem;">
+          Mode : <span id="cert-mode" style="color:var(--cyan)"></span> · 
+          Journal : <span style="color:var(--emerald)">WORM SHA-256</span> · 
+          Horodatage : <span id="cert-tsa" style="color:var(--amber)"></span>
+        </div>
+        <div style="display:inline-block; padding:8px 20px; border-radius:8px; background:rgba(52,211,153,0.1); border:1px solid rgba(52,211,153,0.3); font-size:0.8125rem; color:var(--emerald); font-weight:600;">
+          ✅ 20/20 vérifications passed · Prêt pour la production
+        </div>
+        <div style="margin-top:1rem; font-family:'JetBrains Mono',monospace; font-size:0.625rem; color:var(--text-dim);" id="cert-hash"></div>
+      </div>
+    </div>
+
+    <!-- Deploy CTA -->
+    <div style="text-align:center; margin-top:2rem;">
+      <button class="btn btn-secondary" style="margin-right:8px;" onclick="goToStep(3)">← Modifier la configuration</button>
+      <button class="btn btn-primary" style="padding:12px 32px;" id="deploy-final-btn" onclick="deployNow()" disabled>
+        Déployer en production →
+      </button>
+      <div style="margin-top:0.75rem; font-size:0.75rem; color:var(--text-dim);">Activez le bouton en complétant la checklist ci-dessus</div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  © 2026 Cortex Leman SA — Infrastructure de confiance IA pour professions régulées FR-CH · <a href="architecture.html" style="color:var(--text-dim)">Architecture</a> · <a href="docs/KNOWLEDGE-BASE.md" style="color:var(--text-dim)">Documentation</a>
+</footer>
+
+<!-- ═══════════════════════════════════════════════════════════
+     JAVASCRIPT
+     ═══════════════════════════════════════════════════════════ -->
+<script>
+// ── STATE ──
+let currentStep = 0;
+const quizAnswers = { q1: null, q2: null, q3: null };
+const skills = { hermetique: true, juriste: true, oeil: true };
+let selectedDeploy = 'haute';
+let demoPlaying = false;
+let demoTimer = null;
+
+// ── STEPPER NAVIGATION ──
+function goToStep(step) {
+  // Validate quiz completion for step > 1
+  if (step >= 2 && !quizAnswers.q1) {
+    alert('Veuillez d\'abord répondre aux questions (Phase 1).');
+    return;
+  }
+  // Auto-generate config when arriving at phase 3
+  if (step === 3) generateConfig();
+
+  currentStep = step;
+
+  // Update stepper
+  document.querySelectorAll('.step-item').forEach((el, i) => {
+    el.classList.remove('active', 'done');
+    if (i < step) el.classList.add('done');
+    if (i === step) el.classList.add('active');
+  });
+  document.querySelectorAll('.step-line').forEach((el, i) => {
+    el.classList.toggle('done', i < step);
+  });
+
+  // Show phase
+  document.querySelectorAll('.phase').forEach((el, i) => {
+    el.classList.toggle('visible', i === step);
+  });
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ── QUIZ ──
+function selectQuiz(el, question, value) {
+  quizAnswers[question] = value;
+
+  // Update UI
+  el.parentElement.querySelectorAll('.quiz-option').forEach(opt => opt.classList.remove('selected'));
+  el.classList.add('selected');
+
+  // Enable next button if all answered
+  const allAnswered = quizAnswers.q1 && quizAnswers.q2 && quizAnswers.q3;
+  document.getElementById('quiz-next-btn').disabled = !allAnswered;
+}
+
+// ── SKILLS TOGGLE ──
+function toggleSkill(el) {
+  const id = el.id.replace('toggle-', '');
+  skills[id] = !skills[id];
+  el.classList.toggle('on', skills[id]);
+}
+
+// ── GENERATE CONFIG ──
+function generateConfig() {
+  const verticalLabels = {
+    comptable: 'Expert-Comptable',
+    avocat: 'Avocat',
+    sante: 'Santé',
+    banque: 'Banque / Finance',
+    assurance: 'Assurance',
+    rh: 'Ressources Humaines'
+  };
+  const sizeLabels = { solo: 'Indépendant (1-3)', small: 'Petit cabinet (4-15)', medium: 'Cabinet moyen (15-50)', large: 'Grand cabinet (50+)' };
+
+  const v = quizAnswers.q1 || 'comptable';
+  const modeQ3 = quizAnswers.q3 || 'standard-fr';
+  const isHighProtection = modeQ3.startsWith('haute');
+  const jurisCode = modeQ3.split('-').pop();
+  const jurisMap = { fr: '🇫🇷 France', ch: '🇨🇭 Suisse', frch: '🇫🇷🇨🇭 France-Suisse' };
+  const juris = jurisMap[jurisCode] || '🇫🇷 France';
+  const mode = isHighProtection ? 'Haute Protection' : 'Standard';
+
+  // Thresholds per vertical
+  const thresholds = {
+    comptable: '15 000 CHF / 10 000 €',
+    avocat: 'Par type d\'action',
+    sante: 'Par type de données',
+    banque: '15 000 CHF (KYC)',
+    assurance: '50 000 CHF (sinistres)',
+    rh: 'Par catégorie'
+  };
+
+  // Escalation chain
+  const escalations = {
+    solo: 'Expert → Associé',
+    small: 'Expert → Suppléant → Associé',
+    medium: 'Expert → Suppléant → Associé → Directeur',
+    large: 'Expert → Suppléant → Chef d\'équipe → Associé → Directeur'
+  };
+
+  // LLM
+  const llm = isHighProtection ? 'Ollama (Mistral 7B local)' : 'OpenRouter (cloud)';
+
+  // Residency
+  const residency = isHighProtection ? 'On-premise CH exclusif' : juris === 'suisse' ? 'Cloud CH' : 'Cloud EU';
+
+  // Timestamp
+  const ts = isHighProtection ? 'SwissSign ZertES (local)' : 'Certigna / DigiCert';
+
+  document.getElementById('cfg-vertical').textContent = verticalLabels[v] || v;
+  document.getElementById('cfg-mode').textContent = mode;
+  document.getElementById('cfg-jurisdiction').textContent = juris;
+  document.getElementById('cfg-size').textContent = sizeLabels[quizAnswers.q2] || '—';
+  document.getElementById('cfg-threshold').textContent = thresholds[v] || '—';
+  document.getElementById('cfg-escalation').textContent = escalations[quizAnswers.q2] || '—';
+  document.getElementById('cfg-timestamp').textContent = ts;
+  document.getElementById('cfg-llm').textContent = llm;
+  document.getElementById('cfg-residency').textContent = residency;
+
+  // Rules per vertical
+  const rules = {
+    comptable: [
+      { id: 'comp-001', name: 'Seuil TVA AFC', action: 'arbitrate' },
+      { id: 'comp-002', name: 'Données financières hors CH', action: 'block' },
+      { id: 'comp-003', name: 'Montant ≥ 15K sans validation', action: 'arbitrate' },
+    ],
+    avocat: [
+      { id: 'avoc-001', name: 'LLM externe pour dossier', action: 'block' },
+      { id: 'avoc-002', name: 'Data residency hors CH', action: 'block' },
+      { id: 'avoc-003', name: 'Action non autorisée', action: 'block' },
+    ],
+    sante: [
+      { id: 'san-001', name: 'Diagnostic sans médecin', action: 'block' },
+      { id: 'san-002', name: 'HDS non conforme', action: 'block' },
+      { id: 'san-003', name: 'Données médicales hors CH', action: 'block' },
+    ],
+    banque: [
+      { id: 'banq-001', name: 'Secret bancaire Art. 47 LB', action: 'block' },
+      { id: 'banq-002', name: 'Infrastructure CH obligatoire', action: 'block' },
+      { id: 'banq-003', name: 'KYC/AML ≥ 15K CHF', action: 'arbitrate' },
+    ],
+    assurance: [
+      { id: 'assu-001', name: 'Données santé hors CH', action: 'block' },
+      { id: 'assu-002', name: 'Sinistre ≥ 50K CHF', action: 'arbitrate' },
+      { id: 'assu-003', name: 'Anti-blanchiment ≥ 15K sans KYC', action: 'block' },
+      { id: 'assu-004', name: 'Transfert données hors CH', action: 'block' },
+    ],
+    rh: [
+      { id: 'rh-001', name: 'Données discriminantes', action: 'block' },
+      { id: 'rh-002', name: 'Décision automatisée Art. 22', action: 'arbitrate' },
+      { id: 'rh-003', name: 'Profilage sans consentement', action: 'block' },
+    ]
+  };
+
+  const rulesEl = document.getElementById('cfg-rules');
+  const verticalRules = rules[v] || rules.comptable;
+  rulesEl.innerHTML = verticalRules.map(r => `
+    <div class="rule-item">
+      <span class="rule-id">${r.id}</span>
+      <span class="rule-name">${r.name}</span>
+      <span class="rule-action ${r.action}">${r.action === 'block' ? 'BLOCK' : 'ARBITRATE'}</span>
+    </div>
+  `).join('');
+
+  // Pre-built scenario preview
+  const scenarioEl = document.getElementById('scenario-preview');
+  const scenarioContent = document.getElementById('scenario-content');
+  const ruleCount = (rules[v] || rules.comptable).length;
+  const activeSkills = Object.values(skills).filter(Boolean).length;
+  const verticalLabelsShort = { comptable: 'Comptable', avocat: 'Avocat', sante: 'Santé', banque: 'Banque', assurance: 'Assurance', rh: 'RH' };
+  scenarioEl.style.display = 'block';
+  scenarioContent.innerHTML = `
+    Vertical <strong style="color:var(--cyan)">${verticalLabelsShort[v] || v}</strong> sélectionnée → 
+    <strong style="color:var(--emerald)">${ruleCount} règles</strong> JsonLogic pré-chargées,
+    <strong style="color:var(--violet)">${activeSkills} Skills</strong> activées,
+    <strong style="color:var(--amber)">5 documents</strong> réglementaires seedés dans le Vault.
+    <span style="color:var(--text-dim)">→ 80% de la configuration est déjà faite.</span>
+  `;
+}
+
+// ── DEPLOY SELECT ──
+// selectDeploy removed — Phase 4 is now a checklist, not deploy cards
+
+// ── DEPLOY ACTION ──
+function deployNow() {
+  const btn = document.getElementById('deploy-final-btn');
+  btn.textContent = '⏳ Déploiement en cours...';
+  btn.style.pointerEvents = 'none';
+
+  setTimeout(() => {
+    btn.textContent = '✅ Déployé !';
+    btn.style.background = 'var(--emerald)';
+    btn.style.color = 'var(--bg)';
+    btn.style.fontWeight = '700';
+  }, 2000);
+}
+
+// ── CHECKLIST & CERTIFICATE (inspiration Anthropic) ──
+function updateChecklist() {
+  const checks = document.querySelectorAll('.cl-check');
+  const checked = document.querySelectorAll('.cl-check:checked');
+  const total = checks.length;
+  const done = checked.length;
+  const pct = Math.round((done / total) * 100);
+
+  document.getElementById('cl-progress').textContent = done + ' / ' + total;
+  document.getElementById('cl-bar').style.width = pct + '%';
+
+  const deployBtn = document.getElementById('deploy-final-btn');
+  if (done === total) {
+    deployBtn.disabled = false;
+    showCertificate();
+  } else {
+    deployBtn.disabled = true;
+    document.getElementById('certificate-container').style.display = 'none';
+  }
+}
+
+function showCertificate() {
+  const container = document.getElementById('certificate-container');
+  container.style.display = 'block';
+  container.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+  const verticalLabels = { comptable: 'Expert-Comptable', avocat: 'Avocat', sante: 'Santé', banque: 'Banque / Finance', assurance: 'Assurance', rh: 'Ressources Humaines' };
+  const v = quizAnswers.q1 || 'comptable';
+  const modeQ3 = quizAnswers.q3 || 'standard-fr';
+  const isHigh = modeQ3.startsWith('haute');
+
+  document.getElementById('cert-date').textContent = new Date().toLocaleDateString('fr-CH', { day: 'numeric', month: 'long', year: 'numeric' });
+  document.getElementById('cert-vertical').textContent = verticalLabels[v] || v;
+  document.getElementById('cert-mode').textContent = isHigh ? 'Haute Protection' : 'Standard';
+  document.getElementById('cert-tsa').textContent = isHigh ? 'SwissSign ZertES' : 'Certigna / DigiCert';
+  document.getElementById('cert-hash').textContent = 'Hash: CL5-' + btoa(JSON.stringify(quizAnswers)).substring(0, 24) + ' · Vérifiable via GET /api/v1/journal/verify';
+}
+
+// ── DEMO ANIMATION ──
+const DEMO_STEPS = [
+  {
+    highlight: [{ node: 'orchestrator', cls: 'highlight-cyan' }],
+    arrow: 'arrow-0-1', arrowCls: 'active',
+    statuses: { orchestrator: 'ACTIF', data: '—', reasoning: '—', mediator: '—', action: '—' },
+    events: [{ tag: 'info', msg: 'Orchestrateur → Intention reçue : "' + (document.getElementById('user-intention')?.value?.trim() || 'Vérifier TVA client Dupont') + '"' }]
+  },
+  {
+    highlight: [{ node: 'data', cls: 'highlight-cyan' }, { node: 'reasoning', cls: 'highlight-cyan' }],
+    arrow: null,
+    statuses: { orchestrator: 'OK', data: 'ACTIF', reasoning: 'ACTIF', mediator: '—', action: '—' },
+    events: [
+      { tag: 'info', msg: 'Data → Recherche TVA + seuils AFC (3 sources)' },
+      { tag: 'info', msg: 'Raisonnement → Analyse juridique en cours' }
+    ]
+  },
+  {
+    highlight: [{ node: 'data', cls: 'highlight-emerald' }, { node: 'reasoning', cls: 'highlight-amber' }],
+    arrow: 'arrow-1-2', arrowCls: 'active',
+    statuses: { orchestrator: 'OK', data: '0.87 ✓', reasoning: '0.42 ⚠', mediator: '—', action: '—' },
+    events: [
+      { tag: 'ok', msg: 'Data → Score confiance : 0.87 — conforme' },
+      { tag: 'warn', msg: 'Raisonnement → Score confiance : 0.42 — risque détecté' }
+    ]
+  },
+  {
+    highlight: [{ node: 'mediator', cls: 'highlight-rose' }],
+    arrow: 'arrow-2-3', arrowCls: 'frozen',
+    statuses: { orchestrator: 'OK', data: '0.87 ✓', reasoning: '0.42 ⚠', mediator: 'CONFLIT', action: '—' },
+    events: [{ tag: 'freeze', msg: '⚠️ Médiateur → CONFLIT DÉTECTÉ : data=0.87 vs reasoning=0.42' }]
+  },
+  {
+    highlight: [{ node: 'action', cls: 'frozen' }],
+    arrow: 'arrow-3-4', arrowCls: 'frozen',
+    statuses: { orchestrator: 'OK', data: '0.87 ✓', reasoning: '0.42 ⚠', mediator: 'GEL ⚠', action: 'BLOQUÉ' },
+    events: [
+      { tag: 'freeze', msg: '🛡️ GEL DÉGRADÉ — Action bloquée, Data+Raisonnement continuent' },
+      { tag: 'info', msg: 'Journal WORM → Entrée #47 : SHA-256:a3f8...b2c1' }
+    ]
+  },
+  {
+    highlight: [{ node: 'orchestrator', cls: 'highlight-emerald' }],
+    arrow: null,
+    statuses: { orchestrator: 'ARBITRAGE', data: '0.87 ✓', reasoning: '0.42 ⚠', mediator: 'GEL ⚠', action: 'BLOQUÉ' },
+    events: [{ tag: 'ok', msg: '👨‍⚖️ Arbitrage humain → Option A retenue — Dégel autorisé' }]
+  },
+  {
+    highlight: [{ node: 'action', cls: 'highlight-emerald' }],
+    arrow: 'arrow-3-4', arrowCls: 'active',
+    statuses: { orchestrator: 'OK', data: '0.87 ✓', reasoning: '0.42 ✓', mediator: 'DÉGELÉ', action: 'EXÉCUTE' },
+    events: [
+      { tag: 'ok', msg: 'Action → Rapport TVA généré — Saga compensée ✓' },
+      { tag: 'ok', msg: 'Journal WORM → Entrée #48 : SHA-256:b7d2...e4f3' }
+    ]
+  },
+  {
+    highlight: [],
+    arrow: null,
+    statuses: { orchestrator: '✅', data: '✅', reasoning: '✅', mediator: '✅', action: '✅' },
+    events: [{ tag: 'ok', msg: '✅ Intention complétée — Conformité TVA validée — 2.3s total' }]
+  }
+];
+
+function playDemo() {
+  if (demoPlaying) return;
+  demoPlaying = true;
+  resetDemo();
+
+  const btn = document.getElementById('demo-play-btn');
+  btn.textContent = '⏸ Playing...';
+  btn.style.opacity = '0.6';
+
+  let i = 0;
+  function next() {
+    if (i >= DEMO_STEPS.length) {
+      demoPlaying = false;
+      btn.textContent = '▶ Replay';
+      btn.style.opacity = '1';
+      return;
+    }
+
+    const step = DEMO_STEPS[i];
+
+    // Reset all nodes
+    document.querySelectorAll('.agent-node').forEach(n => {
+      n.className = 'agent-node';
+    });
+    document.querySelectorAll('.flow-arrow').forEach(a => {
+      a.className = 'flow-arrow';
+    });
+
+    // Highlight nodes
+    step.highlight.forEach(h => {
+      document.getElementById('node-' + h.node).classList.add(h.cls);
+    });
+
+    // Activate arrow
+    if (step.arrow) {
+      const arrow = document.getElementById(step.arrow);
+      arrow.className = 'flow-arrow ' + step.arrowCls;
+    }
+
+    // Statuses
+    Object.entries(step.statuses).forEach(([key, val]) => {
+      const el = document.getElementById('status-' + key);
+      el.textContent = val;
+      if (val === 'BLOQUÉ' || val === 'CONFLIT' || val === 'GEL ⚠') el.style.color = 'var(--rose)';
+      else if (val === '✅' || val === 'EXÉCUTE' || val === 'DÉGELÉ' || val === '0.87 ✓' || val === '✓' || val === '0.42 ✓') el.style.color = 'var(--emerald)';
+      else if (val === 'ACTIF' || val === 'ARBITRAGE') el.style.color = 'var(--cyan)';
+      else if (val === '0.42 ⚠') el.style.color = 'var(--amber)';
+      else el.style.color = 'var(--text-dim)';
+    });
+
+    // Events
+    const log = document.getElementById('event-log');
+    const time = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    step.events.forEach(e => {
+      const item = document.createElement('div');
+      item.className = 'event-item';
+      item.innerHTML = `<span class="time">${time}</span><span class="tag tag-${e.tag}">${e.tag.toUpperCase()}</span><span class="msg">${e.msg}</span>`;
+      log.appendChild(item);
+      log.scrollTop = log.scrollHeight;
+    });
+
+    i++;
+    demoTimer = setTimeout(next, 1200);
+  }
+
+  next();
+}
+
+function playWithIntention() {
+  const input = document.getElementById('user-intention');
+  const text = input.value.trim() || 'Vérifier conformité TVA client Dupont — 82 000 CHF';
+  const display = document.getElementById('intention-display');
+  display.textContent = '🎯 ' + text;
+  display.style.display = 'block';
+  playDemo();
+}
+
+// playWithIntention uses playDemo which already reads the input field
+
+function resetDemo() {
+  if (demoTimer) clearTimeout(demoTimer);
+  demoPlaying = false;
+
+  document.querySelectorAll('.agent-node').forEach(n => { n.className = 'agent-node'; });
+  document.querySelectorAll('.flow-arrow').forEach(a => { a.className = 'flow-arrow'; });
+  document.querySelectorAll('[id^="status-"]').forEach(s => { s.textContent = '—'; s.style.color = 'var(--text-dim)'; });
+  document.getElementById('event-log').innerHTML = '';
+
+  const btn = document.getElementById('demo-play-btn');
+  btn.textContent = '▶ Play';
+  btn.style.opacity = '1';
+}
+
+// Auto-play on load
+window.addEventListener('load', () => {
+  setTimeout(() => playDemo(), 1500);
+});
+</script>
+</body>
+</html>

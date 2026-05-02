@@ -1,0 +1,52 @@
+{
+  "vertical": "assurance",
+  "source": "Cortex Leman — Prospect: swiss-premium-insurance.ch",
+  "loaded_at": "2026-04-30",
+  "documents": [
+    {
+      "doc_id": "reg-assu-001",
+      "title": "ISA — Loi fédérale sur le contrat d'assurance",
+      "text": "La loi sur le contrat d'assurance (LCA/ISA) régit les droits et obligations des assureurs et des preneurs d'assurance en Suisse. Art. 1-100 LCA. Les assureurs doivent informer les preneurs de manière transparente, respecter le devoir de conseil, et garantir la protection des données personnelles. La résiliation doit respecter les préavis légaux (Art. 39-41).",
+      "reference": "RS 221.229.1 — Loi fédérale sur le contrat d'assurance",
+      "jurisdiction": "CH",
+      "tags": ["LCA", "ISA", "contrat", "résiliation", "devoir_conseil"],
+      "applicable_rules": ["assu-008"]
+    },
+    {
+      "doc_id": "reg-assu-002",
+      "title": "FINMA — Surveillance des assurances",
+      "text": "La FINMA supervise toutes les entreprises d'assurance actives en Suisse. Les assureurs vie et non-vie sont soumis à des exigences de solvabilité (SST — Swiss Solvency Test), de gouvernance, de gestion des risques et de protection des assurés. Les données des assurés doivent être traitées en Suisse.",
+      "reference": "FINMA — RS 961.01 Loi sur la surveillance des assurances",
+      "jurisdiction": "CH",
+      "tags": ["FINMA", "SST", "solvabilité", "gouvernance", "surveillance"],
+      "applicable_rules": ["assu-003"]
+    },
+    {
+      "doc_id": "reg-assu-003",
+      "title": "LPM — Protection des données médicales en assurance",
+      "text": "Les données médicales collectées dans le cadre de la souscription ou du traitement de sinistres d'assurance sont soumises à la LPM (loi sur la protection des données médicales). Le médecin-conseil de l'assureur est soumis au secret médical (Art. 321 CP). Les données ne peuvent être utilisées que dans le cadre du contrat d'assurance concerné.",
+      "reference": "RS 810.12 — LPM + Art. 321 CP",
+      "jurisdiction": "CH",
+      "tags": ["LPM", "santé", "secret_médical", "données_médicales", "assurance"],
+      "applicable_rules": ["assu-001", "assu-002"]
+    },
+    {
+      "doc_id": "reg-assu-004",
+      "title": "LBA — Anti-blanchiment dans le secteur assurance",
+      "text": "Les assureurs vie et les assureurs proposant des produits d'investissement sont soumis à la LBA (loi sur le blanchiment d'argent). Obligation de diligence (KYC) pour les primes annuelles ≥ 15 000 CHF ou les primes uniques ≥ 25 000 CHF. Signalement au MROS en cas de soupçon.",
+      "reference": "RS 955.0 — LBA Art. 2, 4, 9 + OFBC",
+      "jurisdiction": "CH",
+      "tags": ["LBA", "KYC", "AML", "blanchiment", "MROS", "assurance_vie"],
+      "applicable_rules": ["assu-006"]
+    },
+    {
+      "doc_id": "reg-assu-005",
+      "title": "nLPD — Protection des données assurance",
+      "text": "La nouvelle loi sur la protection des données (nLPD, en vigueur depuis sept. 2023) renforce les obligations des assureurs: principe de minimisation, droit d'accès, droit de rectification, notification de violations de données dans les 72h. Les données d'assurance sont considérées comme sensibles.",
+      "reference": "RS 235.1 — nLPD (révision 2022, en vigueur 2023)",
+      "jurisdiction": "CH",
+      "tags": ["nLPD", "protection_données", "minimisation", "notification"],
+      "applicable_rules": ["assu-007"]
+    }
+  ]
+}

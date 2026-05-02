@@ -1,0 +1,163 @@
+name: Cortex Leman CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  PYTHON_VERSION: "3.12"
+  NODE_VERSION: "22"
+
+jobs:
+  # ── Backend Tests ──────────────────────────────────────
+  backend:
+    name: Backend (Python ${{ matrix.test-group }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        test-group: [journal, mediator, orchestrator, saga, integrations, auth, llm-rag, e2e]
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: cortex_test
+          POSTGRES_USER: cortex
+          POSTGRES_PASSWORD: test_password
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 3
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-asyncio coverage
+
+      - name: Create test directories
+        run: mkdir -p /tmp/cortex-test-journal-ci data/vault/regulatory
+
+      - name: Run tests (${{ matrix.test-group }})
+        env:
+          DATABASE_URL: postgresql://cortex:test_password@localhost:5432/cortex_test
+          SECRET_KEY: ci-test-secret-key
+          JOURNAL_PATH: /tmp/cortex-test-journal-ci
+          LLM_API_KEY: ""
+          REDIS_HOST: localhost
+          NATS_URL: nats://localhost:4222
+        run: |
+          coverage run -m pytest tests/test_${{ matrix.test-group }}.py -v --tb=short || \
+          coverage run -m pytest tests/ -v --tb=short -k "${{ matrix.test-group }}"
+
+      - name: Coverage report
+        if: always()
+        run: coverage report --fail-under=60
+
+  # ── Frontend Build ─────────────────────────────────────
+  frontend:
+    name: Frontend (Build + Lint)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: TypeScript check
+        working-directory: frontend
+        run: npx tsc --noEmit
+
+      - name: Build production
+        working-directory: frontend
+        run: npm run build
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist/
+
+  # ── Docker Build ───────────────────────────────────────
+  docker:
+    name: Docker Build
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download frontend
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist/
+
+      - name: Build Docker image
+        run: docker build -t cortex-leman:v5-${{ github.sha }} .
+
+      - name: Docker security scan
+        continue-on-error: true
+        run: |
+          docker run --rm aquasec/trivy image \
+            --severity HIGH,CRITICAL \
+            cortex-leman:v5-${{ github.sha }}
+
+  # ── Security Audit ─────────────────────────────────────
+  security:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Python safety check
+        run: |
+          pip install safety pip-audit
+          pip-audit -r requirements.txt || true
+
+      - name: Node audit
+        working-directory: frontend
+        run: npm audit --audit-level=high || true
+
+  # ── Deploy (main only) ─────────────────────────────────
+  deploy:
+    name: Deploy Preview
+    runs-on: ubuntu-latest
+    needs: [backend, frontend, docker]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    environment: staging
+    steps:
+      - name: Deploy notification
+        run: |
+          echo "🚀 Cortex Leman v5 deploy ready"
+          echo "Commit: ${{ github.sha }}"
+          echo "Image: cortex-leman:v5-${{ github.sha }}"
+          echo "Deploy to staging would happen here"

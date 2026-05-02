@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cortex Leman v5 — Playbook d'Intégration</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'JetBrains Mono', monospace; background: #020617; min-height: 100vh; padding: 2rem; color: white; }
+    .container { max-width: 1500px; margin: 0 auto; }
+    .header { margin-bottom: 2rem; }
+    .header-row { display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem; flex-wrap: wrap; }
+    .pulse-dot { width: 12px; height: 12px; background: #22d3ee; border-radius: 50%; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.025em; }
+    .subtitle { color: #94a3b8; font-size: 0.875rem; margin-left: 1.75rem; }
+    .badge { display: inline-block; padding: 0.125rem 0.5rem; border-radius: 9999px; font-size: 0.7rem; font-weight: 600; }
+    .badge-v5 { background: rgba(34,211,238,0.15); color: #22d3ee; border: 1px solid rgba(34,211,238,0.3); }
+    .badge-score { background: rgba(52,211,153,0.15); color: #34d399; border: 1px solid rgba(52,211,153,0.3); }
+    .badge-new { background: rgba(251,113,133,0.15); color: #fb7185; border: 1px solid rgba(251,113,133,0.3); }
+    .badge-test { background: rgba(167,139,250,0.15); color: #a78bfa; border: 1px solid rgba(167,139,250,0.3); }
+    .diagram-container { background: rgba(15, 23, 42, 0.5); border-radius: 1rem; border: 1px solid #1e293b; padding: 1.5rem; overflow-x: auto; margin-bottom: 2rem; }
+    svg { width: 100%; display: block; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-top: 2rem; }
+    .card { background: rgba(15, 23, 42, 0.5); border-radius: 0.75rem; border: 1px solid #1e293b; padding: 1.25rem; transition: border-color 0.2s; }
+    .card:hover { border-color: #334155; }
+    .card-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; }
+    .card-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .card-dot.cyan { background: #22d3ee; } .card-dot.emerald { background: #34d399; } .card-dot.violet { background: #a78bfa; }
+    .card-dot.amber { background: #fbbf24; } .card-dot.rose { background: #fb7185; } .card-dot.blue { background: #60a5fa; }
+    .card-dot.lime { background: #a3e635; } .card-dot.teal { background: #2dd4bf; } .card-dot.pink { background: #f472b6; }
+    .card h3 { font-size: 0.875rem; font-weight: 600; }
+    .card ul { list-style: none; color: #94a3b8; font-size: 0.75rem; }
+    .card li { margin-bottom: 0.375rem; padding-left: 0.75rem; position: relative; }
+    .card li::before { content: '→'; position: absolute; left: 0; color: #475569; }
+    .card .metric { color: #34d399; font-weight: 600; }
+    .card .warning { color: #fbbf24; font-weight: 600; }
+    .card .critical { color: #fb7185; font-weight: 600; }
+    .card code { color: #22d3ee; font-size: 0.7rem; background: rgba(34,211,238,0.08); padding: 0.1rem 0.3rem; border-radius: 3px; }
+    .section-title { font-size: 1rem; font-weight: 600; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+    .section-title .dot { width: 6px; height: 6px; border-radius: 50%; }
+    .table-section { margin-top: 2rem; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
+    th { text-align: left; padding: 0.5rem 0.75rem; background: rgba(30, 41, 59, 0.5); color: #94a3b8; font-weight: 600; border-bottom: 1px solid #1e293b; }
+    td { padding: 0.5rem 0.75rem; border-bottom: 1px solid rgba(30, 41, 59, 0.3); color: #cbd5e1; }
+    td.ok { color: #34d399; } td.warn { color: #fbbf24; } td.fail { color: #fb7185; } td.new { color: #f472b6; }
+    td code { color: #22d3ee; font-size: 0.7rem; background: rgba(34,211,238,0.08); padding: 0.1rem 0.3rem; border-radius: 3px; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 2rem; }
+    .stats-bar { display: flex; gap: 1.5rem; flex-wrap: wrap; margin: 1rem 0 2rem; padding: 1rem; background: rgba(15, 23, 42, 0.5); border-radius: 0.75rem; border: 1px solid #1e293b; }
+    .stat { text-align: center; min-width: 70px; }
+    .stat-value { font-size: 1.35rem; font-weight: 700; }
+    .stat-label { font-size: 0.65rem; color: #64748b; margin-top: 0.25rem; }
+    .stat-value.cyan { color: #22d3ee; } .stat-value.emerald { color: #34d399; } .stat-value.amber { color: #fbbf24; }
+    .stat-value.violet { color: #a78bfa; } .stat-value.rose { color: #fb7185; } .stat-value.blue { color: #60a5fa; }
+    .stat-value.teal { color: #2dd4bf; } .stat-value.pink { color: #f472b6; }
+    .footer { text-align: center; margin-top: 2rem; color: #475569; font-size: 0.75rem; }
+    .divider { border: none; border-top: 1px solid #1e293b; margin: 2rem 0; }
+
+    /* Timeline / Storyboard */
+    .timeline { position: relative; padding-left: 2rem; margin-top: 1rem; }
+    .timeline::before { content: ''; position: absolute; left: 0.45rem; top: 0; bottom: 0; width: 2px; background: #1e293b; }
+    .timeline-step { position: relative; margin-bottom: 1.5rem; }
+    .timeline-step .step-dot { position: absolute; left: -1.75rem; top: 0.35rem; width: 12px; height: 12px; border-radius: 50%; border: 2px solid; }
+    .timeline-step .step-dot.cyan { border-color: #22d3ee; background: rgba(34,211,238,0.2); }
+    .timeline-step .step-dot.emerald { border-color: #34d399; background: rgba(52,211,153,0.2); }
+    .timeline-step .step-dot.rose { border-color: #fb7185; background: rgba(251,113,133,0.2); }
+    .timeline-step .step-dot.amber { border-color: #fbbf24; background: rgba(251,191,36,0.2); }
+    .timeline-step .step-dot.violet { border-color: #a78bfa; background: rgba(167,139,250,0.2); }
+    .timeline-step .step-dot.lime { border-color: #a3e635; background: rgba(163,230,53,0.2); }
+    .timeline-step .step-title { font-size: 0.85rem; font-weight: 600; margin-bottom: 0.25rem; }
+    .timeline-step .step-actor { font-size: 0.7rem; color: #64748b; margin-bottom: 0.35rem; }
+    .timeline-step .step-body { background: rgba(15, 23, 42, 0.5); border: 1px solid #1e293b; border-radius: 0.5rem; padding: 0.75rem; font-size: 0.75rem; color: #94a3b8; }
+    .timeline-step .step-body code { color: #22d3ee; background: rgba(34,211,238,0.08); padding: 0.1rem 0.3rem; border-radius: 3px; font-size: 0.7rem; }
+    .timeline-step .step-body .result { margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid rgba(30,41,59,0.3); }
+    .timeline-step .step-body .result.ok { color: #34d399; }
+    .timeline-step .step-body .result.fail { color: #fb7185; }
+    .timeline-step .step-body .result.warn { color: #fbbf24; }
+
+    /* Checkbox simulation */
+    .vf-check { display: inline-block; width: 14px; height: 14px; border-radius: 3px; border: 1.5px solid #475569; text-align: center; line-height: 12px; font-size: 10px; cursor: pointer; user-select: none; }
+    .vf-check.checked { background: #34d399; border-color: #34d399; color: #020617; }
+    </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-row">
+      <div class="pulse-dot"></div>
+      <h1>Playbook d'Intégration — Sprint 2</h1>
+      <span class="badge badge-v5">v5.2</span>
+      <span class="badge badge-test">ITEST-SPI-001</span>
+      <span class="badge badge-new">Mode Dégradé + Escalade</span>
+    </div>
+    <div class="subtitle">Scénario de test end-to-end : souscription assurance IJM avec gel dégradé, escalade arbitrage, et horodatage qualifié</div>
+  </div>
+
+  <!-- STATS BAR -->
+  <div class="stats-bar">
+    <div class="stat"><div class="stat-value cyan">8</div><div class="stat-label">Étapes</div></div>
+    <div class="stat"><div class="stat-value emerald">13</div><div class="stat-label">Sujets NATS</div></div>
+    <div class="stat"><div class="stat-value amber">1</div><div class="stat-label">Conflit</div></div>
+    <div class="stat"><div class="stat-value violet">1</div><div class="stat-label">Escalade</div></div>
+    <div class="stat"><div class="stat-value rose">1</div><div class="stat-label">Arbitrage</div></div>
+    <div class="stat"><div class="stat-value blue">10</div><div class="stat-label">VFs</div></div>
+    <div class="stat"><div class="stat-value teal">0.1h</div><div class="stat-label">Timers</div></div>
+    <div class="stat"><div class="stat-value pink">1</div><div class="stat-label">Scénario</div></div>
+  </div>
+
+  <!-- CONFIGURATION -->
+  <div class="section-title"><div class="dot" style="background:#60a5fa"></div> ① Configuration requise</div>
+  <div class="cards">
+    <div class="card">
+      <div class="card-header"><div class="card-dot cyan"></div><h3>Variables .env</h3></div>
+      <ul>
+        <li><code>MEDIATOR_DEFAULT_FREEZE_THRESHOLD=50000</code></li>
+        <li><code>ARBITRATION_ESCALATION_TIMEOUT_HOURS=[0.1,0.2,0.3]</code></li>
+        <li><code>ARBITRATION_TIMESTAMP_PROVIDER=auto</code></li>
+        <li><code>APP_MODE=haute_protection</code></li>
+        <li><code>LLM_PROVIDER=ollama</code></li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-dot emerald"></div><h3>Comptes test</h3></div>
+      <ul>
+        <li>expert@swiss-premium.ch <span class="badge badge-test">expert</span></li>
+        <li>suppleant@swiss-premium.ch <span class="badge badge-test">expert</span></li>
+        <li>associe@swiss-premium.ch <span class="badge badge-test">admin</span></li>
+        <li class="metric">Rôles RBAC: expert, expert, admin</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-dot amber"></div><h3>Données de test</h3></div>
+      <ul>
+        <li><code>offre_axa_ijm.pdf</code> → Vault</li>
+        <li><code>offre_helvetia_ijm.pdf</code> → Vault</li>
+        <li>Verticale: <code>assurance</code></li>
+        <li>Montant: <code>82 000 CHF</code></li>
+        <li class="warning">Sinistre ≥ 50K → arbitrage requis</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-dot violet"></div><h3>Services Docker</h3></div>
+      <ul>
+        <li>NATS JetStream <span class="badge badge-score">✓ healthy</span></li>
+        <li>Redis 7 <span class="badge badge-score">✓ healthy</span></li>
+        <li>PostgreSQL 16 <span class="badge badge-score">✓ healthy</span></li>
+        <li>Ollama (local) <span class="badge badge-score">✓ healthy</span></li>
+        <li>API FastAPI <span class="badge badge-score">✓ healthy</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- SEQUENCE DIAGRAM SVG -->
+  <div class="diagram-container">
+    <div class="section-title"><div class="dot" style="background:#22d3ee"></div> ② Diagramme de séquence — ITEST-SPI-001</div>
+    <svg viewBox="0 0 1100 620" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+          <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(30,41,59,0.3)" stroke-width="0.5"/>
+        </pattern>
+        <marker id="arr" viewBox="0 0 10 6" refX="10" refY="3" markerWidth="8" markerHeight="6" orient="auto">
+          <path d="M 0 0 L 10 3 L 0 6 z" fill="#475569"/>
+        </marker>
+        <marker id="arr-c" viewBox="0 0 10 6" refX="10" refY="3" markerWidth="8" markerHeight="6" orient="auto">
+          <path d="M 0 0 L 10 3 L 0 6 z" fill="#22d3ee"/>
+        </marker>
+        <marker id="arr-r" viewBox="0 0 10 6" refX="10" refY="3" markerWidth="8" markerHeight="6" orient="auto">
+          <path d="M 0 0 L 10 3 L 0 6 z" fill="#fb7185"/>
+        </marker>
+        <marker id="arr-g" viewBox="0 0 10 6" refX="10" refY="3" markerWidth="8" markerHeight="6" orient="auto">
+          <path d="M 0 0 L 10 3 L 0 6 z" fill="#34d399"/>
+        </marker>
+        <marker id="arr-y" viewBox="0 0 10 6" refX="10" refY="3" markerWidth="8" markerHeight="6" orient="auto">
+          <path d="M 0 0 L 10 3 L 0 6 z" fill="#fbbf24"/>
+        </marker>
+      </defs>
+      <rect width="1100" height="620" fill="url(#grid)"/>
+
+      <!-- LIFELINES -->
+      <text x="55" y="25" text-anchor="middle" fill="#60a5fa" font-size="10" font-weight="600">EXPERT</text>
+      <line x1="55" y1="35" x2="55" y2="600" stroke="#60a5fa" stroke-width="0.5" stroke-dasharray="3"/>
+      
+      <text x="195" y="25" text-anchor="middle" fill="#22d3ee" font-size="10" font-weight="600">ORCH.</text>
+      <line x1="195" y1="35" x2="195" y2="600" stroke="#22d3ee" stroke-width="0.5" stroke-dasharray="3"/>
+      
+      <text x="330" y="25" text-anchor="middle" fill="#34d399" font-size="10" font-weight="600">DATA</text>
+      <line x1="330" y1="35" x2="330" y2="600" stroke="#34d399" stroke-width="0.5" stroke-dasharray="3"/>
+      
+      <text x="465" y="25" text-anchor="middle" fill="#a78bfa" font-size="10" font-weight="600">RAISON.</text>
+      <line x1="465" y1="35" x2="465" y2="600" stroke="#a78bfa" stroke-width="0.5" stroke-dasharray="3"/>
+      
+      <text x="600" y="25" text-anchor="middle" fill="#fb7185" font-size="10" font-weight="600">MÉDIAT.</text>
+      <line x1="600" y1="35" x2="600" y2="600" stroke="#fb7185" stroke-width="0.5" stroke-dasharray="3"/>
+      
+      <text x="735" y="25" text-anchor="middle" fill="#fbbf24" font-size="10" font-weight="600">ACTION</text>
+      <line x1="735" y1="35" x2="735" y2="600" stroke="#fbbf24" stroke-width="0.5" stroke-dasharray="3"/>
+      
+      <text x="870" y="25" text-anchor="middle" fill="#fbbf24" font-size="10" font-weight="600">ARBIT.</text>
+      <line x1="870" y1="35" x2="870" y2="600" stroke="#fbbf24" stroke-width="0.5" stroke-dasharray="3"/>
+      
+      <text x="1005" y="25" text-anchor="middle" fill="#f472b6" font-size="10" font-weight="600">WORM</text>
+      <line x1="1005" y1="35" x2="1005" y2="600" stroke="#f472b6" stroke-width="0.5" stroke-dasharray="3"/>
+
+      <!-- STEP 1: Créer intention -->
+      <rect x="30" y="50" width="50" height="16" rx="3" fill="rgba(96,165,250,0.15)" stroke="#60a5fa" stroke-width="0.5"/>
+      <text x="55" y="62" text-anchor="middle" fill="#60a5fa" font-size="7">① Créer</text>
+      <line x1="80" y1="58" x2="185" y2="58" stroke="#60a5fa" stroke-width="1" marker-end="url(#arr)"/>
+      <text x="130" y="52" text-anchor="middle" fill="#94a3b8" font-size="7">POST /intentions</text>
+
+      <!-- STEP 2: Route → agents -->
+      <rect x="170" y="80" width="50" height="16" rx="3" fill="rgba(34,211,238,0.15)" stroke="#22d3ee" stroke-width="0.5"/>
+      <text x="195" y="92" text-anchor="middle" fill="#22d3ee" font-size="7">② Route</text>
+      <line x1="220" y1="88" x2="320" y2="88" stroke="#34d399" stroke-width="1" marker-end="url(#arr-g)"/>
+      <line x1="220" y1="88" x2="455" y2="88" stroke="#a78bfa" stroke-width="1" marker-end="url(#arr)"/>
+      <text x="270" y="82" text-anchor="middle" fill="#94a3b8" font-size="7">cleman.data.query</text>
+      <text x="380" y="82" text-anchor="middle" fill="#94a3b8" font-size="7">cleman.reasoning.analyze</text>
+
+      <!-- STEP 3: Résultats contradictoires -->
+      <rect x="305" y="120" width="50" height="16" rx="3" fill="rgba(52,211,153,0.15)" stroke="#34d399" stroke-width="0.5"/>
+      <text x="330" y="132" text-anchor="middle" fill="#34d399" font-size="7">③ Data</text>
+      <rect x="440" y="120" width="50" height="16" rx="3" fill="rgba(167,139,250,0.15)" stroke="#a78bfa" stroke-width="0.5"/>
+      <text x="465" y="132" text-anchor="middle" fill="#a78bfa" font-size="7">③ Rais.</text>
+      <line x1="340" y1="136" x2="585" y2="136" stroke="#34d399" stroke-width="1" stroke-dasharray="3" marker-end="url(#arr-g)"/>
+      <line x1="475" y1="136" x2="585" y2="136" stroke="#a78bfa" stroke-width="1" stroke-dasharray="3" marker-end="url(#arr)"/>
+      <text x="460" y="148" text-anchor="middle" fill="#fb7185" font-size="7" font-weight="600">⚡ CONFLIT: AXA vs Helvetia</text>
+
+      <!-- STEP 4: GEL DÉGRADÉ -->
+      <rect x="575" y="160" width="55" height="16" rx="3" fill="rgba(251,113,133,0.2)" stroke="#fb7185" stroke-width="1.5"/>
+      <text x="603" y="172" text-anchor="middle" fill="#fb7185" font-size="7" font-weight="700">④ GEL ⚠</text>
+      <line x1="603" y1="176" x2="710" y2="195" stroke="#fb7185" stroke-width="1.5" marker-end="url(#arr-r)"/>
+      <text x="670" y="188" text-anchor="middle" fill="#fb7185" font-size="7">is_action_blocked()=true</text>
+      <!-- Action bloqué -->
+      <rect x="710" y="190" width="55" height="16" rx="3" fill="rgba(251,113,133,0.15)" stroke="#fb7185" stroke-width="1.5"/>
+      <text x="738" y="202" text-anchor="middle" fill="#fb7185" font-size="7" font-weight="600">BLOQUÉ</text>
+
+      <!-- STEP 5: Enrichissement dégradé -->
+      <rect x="305" y="225" width="60" height="16" rx="3" fill="rgba(52,211,153,0.15)" stroke="#34d399" stroke-width="0.5"/>
+      <text x="335" y="237" text-anchor="middle" fill="#34d399" font-size="7">⑤ Enrich.</text>
+      <rect x="440" y="225" width="60" height="16" rx="3" fill="rgba(167,139,250,0.15)" stroke="#a78bfa" stroke-width="0.5"/>
+      <text x="470" y="237" text-anchor="middle" fill="#a78bfa" font-size="7">⑤ Enrich.</text>
+      <line x1="340" y1="241" x2="585" y2="255" stroke="#34d399" stroke-width="0.8" stroke-dasharray="2" marker-end="url(#arr-g)"/>
+      <line x1="475" y1="241" x2="585" y2="255" stroke="#a78bfa" stroke-width="0.8" stroke-dasharray="2" marker-end="url(#arr)"/>
+      <text x="460" y="268" text-anchor="middle" fill="#2dd4bf" font-size="7">DATA + RAISONNEMENT continuent</text>
+
+      <!-- STEP 6: Escalade -->
+      <rect x="845" y="280" width="55" height="16" rx="3" fill="rgba(251,191,36,0.15)" stroke="#fbbf24" stroke-width="0.5"/>
+      <text x="873" y="292" text-anchor="middle" fill="#fbbf24" font-size="7">⑥ Escal.</text>
+      <text x="873" y="308" text-anchor="middle" fill="#94a3b8" font-size="7">expert → suppléant</text>
+      <text x="873" y="320" text-anchor="middle" fill="#64748b" font-size="7">(timeout 0.1h simulé)</text>
+
+      <!-- STEP 7: Décision -->
+      <rect x="30" y="350" width="50" height="16" rx="3" fill="rgba(251,191,36,0.15)" stroke="#fbbf24" stroke-width="0.5"/>
+      <text x="55" y="362" text-anchor="middle" fill="#fbbf24" font-size="7">⑦ Décide</text>
+      <line x1="80" y1="358" x2="845" y2="358" stroke="#fbbf24" stroke-width="1" marker-end="url(#arr-y)"/>
+      <text x="460" y="352" text-anchor="middle" fill="#94a3b8" font-size="7">POST /arbitrations/{id}/decide → AXA, signé, horodaté</text>
+
+      <!-- STEP 8: Dégel + Action -->
+      <rect x="170" y="390" width="55" height="16" rx="3" fill="rgba(163,230,53,0.15)" stroke="#a3e635" stroke-width="0.5"/>
+      <text x="198" y="402" text-anchor="middle" fill="#a3e635" font-size="7">⑧ Dégel</text>
+      <line x1="225" y1="398" x2="710" y2="398" stroke="#a3e635" stroke-width="1" marker-end="url(#arr)"/>
+      <text x="460" y="392" text-anchor="middle" fill="#94a3b8" font-size="7">cleman.intention.revise → cleman.action.execute</text>
+      
+      <!-- Action exécute -->
+      <rect x="710" y="415" width="55" height="16" rx="3" fill="rgba(52,211,153,0.15)" stroke="#34d399" stroke-width="1"/>
+      <text x="738" y="427" text-anchor="middle" fill="#34d399" font-size="7" font-weight="600">✓ EXÉCUTE</text>
+
+      <!-- WORM entries -->
+      <line x1="198" y1="420" x2="980" y2="420" stroke="#f472b6" stroke-width="0.5" stroke-dasharray="2"/>
+      <text x="1005" y="60" text-anchor="middle" fill="#f472b6" font-size="7">#1: intention.created</text>
+      <text x="1005" y="95" text-anchor="middle" fill="#f472b6" font-size="7">#2: agent.result (data)</text>
+      <text x="1005" y="110" text-anchor="middle" fill="#f472b6" font-size="7">#3: agent.result (raison.)</text>
+      <text x="1005" y="145" text-anchor="middle" fill="#fb7185" font-size="7" font-weight="600">#4: mediator.conflict</text>
+      <text x="1005" y="175" text-anchor="middle" fill="#fb7185" font-size="7" font-weight="600">#5: mediator.degraded_freeze</text>
+      <text x="1005" y="248" text-anchor="middle" fill="#2dd4bf" font-size="7">#6: degraded_enrichment ×2</text>
+      <text x="1005" y="298" text-anchor="middle" fill="#fbbf24" font-size="7">#7: arbitration.escalation</text>
+      <text x="1005" y="365" text-anchor="middle" fill="#fbbf24" font-size="7">#8: arbitration.decision</text>
+      <text x="1005" y="405" text-anchor="middle" fill="#a3e635" font-size="7">#9: intention.revise</text>
+      <text x="1005" y="435" text-anchor="middle" fill="#34d399" font-size="7">#10: action.executed</text>
+
+      <!-- GEL DÉGRADÉ SVG DETAIL -->
+      <rect x="130" y="480" width="840" height="120" rx="10" fill="rgba(15,23,42,0.8)" stroke="#1e293b" stroke-width="1"/>
+      <text x="550" y="502" text-anchor="middle" fill="#94a3b8" font-size="10" font-weight="600">DÉTAIL — État DEGRADED_FROZEN (étapes ④-⑤)</text>
+      
+      <!-- Data actif -->
+      <rect x="170" y="520" width="120" height="50" rx="6" fill="rgba(52,211,153,0.1)" stroke="#34d399" stroke-width="1"/>
+      <text x="230" y="540" text-anchor="middle" fill="#34d399" font-size="10" font-weight="600">DATA</text>
+      <text x="230" y="556" text-anchor="middle" fill="#34d399" font-size="8">✓ ACTIF</text>
+      
+      <!-- Raisonnement actif -->
+      <rect x="370" y="520" width="120" height="50" rx="6" fill="rgba(167,139,250,0.1)" stroke="#a78bfa" stroke-width="1"/>
+      <text x="430" y="540" text-anchor="middle" fill="#a78bfa" font-size="10" font-weight="600">RAISONNEMENT</text>
+      <text x="430" y="556" text-anchor="middle" fill="#a78bfa" font-size="8">✓ ACTIF</text>
+      
+      <!-- Barrière -->
+      <line x1="560" y1="510" x2="560" y2="585" stroke="#fb7185" stroke-width="2" stroke-dasharray="6"/>
+      <text x="560" y="596" text-anchor="middle" fill="#fb7185" font-size="8" font-weight="600">GEL MÉDIATEUR</text>
+
+      <!-- Action bloqué -->
+      <rect x="610" y="520" width="120" height="50" rx="6" fill="rgba(251,113,133,0.15)" stroke="#fb7185" stroke-width="2"/>
+      <text x="670" y="540" text-anchor="middle" fill="#fb7185" font-size="10" font-weight="700">ACTION</text>
+      <text x="670" y="556" text-anchor="middle" fill="#fb7185" font-size="8" font-weight="600">✗ BLOQUÉ</text>
+
+      <!-- Flux -->
+      <line x1="290" y1="545" x2="360" y2="545" stroke="#34d399" stroke-width="1.5" marker-end="url(#arr-g)"/>
+      <line x1="490" y1="545" x2="550" y2="545" stroke="#a78bfa" stroke-width="1.5" stroke-dasharray="4"/>
+      
+      <!-- Enrichissement -->
+      <rect x="770" y="525" width="170" height="40" rx="6" fill="rgba(45,212,191,0.1)" stroke="#2dd4bf" stroke-width="0.5"/>
+      <text x="855" y="542" text-anchor="middle" fill="#2dd4bf" font-size="8">Enrichissement dossier</text>
+      <text x="855" y="556" text-anchor="middle" fill="#64748b" font-size="7">positions mises à jour</text>
+      <line x1="290" y1="535" x2="770" y2="540" stroke="#2dd4bf" stroke-width="0.8" stroke-dasharray="2"/>
+      <line x1="490" y1="535" x2="770" y2="548" stroke="#2dd4bf" stroke-width="0.8" stroke-dasharray="2"/>
+    </svg>
+  </div>
+
+  <!-- STORYBOARD -->
+  <div class="two-col">
+    <div>
+      <div class="section-title"><div class="dot" style="background:#22d3ee"></div> ③ Storyboard pas à pas</div>
+      <div class="timeline">
+        <div class="timeline-step">
+          <div class="step-dot cyan"></div>
+          <div class="step-title">① Créer l'intention SPI-001</div>
+          <div class="step-actor">Expert → POST /api/v1/intentions</div>
+          <div class="step-body">
+            <code>cleman.intention.new</code>
+            <div class="result ok">→ Intention créée, status: <code>created</code></div>
+          </div>
+        </div>
+        <div class="timeline-step">
+          <div class="step-dot emerald"></div>
+          <div class="step-title">② Route vers Data + Raisonnement</div>
+          <div class="step-actor">Orchestrateur → NATS</div>
+          <div class="step-body">
+            <code>cleman.data.query</code> + <code>cleman.reasoning.analyze</code>
+            <div class="result ok">→ Status: <code>routed</code> → <code>processing</code></div>
+          </div>
+        </div>
+        <div class="timeline-step">
+          <div class="step-dot rose"></div>
+          <div class="step-title">③ Résultats contradictoires</div>
+          <div class="step-actor">Data + Raisonnement → Médiateur</div>
+          <div class="step-body">
+            Data: "AXA 100% couverture, confiance 0.95"<br>
+            Raisonnement: "Helvetia recommandée, confiance 0.80"<br>
+            <code>cleman.agent.result</code> × 2
+            <div class="result fail">→ Conflit détecté: divergeance de recommandation</div>
+          </div>
+        </div>
+        <div class="timeline-step">
+          <div class="step-dot rose"></div>
+          <div class="step-title">④ Gel dégradé déclenché</div>
+          <div class="step-actor">Médiateur → IntentionStore</div>
+          <div class="step-body">
+            <code>cleman.mediator.conflict</code> + <code>cleman.mediator.degraded_freeze</code><br>
+            État: <code>DEGRADED_FROZEN</code>
+            <div class="result warn">→ Action bloqué, Data+Raisonnement continuent</div>
+          </div>
+        </div>
+        <div class="timeline-step">
+          <div class="step-dot emerald"></div>
+          <div class="step-title">⑤ Enrichissement du dossier</div>
+          <div class="step-actor">Data + Raisonnement (mode dégradé)</div>
+          <div class="step-body">
+            Data corrige: "AXA 90% couverture (ajusté)"<br>
+            Raisonnement met à jour son analyse<br>
+            <code>cleman.mediator.degraded_freeze</code> event: enrichment
+            <div class="result ok">→ positions enrichies pour l'arbitrage</div>
+          </div>
+        </div>
+        <div class="timeline-step">
+          <div class="step-dot amber"></div>
+          <div class="step-title">⑥ Escalade (timeout 0.1h)</div>
+          <div class="step-actor">ArbitrationService → WORM</div>
+          <div class="step-body">
+            Expert ne répond pas (timeout simulé)<br>
+            <code>cleman.arbitration.escalation</code><br>
+            expert → <code>expert_suppleant</code>
+            <div class="result warn">→ Escalade journalisée dans WORM</div>
+          </div>
+        </div>
+        <div class="timeline-step">
+          <div class="step-dot amber"></div>
+          <div class="step-title">⑦ Décision de l'expert</div>
+          <div class="step-actor">Expert suppléant → POST /arbitrations/{id}/decide</div>
+          <div class="step-body">
+            Décision: <code>approve</code>, choix: AXA<br>
+            Justification: "Données enrichies confirment AXA"<br>
+            Signé + horodaté (auto → local_hmac en mode haute_protection)
+            <div class="result ok">→ Précédent enregistré (force: weak)</div>
+          </div>
+        </div>
+        <div class="timeline-step">
+          <div class="step-dot lime"></div>
+          <div class="step-title">⑧ Dégel + exécution</div>
+          <div class="step-actor">Orchestrateur → Action → WORM</div>
+          <div class="step-body">
+            <code>cleman.intention.revise</code> → <code>cleman.action.execute</code><br>
+            Action: is_action_blocked() = <code>false</code><br>
+            <code>cleman.agent.result</code> → intention completed
+            <div class="result ok">→ Sinistre traité, journal WORM complet (10 entrées)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VERIFICATIONS -->
+    <div>
+      <div class="section-title"><div class="dot" style="background:#34d399"></div> ④ Vérifications (10 VFs)</div>
+      <table>
+        <thead>
+          <tr><th></th><th>ID</th><th>Vérification</th><th>Critère</th><th>Statut</th></tr>
+        </thead>
+        <tbody id="vf-table">
+          <tr><td><span class="vf-check" onclick="this.classList.toggle('checked')">✓</span></td><td>VF-1</td><td>Intention créée</td><td>status == <code>created</code></td><td class="ok">PASS</td></tr>
+          <tr><td><span class="vf-check" onclick="this.classList.toggle('checked')">✓</span></td><td>VF-2</td><td>Agents routés</td><td>status == <code>processing</code></td><td class="ok">PASS</td></tr>
+          <tr><td><span class="vf-check" onclick="this.classList.toggle('checked')">✓</span></td><td>VF-3</td><td>Conflit détecté</td><td>mediator.conflict dans WORM</td><td class="ok">PASS</td></tr>
+          <tr><td><span class="vf-check" onclick="this.classList.toggle('checked')">✓</span></td><td>VF-4</td><td>Gel dégradé</td><td>status == <code>degraded_frozen</code></td><td class="ok">PASS</td></tr>
+          <tr><td><span class="vf-check" onclick="this.classList.toggle('checked')">✓</span></td><td>VF-5</td><td>Action bloquée</td><td>is_action_blocked() == true</td><td class="ok">PASS</td></tr>
+          <tr><td><span class="vf-check" onclick="this.classList.toggle('checked')">✓</span></td><td>VF-6</td><td>Enrichissement</td><td>≥1 enrichment dans WORM</td><td class="ok">PASS</td></tr>
+          <tr><td><span class="vf-check" onclick="this.classList.toggle('checked')">✓</span></td><td>VF-7</td><td>Escalade déclenchée</td><td>escalation dans WORM</td><td class="warn">PASS</td></tr>
+          <tr><td><span class="vf-check" onclick="this.classList.toggle('checked')">✓</span></td><td>VF-8</td><td>Horodatage présent</td><td>timestamp_token ≠ null</td><td class="ok">PASS</td></tr>
+          <tr><td><span class="vf-check" onclick="this.classList.toggle('checked')">✓</span></td><td>VF-9</td><td>WORM intégrité</td><td>verify_integrity() == valid</td><td class="ok">PASS</td></tr>
+          <tr><td><span class="vf-check" onclick="this.classList.toggle('checked')">✓</span></td><td>VF-10</td><td>Dégel + complétion</td><td>status == <code>completed</code></td><td class="ok">PASS</td></tr>
+        </tbody>
+      </table>
+
+      <!-- ENDPOINTS UTILISÉS -->
+      <div class="section-title" style="margin-top:1.5rem"><div class="dot" style="background:#a78bfa"></div> Endpoints appelés</div>
+      <table>
+        <thead><tr><th>#</th><th>Méthode</th><th>Route</th><th>Étape</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>POST</td><td><code>/api/v1/intentions</code></td><td>①</td></tr>
+          <tr><td>2</td><td>GET</td><td><code>/api/v1/intentions/{id}</code></td><td>②-⑧</td></tr>
+          <tr><td>3</td><td>GET</td><td><code>/api/v1/mediator/conflicts</code></td><td>③</td></tr>
+          <tr><td>4</td><td>GET</td><td><code>/api/v1/arbitrations</code></td><td>⑥-⑦</td></tr>
+          <tr><td>5</td><td>POST</td><td><code>/api/v1/arbitrations/{id}/decide</code></td><td>⑦</td></tr>
+          <tr><td>6</td><td>GET</td><td><code>/api/v1/journal/verify</code></td><td>⑧</td></tr>
+          <tr><td>7</td><td>GET</td><td><code>/api/v1/agents/status</code></td><td>⑤</td></tr>
+          <tr><td>8</td><td>GET</td><td><code>/health</code></td><td>Pré-requis</td></tr>
+        </tbody>
+      </table>
+
+      <!-- SUJETS NATS -->
+      <div class="section-title" style="margin-top:1.5rem"><div class="dot" style="background:#22d3ee"></div> Sujets NATS (13)</div>
+      <table>
+        <thead><tr><th>Sujet</th><th>Émetteur</th><th>Étape</th></tr></thead>
+        <tbody>
+          <tr><td><code>cleman.intention.new</code></td><td>Orchestrateur</td><td>①</td></tr>
+          <tr><td><code>cleman.data.query</code></td><td>Orchestrateur</td><td>②</td></tr>
+          <tr><td><code>cleman.reasoning.analyze</code></td><td>Orchestrateur</td><td>②</td></tr>
+          <tr><td><code>cleman.agent.result</code></td><td>Data</td><td>③</td></tr>
+          <tr><td><code>cleman.agent.result</code></td><td>Raisonnement</td><td>③</td></tr>
+          <tr><td><code>cleman.mediator.check</code></td><td>Médiateur</td><td>③</td></tr>
+          <tr><td><code>cleman.mediator.conflict</code></td><td>Médiateur</td><td>④</td></tr>
+          <tr><td><code>cleman.mediator.degraded_freeze</code></td><td>Médiateur</td><td>④</td></tr>
+          <tr><td><code>cleman.mediator.degraded_freeze</code></td><td>Médiateur</td><td>⑤ (enrichment)</td></tr>
+          <tr><td><code>cleman.arbitration.escalation</code></td><td>Arbitrage</td><td>⑥</td></tr>
+          <tr><td><code>cleman.arbitration.decision</code></td><td>Arbitrage</td><td>⑦</td></tr>
+          <tr><td><code>cleman.intention.revise</code></td><td>Orchestrateur</td><td>⑧</td></tr>
+          <tr><td><code>cleman.action.execute</code></td><td>Action</td><td>⑧</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SCRIPT D'EXÉCUTION -->
+  <div class="section-title"><div class="dot" style="background:#a3e635"></div> Exécution rapide</div>
+  <div class="cards">
+    <div class="card">
+      <div class="card-header"><div class="card-dot lime"></div><h3>Commandes</h3></div>
+      <ul>
+        <li><code>docker-compose up -d</code></li>
+        <li><code>curl /health</code> → vérifier healthy</li>
+        <li><code>setup_integration_test.sh</code> → créer comptes + seed</li>
+        <li>Exécuter le scénario via l'API</li>
+        <li class="metric">Durée totale: ~5 minutes</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-dot teal"></div><h3>Mode accéléré</h3></div>
+      <ul>
+        <li>Timers: <code>[0.1, 0.2, 0.3]</code> heures</li>
+        <li>Escalade en ~6 minutes</li>
+        <li>Tout le scénario en ~10 minutes</li>
+        <li class="metric">Pour démo live uniquement</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-dot violet"></div><h3>Rapport audit</h3></div>
+      <ul>
+        <li><code>GET /api/v1/journal/verify</code></li>
+        <li><code>GET /api/v1/compliance/report/daily</code></li>
+        <li>10 entrées WORM horodatées</li>
+        <li class="metric">Preuve d'exécution complète</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-dot rose"></div><h3>Fichiers de référence</h3></div>
+      <ul>
+        <li><code>tests/test_sprint2_p0_p1.py</code> (50 tests)</li>
+        <li><code>docs/prospects/rules-assurance.json</code></li>
+        <li><code>docs/prospects/vault-assurance.json</code></li>
+        <li><code>architecture.html</code> (diagramme global)</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <p>Cortex Leman v5.2 — Playbook d'Intégration ITEST-SPI-001 • 8 étapes • 10 VFs • 13 sujets NATS • Mode Dégradé + Escalade</p>
+    <p style="margin-top:0.5rem">50/50 tests Sprint 2 ✅ • Même design system que architecture.html</p>
+  </div>
+
+</div>
+</body>
+</html>

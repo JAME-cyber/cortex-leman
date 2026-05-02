@@ -1,0 +1,257 @@
+{
+  "vertical": "comptable",
+  "description": "Règles de conformité pour cabinets comptables FR-CH",
+  "rules": [
+    {
+      "id": "comptable-001",
+      "name": "Aucune décision fiscale automatique",
+      "severity": "critical",
+      "condition": {
+        "and": [
+          {
+            "==": [
+              {
+                "var": "action.type"
+              },
+              "decision_fiscale"
+            ]
+          },
+          {
+            "!": [
+              {
+                "var": "human_validated"
+              }
+            ]
+          }
+        ]
+      },
+      "action": "freeze",
+      "message": "Art. 22 RGPD: Les décisions fiscales ne peuvent être entièrement automatisées. Validation humaine obligatoire."
+    },
+    {
+      "id": "comptable-002",
+      "name": "Données client en EU uniquement",
+      "severity": "high",
+      "condition": {
+        "and": [
+          {
+            "==": [
+              {
+                "var": "action.type"
+              },
+              "data_transfer"
+            ]
+          },
+          {
+            "==": [
+              {
+                "var": "data_residency"
+              },
+              "CH"
+            ]
+          }
+        ]
+      },
+      "action": "block",
+      "message": "Les données comptables EU ne peuvent transiter par des serveurs CH sans accord préalable."
+    },
+    {
+      "id": "comptable-003",
+      "name": "Montant > 10K€ nécessite validation",
+      "severity": "high",
+      "condition": {
+        "and": [
+          {
+            "!=": [
+              {
+                "var": "payload.montant"
+              },
+              null
+            ]
+          },
+          {
+            ">=": [
+              {
+                "var": "payload.montant"
+              },
+              10000
+            ]
+          }
+        ]
+      },
+      "action": "arbitrate",
+      "message": "Opération > 10 000€ détectée. Validation expert requise (anti-blanchiment)."
+    },
+    {
+      "id": "comptable-004",
+      "name": "Anti-biais: vérification cohérence",
+      "severity": "medium",
+      "condition": {
+        "and": [
+          {
+            "!=": [
+              {
+                "var": "confidence_bias_score"
+              },
+              null
+            ]
+          },
+          {
+            ">=": [
+              {
+                "var": "confidence_bias_score"
+              },
+              0.7
+            ]
+          }
+        ]
+      },
+      "action": "warn",
+      "message": "Score de biais élevé détecté. Vérification manuelle recommandée."
+    },
+    {
+      "id": "comptable-005",
+      "name": "Audit trail obligatoire pour écritures",
+      "severity": "critical",
+      "condition": {
+        "==": [
+          {
+            "var": "action.type"
+          },
+          "ecriture_comptable"
+        ]
+      },
+      "action": "require_audit",
+      "message": "Toute écriture comptable doit être tracée dans le journal d'audit."
+    },
+    {
+      "id": "comptable-006",
+      "name": "Déduction fiscale élevée",
+      "severity": "high",
+      "condition": {
+        "and": [
+          {
+            "!=": [
+              {
+                "var": "payload.montant"
+              },
+              null
+            ]
+          },
+          {
+            ">=": [
+              {
+                "var": "payload.montant"
+              },
+              50000
+            ]
+          }
+        ]
+      },
+      "action": "freeze",
+      "message": "Déduction fiscale > 50 000 CHF détectée. Gel préventif: vérification du seuil de chiffre d'affaires et de l'éligibilité requise avant toute exécution."
+    },
+    {
+      "id": "comptable-007",
+      "name": "Conflit de déduction entre sources",
+      "severity": "high",
+      "condition": {
+        "and": [
+          {
+            "!=": [
+              {
+                "var": "contradiction_count"
+              },
+              null
+            ]
+          },
+          {
+            ">": [
+              {
+                "var": "contradiction_count"
+              },
+              0
+            ]
+          }
+        ]
+      },
+      "action": "freeze",
+      "message": "Conflit détecté entre sources fiscales. Gel: arbitrage expert requis pour choisir la déduction applicable."
+    },
+    {
+      "id": "comptable-008",
+      "name": "Conformité avec les normes OSCAL",
+      "severity": "medium",
+      "condition": {
+        "==": [
+          {
+            "var": "action.type"
+          },
+          "IA_high_risk"
+        ]
+      },
+      "action": "warn",
+      "message": "Assurez-vous que les systèmes d'IA respectent les exigences de conformité OSCAL."
+    },
+    {
+      "id": "comptable-009",
+      "name": "Conformité avec les normes de gouvernance IA",
+      "severity": "medium",
+      "condition": {
+        "==": [
+          {
+            "var": "action.type"
+          },
+          "IA_governance"
+        ]
+      },
+      "action": "warn",
+      "message": "Assurez-vous que les systèmes d'IA respectent les normes de gouvernance harmonisées."
+    },
+    {
+      "id": "comptable-010",
+      "name": "Conformité RGPD pour transferts de données",
+      "severity": "high",
+      "condition": {
+        "==": [
+          {
+            "var": "data.transfer"
+          },
+          "international"
+        ]
+      },
+      "action": "arbitrate",
+      "message": "Assurez-vous que les transferts de données internationales respectent les exigences du RGPD."
+    },
+    {
+      "id": "comptable-011",
+      "name": "Conformité avec le règlement IA de l'UE pour les opérations transfrontalières",
+      "severity": "medium",
+      "condition": {
+        "==": [
+          {
+            "var": "action.type"
+          },
+          "cross_border"
+        ]
+      },
+      "action": "warn",
+      "message": "Assurez-vous que toutes les opérations transfrontalières respectent le règlement IA de l'UE."
+    },
+    {
+      "id": "comptable-012",
+      "name": "Conformité avec les normes de gouvernance IA basées sur blockchain",
+      "severity": "medium",
+      "condition": {
+        "==": [
+          {
+            "var": "action.type"
+          },
+          "transborder_compliance"
+        ]
+      },
+      "action": "warn",
+      "message": "Assurez-vous que les systèmes d'IA respectent les normes de gouvernance basées sur blockchain pour les opérations transfrontalières."
+    }
+  ]
+}

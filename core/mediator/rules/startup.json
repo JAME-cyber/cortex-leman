@@ -1,0 +1,29 @@
+{
+  "vertical": "startup",
+  "description": "Règles de conformité pour startups FR (RGPD standard, AI Act Limited)",
+  "rules": [
+    {
+      "id": "startup-001",
+      "name": "Consentement cookies/data",
+      "severity": "medium",
+      "condition": {
+        "!": [{"var": "user_consent"}]
+      },
+      "action": "warn",
+      "message": "RGPD: Consentement utilisateur requis avant collecte de données."
+    },
+    {
+      "id": "startup-002",
+      "name": "DPIA si profiling",
+      "severity": "high",
+      "condition": {
+        "and": [
+          { "==": [{"var": "action.type"}, "profiling"] },
+          { "!": [{"var": "dpia_completed"}] }
+        ]
+      },
+      "action": "arbitrate",
+      "message": "RGPD Art. 35: AIPD/DPIA obligatoire pour toute opération de profilage."
+    }
+  ]
+}

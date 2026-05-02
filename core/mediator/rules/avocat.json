@@ -1,0 +1,52 @@
+{
+  "vertical": "avocat",
+  "description": "Règles de conformité pour cabinets d'avocats FR-CH (Art. 321 CP, secret professionnel)",
+  "rules": [
+    {
+      "id": "avocat-001",
+      "name": "Secret professionnel absolu",
+      "severity": "critical",
+      "condition": {
+        "and": [
+          { "==": [{"var": "action.type"}, "data_transfer"] },
+          { "==": [{"var": "data_category"}, "client_dossier"] }
+        ]
+      },
+      "action": "block",
+      "message": "Art. 321 CP: Aucun transfert de dossier client hors du cabinet. Mode Haute Protection obligatoire."
+    },
+    {
+      "id": "avocat-002",
+      "name": "LLM local obligatoire",
+      "severity": "critical",
+      "condition": {
+        "and": [
+          { "==": [{"var": "action.type"}, "llm_query"] },
+          { "==": [{"var": "llm_provider"}, "external"] }
+        ]
+      },
+      "action": "block",
+      "message": "Secret professionnel: Aucune requête LLM externe autorisée pour les dossiers clients."
+    },
+    {
+      "id": "avocat-003",
+      "name": "Validation requise pour conclusions",
+      "severity": "high",
+      "condition": {
+        "==": [{"var": "action.type"}, "redaction_conclusions"]
+      },
+      "action": "arbitrate",
+      "message": "Toute rédaction de conclusions nécessite validation de l'avocat responsable."
+    },
+    {
+      "id": "avocat-004",
+      "name": "Data Residency CH stricte",
+      "severity": "critical",
+      "condition": {
+        "!": [{"var": "infrastructure.in_switzerland"}]
+      },
+      "action": "block",
+      "message": "LPM/Art. 321 CP: Infrastructure doit être physiquement en Suisse pour les dossiers clients."
+    }
+  ]
+}

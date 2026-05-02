@@ -1,0 +1,45 @@
+{
+  "vertical": "rh",
+  "description": "Règles de conformité pour RH FR-CH (RGPD, AI Act, droit du travail)",
+  "rules": [
+    {
+      "id": "rh-001",
+      "name": "Pas de décision RH automatique",
+      "severity": "critical",
+      "condition": {
+        "and": [
+          { "==": [{"var": "action.type"}, "decision_rh"] },
+          { "!": [{"var": "human_validated"}] }
+        ]
+      },
+      "action": "freeze",
+      "message": "RGPD Art. 22 + AI Act: Aucune décision RH automatisée (embauche, licenciement, notation)."
+    },
+    {
+      "id": "rh-002",
+      "name": "Anti-discrimination embauche",
+      "severity": "critical",
+      "condition": {
+        "and": [
+          { "!=": [{"var": "bias_score"}, null] },
+          { ">=": [{"var": "bias_score"}, 0.5] }
+        ]
+      },
+      "action": "freeze",
+      "message": "AI Act + Loi anti-discrimination: Score de biais >= 0.5 dans le processus d'embauche. Gel immédiat."
+    },
+    {
+      "id": "rh-003",
+      "name": "Données sensibles: consentement",
+      "severity": "high",
+      "condition": {
+        "and": [
+          { "==": [{"var": "data_category"}, "donnees_sensibles_rh"] },
+          { "!": [{"var": "employee_consent"}] }
+        ]
+      },
+      "action": "block",
+      "message": "RGPD Art. 9: Traitement de données sensibles RH sans consentement. Blocage."
+    }
+  ]
+}
