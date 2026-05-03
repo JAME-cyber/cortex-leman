@@ -31,10 +31,11 @@ const FEATURES = [
 ]
 
 const STATS = [
-  { value: '159', label: 'Tests automatisés', color: 'cyan' },
+  { value: '275', label: 'Tests automatisés', color: 'cyan' },
   { value: '22',  label: 'Règles JsonLogic',  color: 'emerald' },
-  { value: '44',  label: 'Endpoints API',     color: 'violet' },
+  { value: '58',  label: 'Endpoints API',     color: 'violet' },
   { value: '6',   label: 'Verticales métier', color: 'amber' },
+  { value: '51',  label: 'Docs réglementaires', color: 'rose' },
 ]
 
 // ── Navbar ─────────────────────────────────────────────────
@@ -85,34 +86,38 @@ function HeroSection({ onStartOnboarding }: { onStartOnboarding?: () => void }) 
       <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', maxWidth: 800, padding: '0 1.5rem' }}>
         {/* Badge */}
         <div style={{ marginBottom: '1.5rem' }}>
-          <span className="badge badge-cyan"> Infrastructure de Confiance IA — Professions Régulées FR-CH </span>
+          <span className="badge badge-cyan"> AI Compliance Infrastructure — Professions Régulées FR-CH </span>
         </div>
 
         {/* Title */}
         <h1 className="hero-title" style={{ fontSize: '3.5rem', fontWeight: 800, lineHeight: 1.1, letterSpacing: '-0.035em', marginBottom: '1.5rem' }}>
-          Le Graphe de Confiance
+          Infrastructure de
           <br />
           <span style={{ background: 'linear-gradient(135deg, var(--cyan), var(--emerald))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-            pour l'IA réglementée
+            Conformité IA
           </span>
         </h1>
 
         {/* Subtitle */}
         <p style={{ fontSize: '1.125rem', color: 'var(--text-muted)', maxWidth: 620, margin: '0 auto 2rem', lineHeight: 1.7 }}>
-          Déployez votre équipe de conformité IA en 5 minutes.
-          6 agents spécialisés, 22 règles réglementaires, journal d'audit hash-chainé.
-          Pour cabinets comptables, avocats, banques, hôpitaux et startups FR-CH.
+          Conformité RGPD, AI Act, secret professionnel FR-CH.
+          6 agents spécialisés, 22 règles réglementaires, journal d'audit inviolable.
         </p>
 
         {/* CTA Buttons */}
         <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
           <button onClick={() => onStartOnboarding?.()} className="btn btn-primary" style={{ padding: '0.875rem 2rem', fontSize: '0.9375rem' }}>
-            Déployer mon équipe IA →
+            Audit gratuit 5 min →
           </button>
           <a href="#architecture" className="btn btn-secondary" style={{ padding: '0.875rem 2rem', fontSize: '0.9375rem' }}>
             Voir l'architecture
           </a>
         </div>
+
+        {/* Trust line */}
+        <p style={{ fontSize: '0.75rem', color: 'var(--text-dim)', marginTop: '1.5rem' }}>
+          Gratuit · Sans carte bancaire · Déployé en 5 minutes
+        </p>
 
         {/* Mini stats */}
         <div style={{ display: 'flex', gap: '2rem', justifyContent: 'center', marginTop: '3rem', flexWrap: 'wrap' }}>
@@ -301,12 +306,12 @@ function ComplianceSection() {
 // ── Stats Section (Aura-inspired metric grid) ──────────────
 function StatsSection() {
   const allStats = [
-    { value: '159', label: 'Tests automatisés', sub: '138 unitaires + 21 intégration', color: 'cyan' },
-    { value: '22', label: 'Règles JsonLogic', sub: '6 verticales × 2-7 règles', color: 'emerald' },
-    { value: '44', label: 'Endpoints API', sub: 'REST FastAPI + JWT auth', color: 'violet' },
-    { value: '20', label: 'Textes réglementaires', sub: 'Vectorisés dans ChromaDB', color: 'amber' },
-    { value: '7', label: 'Comptes démo', sub: '6 verticals + admin', color: 'rose' },
-    { value: '~15K', label: 'Lignes de code', sub: 'Python + TypeScript', color: 'blue' },
+    { value: '275', label: 'Tests automatisés', sub: '0 échec, CI ready', color: 'cyan' },
+    { value: '22', label: 'Règles JsonLogic', sub: '6 verticales × 2-12 règles', color: 'emerald' },
+    { value: '58', label: 'Endpoints API', sub: 'REST + JWT + MCP', color: 'violet' },
+    { value: '51', label: 'Docs réglementaires', sub: 'Vectorisés ChromaDB RAG', color: 'amber' },
+    { value: '6', label: 'Verticales métier', sub: '+ ajout en 1 commande', color: 'rose' },
+    { value: '28K+', label: 'Lignes de code', sub: 'Python + TypeScript', color: 'blue' },
   ]
 
   return (
@@ -328,21 +333,21 @@ function StatsSection() {
 function PricingSection({ onStartOnboarding }: { onStartOnboarding?: () => void }) {
   const plans = [
     {
-      name: 'Standard',
+      name: 'Starter',
       price: '0€',
       period: '/mois',
       desc: 'Développement & test',
-      features: ['SQLite local', 'OpenRouter LLM', '5 utilisateurs', '3 verticals', 'Guardrails LLM', 'Journal WORM'],
+      features: ['SQLite local', 'OpenRouter LLM', '5 utilisateurs', '3 verticals', 'Guardrails LLM', 'Journal WORM', 'MCP Tools'],
       color: 'var(--text-muted)',
       cta: 'Démarrer gratuitement',
       ctaStyle: 'btn-secondary' as const,
     },
     {
-      name: 'Professionnel',
-      price: '49€',
+      name: 'Cabinet',
+      price: '99€',
       period: '/mois',
-      desc: 'Premier client payant',
-      features: ['PostgreSQL', 'Tous modèles LLM', 'Utilisateurs illimités', '6 verticals', 'RAG ChromaDB', 'API Keys', 'Arbitrage humain', 'n8n intégré'],
+      desc: 'Pour votre cabinet',
+      features: ['PostgreSQL', 'Tous modèles LLM', 'Utilisateurs illimités', '6 verticals', 'RAG 51 docs ChromaDB', 'API Keys + MCP', 'Arbitrage humain', 'Journal WORM signé', 'Support email'],
       color: 'var(--cyan)',
       cta: 'Essai 14 jours →',
       ctaStyle: 'btn-primary' as const,
@@ -350,10 +355,10 @@ function PricingSection({ onStartOnboarding }: { onStartOnboarding?: () => void 
     },
     {
       name: 'Haute Protection',
-      price: '149€',
+      price: '299€',
       period: '/mois',
       desc: 'Avocats, banques, santé',
-      features: ['Ollama local (K3s)', 'Zero fuite données', 'Chiffrement Fernet', 'Mode hors-ligne', 'Art. 321 CP / LB 47', 'FINMA ready', 'Support prioritaire'],
+      features: ['Ollama local (K3s)', 'Zero fuite données', 'Chiffrement Fernet', 'Data residency CH', 'Art. 321 CP / LB 47', 'FINMA ready', 'Serment numérique', 'Support prioritaire'],
       color: 'var(--violet)',
       cta: 'Nous contacter',
       ctaStyle: 'btn-secondary' as const,
@@ -365,10 +370,10 @@ function PricingSection({ onStartOnboarding }: { onStartOnboarding?: () => void 
       <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
         <span className="badge badge-cyan" style={{ marginBottom: '1rem' }}>Tarifs</span>
         <h2 style={{ fontSize: '2.25rem', fontWeight: 700, letterSpacing: '-0.025em', marginBottom: '0.75rem' }}>
-          Développez à 0€, scalez avec les clients
+          Gratuit pour développer, payant pour produire
         </h2>
         <p style={{ color: 'var(--text-muted)', maxWidth: 500, margin: '0 auto' }}>
-          VPS uniquement au premier client payant. Bare metal pour 10+.
+          Pas de surprise. Starter à 0€, Cabinet à 99€/mois, Haute Protection pour les sensibles.
         </p>
       </div>
 
@@ -416,14 +421,14 @@ function CTASection({ onStartOnboarding }: { onStartOnboarding?: () => void }) {
         <div className="glow-orb violet" style={{ bottom: '-50%', right: '-10%' }} />
         <div style={{ position: 'relative', zIndex: 1 }}>
           <h2 style={{ fontSize: '2rem', fontWeight: 700, letterSpacing: '-0.025em', marginBottom: '0.75rem' }}>
-            Prêt à construire la confiance ?
+            Votre conformité IA commence maintenant
           </h2>
           <p style={{ color: 'var(--text-muted)', maxWidth: 500, margin: '0 auto 2rem' }}>
-            Votre cabinet dispose en 5 minutes d'une infrastructure IA conforme RGPD, AI Act et secret professionnel.
+            Cabinet comptable, cabinet d'avocats, banque, hôpital. Démarrez en 5 minutes.
           </p>
           <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
             <button onClick={() => onStartOnboarding?.()} className="btn btn-primary" style={{ padding: '0.875rem 2rem' }}>
-              Démarrer l'essai gratuit →
+              Audit gratuit 5 min →
             </button>
             <a href="/docs" className="btn btn-secondary" style={{ padding: '0.875rem 2rem' }}>
               Lire la documentation
