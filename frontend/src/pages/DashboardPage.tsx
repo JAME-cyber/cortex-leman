@@ -4,6 +4,7 @@ import { useApi, apiFetch } from '../hooks/useApi'
 const NAV_ITEMS = [
   { id: 'dashboard',  icon: '📊', label: 'Tableau de bord' },
   { id: 'serment',    icon: '🤫', label: 'Serment numérique' },
+  { id: 'trustbox',   icon: '🛡️', label: 'Trust Box' },
   { id: 'echeancier', icon: '📅', label: 'Échéancier' },
   { id: 'chat',       icon: '💬', label: 'Chat Agent' },
   { id: 'intents',    icon: '🎯', label: 'Intentions' },
@@ -114,6 +115,7 @@ export function DashboardPage({ user, onLogout }: { user: any; onLogout: () => v
       }}>
         {displayedView === 'dashboard'  && <DashboardView user={user} />}
         {displayedView === 'serment'    && <SermentView user={user} />}
+        {displayedView === 'trustbox'   && <TrustBoxView user={user} />}
         {displayedView === 'echeancier' && <EcheancierView user={user} />}
         {displayedView === 'chat'       && <ChatView user={user} />}
         {displayedView === 'intents'    && <IntentsView user={user} />}
@@ -964,6 +966,323 @@ function SettingsView({ user, onLogout: _onLogout }: { user: any; onLogout: () =
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    SERMENT NUMÉRIQUE — Par vertical
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+// ═══════════════════════════════════════════════════════════
+// TRUST BOX VIEW — Phase 1B
+// Visualisation temps réel du Trust Box (Médiateur déterministe)
+// Inspiré du T-Box d'Ant Group
+// ═══════════════════════════════════════════════════════════
+function TrustBoxView({ user }: { user: any }) {
+  const [selectedVertical, setSelectedVertical] = useState(user?.primary_vertical || 'comptable')
+  const [simAction, setSimAction] = useState('consultation')
+  const [simPayload, setSimPayload] = useState('{"montant": 500}')
+  const [simResult, setSimResult] = useState<any>(null)
+  const [simLoading, setSimLoading] = useState(false)
+  const [activeTab, setActiveTab] = useState<'overview' | 'rules' | 'simulate'>('overview')
+
+  // Fetch Trust Box status
+  const { data: statusData, loading: statusLoading } = useApi('/trust-box/status')
+  // Fetch rules for selected vertical
+  const { data: rulesData, loading: rulesLoading } = useApi(`/trust-box/rules?vertical=${selectedVertical}`)
+  // Fetch conflicts
+  const { data: conflictsData } = useApi('/trust-box/conflicts')
+
+  const status = statusData as any
+  const rules = rulesData as any
+  const conflicts = conflictsData as any
+
+  const actionColor: Record<string, string> = {
+    block: '#ef4444', freeze: '#f59e0b', arbitrate: '#a78bfa',
+    warn: '#fbbf24', require_audit: '#fb923c', pass: '#34d399',
+  }
+
+  const verdictColor: Record<string, string> = {
+    APPROVED: 'var(--emerald)', BLOCKED: '#ef4444', FROZEN: '#f59e0b',
+    ARBITRATION_REQUIRED: 'var(--violet)', WARNED: '#fbbf24', AUDIT_REQUIRED: '#fb923c',
+  }
+
+  const handleSimulate = async () => {
+    setSimLoading(true)
+    try {
+      const payload = JSON.parse(simPayload)
+      const res = await apiFetch('/trust-box/simulate', {
+        method: 'POST',
+        body: JSON.stringify({ vertical: selectedVertical, action_type: simAction, payload }),
+      })
+      setSimResult(await res.json())
+    } catch (e: any) {
+      setSimResult({ error: e.message })
+    }
+    setSimLoading(false)
+  }
+
+  return (
+    <div style={{ flex: 1, overflow: 'auto', padding: '1.5rem 2rem' }}>
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+        <div>
+          <h1 style={{ fontSize: '1.25rem', fontWeight: 700 }}>🛡️ Trust Box</h1>
+          <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+            Couche de confiance déterministe · 0% LLM · Inspiré du T-Box d'Ant Group
+          </p>
+        </div>
+        {!statusLoading && status && (
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            <div style={{ padding: '0.5rem 1rem', borderRadius: '0.5rem', background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.2)' }}>
+              <span style={{ fontSize: '0.75rem', color: 'var(--emerald)', fontWeight: 700 }}>{status.metrics?.total_rules || 0} règles</span>
+            </div>
+            <div style={{ padding: '0.5rem 1rem', borderRadius: '0.5rem', background: conflicts?.active_conflicts > 0 ? 'rgba(245,158,11,0.1)' : 'rgba(52,211,153,0.1)', border: `1px solid ${conflicts?.active_conflicts > 0 ? 'rgba(245,158,11,0.2)' : 'rgba(52,211,153,0.2)'}` }}>
+              <span style={{ fontSize: '0.75rem', color: conflicts?.active_conflicts > 0 ? '#f59e0b' : 'var(--emerald)', fontWeight: 700 }}>
+                {conflicts?.active_conflicts || 0} conflits
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Tabs */}
+      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem' }}>
+        {(['overview', 'rules', 'simulate'] as const).map(tab => (
+          <button key={tab} onClick={() => setActiveTab(tab)} style={{
+            padding: '0.5rem 1rem', borderRadius: '0.5rem', fontSize: '0.8125rem',
+            fontWeight: activeTab === tab ? 700 : 400, cursor: 'pointer', border: 'none',
+            background: activeTab === tab ? 'rgba(34,211,238,0.1)' : 'transparent',
+            color: activeTab === tab ? 'var(--cyan)' : 'var(--text-muted)',
+          }}>
+            {tab === 'overview' ? '📊 Vue d\'ensemble' : tab === 'rules' ? '📜 Règles' : '🧪 Simulateur'}
+          </button>
+        ))}
+      </div>
+
+      {/* === OVERVIEW TAB === */}
+      {activeTab === 'overview' && (
+        <div style={{ maxWidth: 900 }}>
+          {/* Philosophy card */}
+          <div className="glass" style={{ padding: '1.5rem', marginBottom: '1rem', position: 'relative', overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg, var(--cyan), var(--emerald))' }} />
+            <div style={{ fontSize: '0.875rem', fontStyle: 'italic', color: 'var(--text-muted)', marginBottom: '1rem' }}>
+              "{status?.philosophy || 'Déterministe là où il faut. Intelligent là où on peut.'}"
+            </div>
+
+            {/* Architecture badges */}
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              {status?.architecture?.actions?.map((a: string) => (
+                <span key={a} style={{
+                  padding: '0.25rem 0.625rem', borderRadius: '9999px', fontSize: '0.6875rem', fontWeight: 600,
+                  background: (actionColor[a] || 'var(--text-dim)') + '15',
+                  color: actionColor[a] || 'var(--text-dim)',
+                  border: `1px solid ${(actionColor[a] || 'var(--text-dim)')}25`,
+                }}>{a}</span>
+              ))}
+            </div>
+          </div>
+
+          {/* 6 Principes du Serment */}
+          <div className="glass" style={{ padding: '1.5rem', marginBottom: '1rem' }}>
+            <h3 style={{ fontSize: '0.875rem', fontWeight: 700, marginBottom: '1rem' }}>🤝 Les 6 Principes du Trust Box</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '0.75rem' }}>
+              {[
+                { icon: '🔒', title: 'Déterminisme critique', desc: 'Les décisions de gel sont 100% JsonLogic. Jamais de LLM.' },
+                { icon: '🧊', title: 'Gel préventif', desc: 'Action gelée automatiquement si une règle est violée.' },
+                { icon: '⚖️', title: 'Arbitrage humain', desc: "L'IA ne décide JAMAIS seule pour les actions critiques." },
+                { icon: '📝', title: 'Transparence totale', desc: 'Chaque décision tracée dans un journal inviolable WORM.' },
+                { icon: '🔄', title: 'Mode dégradé', desc: 'En cas de gel, Data et Raisonnement continuent de travailler.' },
+                { icon: '✅', title: 'Conformité by design', desc: 'RGPD, AI Act, secret professionnel encodés dans les règles.' },
+              ].map((p, i) => (
+                <div key={i} style={{ padding: '0.75rem', borderRadius: '0.5rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.375rem' }}>
+                    <span>{p.icon}</span>
+                    <span style={{ fontSize: '0.8125rem', fontWeight: 600 }}>{p.title}</span>
+                  </div>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: 1.6 }}>{p.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Verticals summary */}
+          {!statusLoading && status?.verticals && (
+            <div className="glass" style={{ padding: '1.5rem' }}>
+              <h3 style={{ fontSize: '0.875rem', fontWeight: 700, marginBottom: '1rem' }}>📐 Verticales actives</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '0.75rem' }}>
+                {status.verticals.map((v: string) => (
+                  <div key={v} onClick={() => { setSelectedVertical(v); setActiveTab('rules') }} style={{
+                    padding: '0.75rem', borderRadius: '0.5rem', cursor: 'pointer', textAlign: 'center',
+                    background: v === selectedVertical ? 'rgba(34,211,238,0.08)' : 'rgba(255,255,255,0.02)',
+                    border: `1px solid ${v === selectedVertical ? 'rgba(34,211,238,0.2)' : 'var(--border)'}`,
+                    transition: 'all 0.2s',
+                  }}>
+                    <div style={{ fontSize: '0.875rem', fontWeight: 600 }}>{verticalIcon(v)}</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>{v}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* === RULES TAB === */}
+      {activeTab === 'rules' && (
+        <div style={{ maxWidth: 900 }}>
+          {/* Vertical selector */}
+          <div style={{ marginBottom: '1rem' }}>
+            <select value={selectedVertical} onChange={e => setSelectedVertical(e.target.value)} style={{
+              padding: '0.5rem 1rem', borderRadius: '0.5rem', fontSize: '0.8125rem',
+              background: 'var(--bg-card-solid)', border: '1px solid var(--border)', color: 'var(--text)',
+            }}>
+              {status?.verticals?.map((v: string) => (
+                <option key={v} value={v}>{verticalIcon(v)} {v}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Rules list */}
+          {!rulesLoading && rules?.rules?.map((rule: any, i: number) => (
+            <div key={rule.id || i} className="glass" style={{
+              padding: '1rem 1.25rem', marginBottom: '0.75rem',
+              borderLeft: `3px solid ${actionColor[rule.action] || 'var(--text-dim)'}`,
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.375rem' }}>
+                    <span className="mono" style={{ fontSize: '0.6875rem', color: 'var(--text-dim)' }}>{rule.id}</span>
+                    <span style={{ fontSize: '0.875rem', fontWeight: 600 }}>{rule.name}</span>
+                  </div>
+                  <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', lineHeight: 1.6 }}>{rule.message}</p>
+                </div>
+                <div style={{ display: 'flex', gap: '0.375rem', flexShrink: 0, marginLeft: '1rem' }}>
+                  <span style={{
+                    padding: '0.25rem 0.625rem', borderRadius: '9999px', fontSize: '0.625rem', fontWeight: 700,
+                    background: (actionColor[rule.action] || 'var(--text-dim)') + '15',
+                    color: actionColor[rule.action] || 'var(--text-dim)',
+                  }}>{rule.action}</span>
+                  <span style={{
+                    padding: '0.25rem 0.625rem', borderRadius: '9999px', fontSize: '0.625rem', fontWeight: 600,
+                    background: rule.severity === 'critical' ? 'rgba(239,68,68,0.1)' : rule.severity === 'high' ? 'rgba(245,158,11,0.1)' : 'rgba(255,255,255,0.03)',
+                    color: rule.severity === 'critical' ? '#ef4444' : rule.severity === 'high' ? '#f59e0b' : 'var(--text-dim)',
+                  }}>{rule.severity}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+
+          {!rulesLoading && rules?.total === 0 && (
+            <div className="glass" style={{ padding: '2rem', textAlign: 'center' }}>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Aucune règle pour cette verticale</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* === SIMULATE TAB === */}
+      {activeTab === 'simulate' && (
+        <div style={{ maxWidth: 900 }}>
+          <div className="glass" style={{ padding: '1.5rem', marginBottom: '1rem' }}>
+            <h3 style={{ fontSize: '0.875rem', fontWeight: 700, marginBottom: '1rem' }}>🧪 Simulateur Trust Box</h3>
+            <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
+              Testez ce que le Trust Box déciderait pour une action donnée. Aucun effet de bord — dry-run uniquement.
+            </p>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+              <div>
+                <label style={{ fontSize: '0.75rem', color: 'var(--text-dim)', display: 'block', marginBottom: '0.375rem' }}>Verticale</label>
+                <select value={selectedVertical} onChange={e => setSelectedVertical(e.target.value)} style={{
+                  width: '100%', padding: '0.5rem 0.75rem', borderRadius: '0.5rem', fontSize: '0.8125rem',
+                  background: 'var(--bg-card-solid)', border: '1px solid var(--border)', color: 'var(--text)',
+                }}>
+                  {status?.verticals?.map((v: string) => (
+                    <option key={v} value={v}>{v}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize: '0.75rem', color: 'var(--text-dim)', display: 'block', marginBottom: '0.375rem' }}>Type d'action</label>
+                <select value={simAction} onChange={e => setSimAction(e.target.value)} style={{
+                  width: '100%', padding: '0.5rem 0.75rem', borderRadius: '0.5rem', fontSize: '0.8125rem',
+                  background: 'var(--bg-card-solid)', border: '1px solid var(--border)', color: 'var(--text)',
+                }}>
+                  <option value="consultation">Consultation</option>
+                  <option value="decision_fiscale">Décision fiscale</option>
+                  <option value="data_transfer">Transfert données</option>
+                  <option value="ecriture_comptable">Écriture comptable</option>
+                  <option value="virement">Virement</option>
+                  <option value="IA_high_risk">IA haut risque</option>
+                  <option value="cross_border">Cross-border</option>
+                </select>
+              </div>
+            </div>
+
+            <div style={{ marginBottom: '1rem' }}>
+              <label style={{ fontSize: '0.75rem', color: 'var(--text-dim)', display: 'block', marginBottom: '0.375rem' }}>Payload (JSON)</label>
+              <textarea value={simPayload} onChange={e => setSimPayload(e.target.value)} style={{
+                width: '100%', minHeight: 60, padding: '0.5rem 0.75rem', borderRadius: '0.5rem', fontSize: '0.8125rem',
+                fontFamily: 'monospace', background: 'var(--bg-card-solid)', border: '1px solid var(--border)', color: 'var(--text)', resize: 'vertical',
+              }} />
+            </div>
+
+            <button onClick={handleSimulate} disabled={simLoading} className="btn btn-primary" style={{ padding: '0.625rem 1.5rem' }}>
+              {simLoading ? '⏳ Simulation...' : '▶ Simuler'}
+            </button>
+          </div>
+
+          {/* Simulation result */}
+          {simResult && !simResult.error && (
+            <div className="glass" style={{ padding: '1.5rem', position: 'relative', overflow: 'hidden' }}>
+              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: verdictColor[simResult.verdict] || 'var(--text-dim)' }} />
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+                <div style={{
+                  width: 48, height: 48, borderRadius: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  background: (verdictColor[simResult.verdict] || 'var(--text-dim)') + '15',
+                  border: `1px solid ${(verdictColor[simResult.verdict] || 'var(--text-dim)')}25`,
+                }}>
+                  <span style={{ fontSize: '1.5rem' }}>
+                    {simResult.verdict === 'APPROVED' ? '✅' : simResult.verdict === 'BLOCKED' ? '🚫' : simResult.verdict === 'FROZEN' ? '🧊' : simResult.verdict === 'WARNED' ? '⚠️' : '⚖️'}
+                  </span>
+                </div>
+                <div>
+                  <div style={{ fontSize: '1rem', fontWeight: 700, color: verdictColor[simResult.verdict] || 'var(--text)' }}>
+                    {simResult.verdict}
+                  </div>
+                  <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>{simResult.explanation}</div>
+                </div>
+              </div>
+
+              {simResult.triggered_rules?.length > 0 && (
+                <div>
+                  <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-dim)', marginBottom: '0.5rem' }}>
+                    {simResult.rules_triggered} règle(s) déclenchée(s) sur {simResult.rules_checked} évaluées
+                  </div>
+                  {simResult.triggered_rules.map((r: any, i: number) => (
+                    <div key={i} style={{
+                      padding: '0.75rem', marginBottom: '0.5rem', borderRadius: '0.5rem',
+                      borderLeft: `3px solid ${actionColor[r.action] || 'var(--text-dim)'}`,
+                      background: 'rgba(255,255,255,0.02)',
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span className="mono" style={{ fontSize: '0.6875rem', color: 'var(--text-dim)' }}>{r.rule_id}</span>
+                        <span style={{ fontSize: '0.625rem', fontWeight: 700, color: actionColor[r.action] || 'var(--text-dim)' }}>{r.action}</span>
+                      </div>
+                      <div style={{ fontSize: '0.8125rem', fontWeight: 600, marginTop: '0.25rem' }}>{r.rule_name}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>{r.message}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {simResult?.error && (
+            <div className="glass" style={{ padding: '1.5rem', borderLeft: '3px solid #ef4444' }}>
+              <p style={{ color: '#ef4444', fontSize: '0.875rem' }}>Erreur: {simResult.error}</p>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function SermentView({ user }: { user: any }) {
   const [vertical, setVertical] = useState(user?.primary_vertical || 'comptable')
   const { data, loading } = useApi(`/api/v1/serment/${vertical}`)
