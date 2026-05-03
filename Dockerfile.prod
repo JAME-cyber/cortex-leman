@@ -1,0 +1,59 @@
+# Cortex Leman v5 — Dockerfile Production
+# Multi-stage: Node build frontend + Python API
+
+# ═══ Stage 1: Build Frontend ═══
+FROM node:20-alpine AS frontend-builder
+
+WORKDIR /build
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci --silent
+COPY frontend/ ./
+RUN npm run build
+
+# ═══ Stage 2: API + Frontend ═══
+FROM python:3.12-slim AS production
+
+LABEL maintainer="Cortex Leman <contact@cortex-leman.com>"
+LABEL version="5.2.0"
+LABEL description="Cortex Leman v5 — Graphe de Confiance"
+
+# Dépendances système
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    curl gcc && \
+    rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Backend code
+COPY core/ /app/core/
+COPY api/ /app/api/
+COPY scripts/ /app/scripts/
+COPY alembic/ /app/alembic/
+COPY alembic.ini /app/alembic.ini
+
+# Frontend (depuis le stage 1)
+COPY --from=frontend-builder /build/dist /app/frontend/dist
+
+# Regulatory vault
+COPY data/vault/ /app/data/vault/
+
+# Data directories
+RUN mkdir -p /app/data/{journal,reports,precedents,chroma_db}
+
+# Environment
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV APP_ENV=production
+
+EXPOSE 8000
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# Seed RAG at startup, then start API
+CMD ["sh", "-c", "python scripts/seed_rag.py && uvicorn api.main:app --host 0.0.0.0 --port 8000 --workers 2"]
