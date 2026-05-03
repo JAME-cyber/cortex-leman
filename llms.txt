@@ -1,0 +1,87 @@
+# Cortex Leman v5 — llms.txt
+
+> Ce fichier est destiné aux agents IA et outils automatiques.
+> Il décrit l'API Cortex Leman pour permettre à un agent de découvrir et utiliser la plateforme.
+
+## Nom
+Cortex Leman v5 — Graphe de Confiance
+
+## Description
+Infrastructure de confiance IA pour professions régulées franco-suisses.
+6 verticales métier: comptable, avocat, santé, banque, startup, RH.
+Conformité RGPD, AI Act, secret professionnel FR-CH.
+
+## Base URL
+https://api.cortex-leman.com (production)
+http://localhost:8001 (développement)
+
+## Authentification
+- JWT Bearer token: `Authorization: Bearer <token>`
+- API Key: `X-API-Key: cl_xxxxx`
+- Login: `POST /api/v1/auth/login` avec `{email, password}`
+
+## Endpoints principaux
+
+### Intentions
+- `POST /api/v1/intentions` — Soumettre une nouvelle intention
+- `GET /api/v1/intentions/{id}` — Consulter une intention
+- `GET /api/v1/intentions/{id}/history` — Historique des transitions
+
+### Agents
+- `GET /api/v1/agents/status` — Statut des agents et circuit breakers
+- `POST /api/v1/agents/assemble-team` — Assembler une équipe d'agents
+
+### RAG (Recherche réglementaire)
+- `POST /api/v1/rag/search` — Recherche sémantique `{query, vertical?, n_results?}`
+- `GET /api/v1/rag/stats` — Statistiques du Knowledge Vault
+
+### MCP (Model Context Protocol)
+- `GET /mcp/tools` — Liste des tools MCP disponibles
+- `POST /mcp/tools/call` — Appeler un tool MCP `{name, arguments}`
+- `POST /mcp` — Endpoint JSON-RPC 2.0 complet
+
+### Tools MCP disponibles
+1. `rag_search` — Recherche sémantique dans le Knowledge Vault réglementaire FR-CH
+2. `rag_regulatory` — Lister les textes réglementaires par verticale
+3. `rag_stats` — Statistiques du Knowledge Vault
+
+### Journal d'audit
+- `GET /api/v1/journal` — Consulter le journal WORM (hash-chainé SHA-256)
+- `GET /api/v1/journal/verify` — Vérifier l'intégrité du journal
+
+### Médiateur
+- `GET /api/v1/mediator/rules` — Règles JsonLogic par verticale
+- `POST /api/v1/mediator/check` — Vérifier une intention contre les règles
+
+### Conformité
+- `GET /api/v1/compliance/report/daily` — Rapport de conformité quotidien
+- `GET /api/v1/compliance/data-residency` — Statut data residency par verticale
+
+### Arbitrage
+- `GET /api/v1/arbitrations` — Liste des arbitrages en cours
+- `POST /api/v1/arbitrations/{id}/decide` — Décision d'arbitrage (humain)
+
+## Verticales supportées
+- `comptable` — Experts-comptables FR/CH (RGPD, DEC/OEC)
+- `avocat` — Avocats FR/CH (Art. 321 CP, secret professionnel)
+- `sante` — Professionnels de santé (LPM, HDS, données patient)
+- `banque` — Institutions bancaires CH (Art. 47 LB, FINMA)
+- `startup` — Startups (AI Act risque limité, DPIA)
+- `rh` — Ressources humaines (RGPD Art. 22, anti-discrimination)
+
+## Architecture
+5 agents pair-à-pair sur bus NATS JetStream:
+- Agent Data (recherche + RAG)
+- Agent Raisonnement (analyse LLM + recommandations)
+- Agent Action (exécution transactionnelle)
+- Médiateur (sécurité déterministe JsonLogic — JAMAIS de LLM)
+- Superviseur (observateur continu + health board)
+
+Modes de déploiement:
+- Standard: LLM via OpenRouter, NATS/Redis cloud
+- Haute Protection: LLM via Ollama local, K3s edge, zero appel externe
+
+## Contact
+- Site: https://cortex-leman.com
+- Email: contact@cortex-leman.com
+- GitHub: https://github.com/cortex-leman/v5

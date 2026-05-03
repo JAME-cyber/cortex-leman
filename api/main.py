@@ -1316,15 +1316,47 @@ async def onboarding_status(
 # ════════════════════════════════════════════════════════════════
 # MCP & A2A Protocol Endpoints (AG2-inspired Insights 5-6)
 # ════════════════════════════════════════════════════════════════
+# MCP & A2A Protocols
+# ════════════════════════════════════════════════════════════════
 
 @app.post("/mcp")
-async def mcp_endpoint(request: Request):
-    """MCP (Model Context Protocol) — JSON-RPC 2.0 endpoint"""
+async def mcp_jsonrpc(request: Request):
+    """MCP (Model Context Protocol) — JSON-RPC 2.0 complet"""
     from core.integrations.mcp_server import mcp_server
     body = await request.json()
     result = mcp_server.handle_request(body)
     if result is None:
         return JSONResponse(content={}, status_code=204)
+    return JSONResponse(content=result)
+
+
+@app.get("/mcp/tools")
+async def mcp_tools_list():
+    """MCP: Liste des tools disponibles (public, pour discovery agents)"""
+    from core.integrations.mcp_server import mcp_server
+    response = mcp_server.handle_request({
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "tools/list",
+    })
+    return response.get("result", {"tools": []})
+
+
+@app.post("/mcp/tools/call")
+async def mcp_tools_call(request: Request):
+    """MCP: Appeler un tool (public pour agents externes)"""
+    from core.integrations.mcp_server import mcp_server
+    body = await request.json()
+    response = mcp_server.handle_request({
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "tools/call",
+        "params": {
+            "name": body.get("name", ""),
+            "arguments": body.get("arguments", {}),
+        },
+    })
+    result = response.get("result") or response.get("error", {"message": "unknown"})
     return JSONResponse(content=result)
 
 

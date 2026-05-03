@@ -128,11 +128,11 @@ export function DashboardPage({ user, onLogout }: { user: any; onLogout: () => v
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    1. TABLEAU DE BORD — Vue executive
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-function DashboardView({ user }: { user: any }) {
+function DashboardView({ user: _user }: { user: any }) {
   const { data: agents } = useApi('/api/v1/agents/status')
   const { data: compliance } = useApi('/api/v1/compliance/report/daily')
   const { data: vault } = useApi('/api/v1/vault/stats')
-  const { data: orchestrator } = useApi('/api/v1/orchestrator/status')
+  const { data: _orchestrator } = useApi('/api/v1/orchestrator/status')
 
   const circuitBreakers = (agents as any)?.circuit_breakers || []
   const activeConflicts = (agents as any)?.active_conflicts || []
@@ -643,7 +643,7 @@ function IntentsView({ user }: { user: any }) {
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    4. JOURNAL D'AUDIT — WORM hash-chainé
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-function JournalView({ user }: { user: any }) {
+function JournalView({ user: _user }: { user: any }) {
   const [eventType, setEventType] = useState('')
   const [limit, setLimit] = useState(50)
   const { data, loading } = useApi(`/api/v1/journal?limit=${limit}${eventType ? `&event_type=${eventType}` : ''}`, [eventType, limit])
@@ -879,7 +879,7 @@ function ArbitrageView({ user }: { user: any }) {
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    6. PARAMÈTRES
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-function SettingsView({ user, onLogout }: { user: any; onLogout: () => void }) {
+function SettingsView({ user, onLogout: _onLogout }: { user: any; onLogout: () => void }) {
   const { data: rules } = useApi('/api/v1/mediator/rules')
   const { data: apiKeys } = useApi('/api/v1/auth/api-keys')
   const { data: residency } = useApi(`/api/v1/compliance/data-residency?vertical=${user?.primary_vertical || 'comptable'}`)
