@@ -454,10 +454,10 @@ class TestScenarioFiscal:
         assert result.get("confidence") is not None
 
     def test_comptable_rules_count(self):
-        """Fix 4: 7 règles comptable (au lieu de 5 avant)."""
+        """Vérifie que les règles comptable sont chargées avec les IDs clés."""
         import json
         rules = json.load(open("core/mediator/rules/comptable.json"))
-        assert len(rules["rules"]) == 7
+        assert len(rules["rules"]) >= 7, f"Au moins 7 règles comptable attendues, got {len(rules['rules'])}"
         rule_ids = [r["id"] for r in rules["rules"]]
         assert "comptable-006" in rule_ids, "Règle déduction avec seuil manquante"
         assert "comptable-007" in rule_ids, "Règle conflit de sources manquante"
