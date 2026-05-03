@@ -360,3 +360,160 @@ class TestDataAgentWired:
 
         # Peut avoir des sources du vault ou RAG, mais le format est correct
         assert "confidence" in result
+
+    @pytest.mark.asyncio
+    async def test_data_returns_facts_field(self):
+        """Sprint 3: L'Agent Data retourne toujours le champ facts"""
+        from core.agents.data_agent import DataAgent
+        agent = DataAgent()
+
+        result = await agent.process({
+            "query": "test facts field",
+            "vertical": "comptable",
+            "context": {},
+            "intention_id": "test-facts-001",
+            "client_id": "test-client",
+        }, {})
+
+        assert "facts" in result
+        assert isinstance(result["facts"], list)
+        assert "mode" in result
+        assert "llm_used" in result
+        assert "data_residency" in result
+
+    @pytest.mark.asyncio
+    async def test_data_high_protection_mode(self):
+        """Sprint 3: Mode Haute Protection détecté"""
+        from core.agents.data_agent import DataAgent
+        agent = DataAgent()
+
+        # En mode standard par défaut
+        assert not agent._is_high_protection
+
+    @pytest.mark.asyncio
+    async def test_data_residency_check(self):
+        """Sprint 3: Vérification data residency"""
+        from core.agents.data_agent import DataAgent
+        agent = DataAgent()
+
+        # Verticale sensible en mode standard
+        check = agent._check_data_residency("avocat", "test")
+        assert check["allowed"] is True
+        assert check["mode"] == "standard_warn"
+
+        # Verticale non-sensible
+        check2 = agent._check_data_residency("startup", "test")
+        assert check2["allowed"] is True
+        assert check2["mode"] == "standard"
+
+    @pytest.mark.asyncio
+    async def test_data_residency_high_protection(self):
+        """Sprint 3: Mode haute protection = local_only"""
+        from core.agents.data_agent import DataAgent
+        import unittest.mock as mock
+
+        with mock.patch("core.agents.data_agent.settings") as mock_settings:
+            mock_settings.app_mode = "haute_protection"
+            agent = DataAgent()
+            assert agent._is_high_protection is True
+
+            check = agent._check_data_residency("avocat", "test")
+            assert check["allowed"] is True
+            assert check["mode"] == "local_only"
+
+    def test_data_parse_facts_response(self):
+        """Sprint 3: Parser les réponses LLM en JSON"""
+        from core.agents.data_agent import DataAgent
+        agent = DataAgent()
+
+        # JSON direct
+        text = '[{"description": "TVA 20%", "source": "CGI", "confidence": 0.9}]'
+        facts = agent._parse_facts_response(text)
+        assert len(facts) == 1
+        assert facts[0]["description"] == "TVA 20%"
+
+        # JSON dans backticks
+        text2 = '```json\n[{"description": "Seuil CA", "source": "AFC", "confidence": 0.8}]\n```'
+        facts2 = agent._parse_facts_response(text2)
+        assert len(facts2) == 1
+
+        # Texte invalide
+        text3 = "Pas de JSON ici"
+        facts3 = agent._parse_facts_response(text3)
+        assert len(facts3) == 0
+
+    def test_data_fallback_facts(self):
+        """Sprint 3: Mode dégradé — faits programmatiques"""
+        from core.agents.data_agent import DataAgent
+        agent = DataAgent()
+
+        sources = [
+            {
+                "type": "rag",
+                "relevance": 0.8,
+                "data": {"content": "Circulaire AFC 2024-01", "title": "AFC", "doc_id": "d1"},
+            },
+            {
+                "type": "vault",
+                "relevance": 0.6,
+                "data": {"name": "Bilan fiscal", "snippet": "CA: 500K", "tags": ["fiscal"]},
+            },
+        ]
+
+        facts = agent._fallback_facts(sources)
+        assert len(facts) == 2
+        assert all("id" in f for f in facts)
+        assert all("timestamp" in f for f in facts)
+        assert all(f["extracted_by"] == "data_agent_programmatic" for f in facts)
+
+    def test_data_format_sources_for_llm(self):
+        """Sprint 3: Formatage des sources pour le prompt LLM"""
+        from core.agents.data_agent import DataAgent
+        agent = DataAgent()
+
+        sources = [
+            {
+                "type": "rag",
+                "relevance": 0.9,
+                "data": {"content": "Contenu RAG", "title": "Titre RAG", "doc_id": "d1"},
+            },
+            {
+                "type": "vault",
+                "relevance": 0.7,
+                "data": {"name": "Doc Vault", "snippet": "Extrait", "tags": ["tag1"]},
+            },
+        ]
+
+        formatted = agent._format_sources_for_llm(sources)
+        assert "[1] RAG" in formatted
+        assert "[2] Vault" in formatted
+        assert "Titre RAG" in formatted
+        assert "Doc Vault" in formatted
+
+    def test_data_compute_confidence_with_facts(self):
+        """Sprint 3: Confiance pondérée sources + faits"""
+        from core.agents.data_agent import DataAgent
+        agent = DataAgent()
+
+        sources = [{"relevance": 0.8}, {"relevance": 0.6}]
+        facts = [{"confidence": 0.9}, {"confidence": 0.7}]
+
+        conf = agent._compute_confidence(sources, facts)
+        # 40% * avg(0.8, 0.6) + 60% * avg(0.9, 0.7)
+        # = 0.4 * 0.7 + 0.6 * 0.8 = 0.28 + 0.48 = 0.76
+        assert abs(conf - 0.76) < 0.01
+
+    def test_data_compute_confidence_sources_only(self):
+        """Sprint 3: Confiance sources uniquement"""
+        from core.agents.data_agent import DataAgent
+        agent = DataAgent()
+
+        sources = [{"relevance": 0.8}, {"relevance": 0.6}]
+        conf = agent._compute_confidence(sources, None)
+        assert abs(conf - 0.7) < 0.01
+
+    def test_data_compute_confidence_empty(self):
+        """Sprint 3: Confiance zéro si pas de sources"""
+        from core.agents.data_agent import DataAgent
+        agent = DataAgent()
+        assert agent._compute_confidence([], None) == 0.0
