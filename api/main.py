@@ -871,6 +871,290 @@ async def list_conflicts(
 
 
 # ============================================================
+# TRUST BOX (exposition produit — Ant Group T-Box inspired)
+# ============================================================
+
+@app.get("/trust-box/status")
+async def trust_box_status():
+    """Statut global du Trust Box
+    
+    Le Trust Box est la couche de confiance déterministe de Cortex Leman.
+    0% LLM. 100% JsonLogic. Gel automatique si violation.
+    """
+    from core.mediator.rules_engine import rules_engine
+    from core.mediator.mediator import mediator
+    
+    verticals = rules_engine.get_all_verticals()
+    total_rules = sum(len(rules_engine.get_rules_for_vertical(v)) for v in verticals)
+    
+    return {
+        "name": "Cortex Leman Trust Box",
+        "version": "5.2.0",
+        "status": "active",
+        "philosophy": "Déterministe là où il faut. Intelligent là où on peut.",
+        "architecture": {
+            "decision_engine": "JsonLogic (0% LLM)",
+            "actions": ["block", "freeze", "arbitrate", "warn", "require_audit", "pass"],
+            "freeze_modes": ["complete", "degraded"],
+            "consolidation_window_sec": mediator._CONSOLIDATION_WINDOW_SEC,
+        },
+        "metrics": {
+            "verticals": len(verticals),
+            "total_rules": total_rules,
+            "active_conflicts": len(mediator.get_active_conflicts()),
+        },
+        "verticals": verticals,
+        "serment": "Ne jamais laisser l'IA prendre une décision seule dans les moments critiques.",
+    }
+
+
+@app.post("/trust-box/evaluate")
+async def trust_box_evaluate(
+    request: dict,
+    auth: AuthContext = Depends(require_operator),
+):
+    """Évaluer un contexte contre les règles du Trust Box (dry-run)"""
+    from core.mediator.rules_engine import rules_engine
+    
+    vertical = request.get("vertical")
+    context = request.get("context", {})
+    
+    if not vertical:
+        raise HTTPException(400, "vertical requis")
+    
+    results = rules_engine.evaluate(vertical, context)
+    triggered = [r for r in results if r.triggered]
+    
+    return {
+        "vertical": vertical,
+        "context_evaluated": context,
+        "rules_evaluated": len(results),
+        "rules_triggered": len(triggered),
+        "decision": "BLOCKED" if any(r.action == "block" for r in triggered) else
+                    "FROZEN" if any(r.action == "freeze" for r in triggered) else
+                    "ARBITRATION" if any(r.action == "arbitrate" for r in triggered) else
+                    "WARNED" if any(r.action == "warn" for r in triggered) else
+                    "APPROVED",
+        "details": [
+            {
+                "rule_id": r.rule_id,
+                "rule_name": r.rule_name,
+                "severity": r.severity,
+                "action": r.action,
+                "triggered": r.triggered,
+                "message": r.message,
+            }
+            for r in results
+        ],
+    }
+
+
+@app.get("/trust-box/rules")
+async def trust_box_rules(vertical: str = None):
+    """Lister les règles du Trust Box"""
+    from core.mediator.rules_engine import rules_engine
+    
+    if vertical:
+        rules = rules_engine.get_rules_for_vertical(vertical)
+        return {
+            "vertical": vertical,
+            "rules": [
+                {
+                    "id": r.get("id"),
+                    "name": r.get("name"),
+                    "severity": r.get("severity"),
+                    "action": r.get("action"),
+                    "message": r.get("message"),
+                }
+                for r in rules
+            ],
+            "total": len(rules),
+        }
+    
+    verticals = rules_engine.get_all_verticals()
+    summary = []
+    for v in verticals:
+        rules = rules_engine.get_rules_for_vertical(v)
+        summary.append({
+            "vertical": v,
+            "rules": len(rules),
+            "actions": list(set(r.get("action") for r in rules)),
+        })
+    
+    return {
+        "trust_box": "Cortex Leman v5",
+        "verticals": summary,
+        "total_rules": sum(len(rules_engine.get_rules_for_vertical(v)) for v in verticals),
+    }
+
+
+@app.get("/trust-box/conflicts")
+async def trust_box_conflicts(
+    auth: AuthContext = Depends(require_operator),
+):
+    """Conflits actifs du Trust Box"""
+    from core.mediator.mediator import mediator
+    conflicts = mediator.get_active_conflicts()
+    return {
+        "trust_box": "Cortex Leman v5",
+        "active_conflicts": len(conflicts),
+        "conflicts": conflicts,
+    }
+
+
+@app.get("/trust-box/audit-trail")
+async def trust_box_audit_trail(
+    limit: int = 50,
+    event_type: str = None,
+    auth: AuthContext = Depends(require_operator),
+):
+    """Journal d'audit du Trust Box"""
+    from core.journal.append_only_journal import journal
+    from core.journal.models import JournalEventType
+    
+    tb_events = [
+        JournalEventType.MEDIATOR_CHECK,
+        JournalEventType.MEDIATOR_CONFLICT,
+        JournalEventType.MEDIATOR_FREEZE,
+        JournalEventType.COMPLIANCE_CHECK,
+        JournalEventType.COMPLIANCE_VIOLATION,
+    ]
+    
+    events = journal.query(limit=limit)
+    filtered = []
+    for e in events:
+        et = e.get("event_type")
+        if et in [t.value for t in tb_events]:
+            if event_type and et != event_type:
+                continue
+            filtered.append(e)
+    
+    return {
+        "trust_box": "Cortex Leman v5",
+        "total_events": len(filtered),
+        "events": filtered[:limit],
+        "integrity": journal.verify_integrity(),
+    }
+
+
+@app.get("/trust-box/serment")
+async def trust_box_serment():
+    """Le serment du Trust Box"""
+    return {
+        "trust_box": "Cortex Leman v5",
+        "serment": {
+            "version": "1.0",
+            "principes": [
+                {
+                    "id": 1,
+                    "titre": "Déterminisme critique",
+                    "texte": "Les décisions de gel et de blocage sont 100% déterministes. Jamais de LLM.",
+                    "implementation": "JsonLogic rules_engine"
+                },
+                {
+                    "id": 2,
+                    "titre": "Gel préventif",
+                    "texte": "Si une règle est violée, l'action est gelée automatiquement avant exécution.",
+                    "implementation": "AgentMediator.freeze()"
+                },
+                {
+                    "id": 3,
+                    "titre": "Arbitrage humain",
+                    "texte": "L'IA ne décide JAMAIS seule pour les actions critiques. L'humain est arbitre.",
+                    "implementation": "ArbitrationService"
+                },
+                {
+                    "id": 4,
+                    "titre": "Transparence totale",
+                    "texte": "Chaque décision du Trust Box est tracée dans un journal inviolable.",
+                    "implementation": "WORM Journal SHA-256"
+                },
+                {
+                    "id": 5,
+                    "titre": "Mode dégradé",
+                    "texte": "En cas de gel, Data et Raisonnement continuent d'enrichir le dossier.",
+                    "implementation": "Degraded freeze + consolidation window"
+                },
+                {
+                    "id": 6,
+                    "titre": "Conformité by design",
+                    "texte": "RGPD, AI Act, secret professionnel FR-CH encodés dans les règles.",
+                    "implementation": "6 verticals × 2-12 règles JsonLogic"
+                },
+            ],
+            "signature": "Cortex Leman Trust Box — Déterministe là où il faut. Intelligent là où on peut."
+        }
+    }
+
+
+@app.post("/trust-box/simulate")
+async def trust_box_simulate(
+    request: dict,
+    auth: AuthContext = Depends(require_operator),
+):
+    """Simuler une action et voir ce que le Trust Box déciderait (dry-run)"""
+    from core.mediator.rules_engine import rules_engine
+    
+    vertical = request.get("vertical")
+    action_type = request.get("action_type")
+    payload = request.get("payload", {})
+    
+    if not vertical or not action_type:
+        raise HTTPException(400, "vertical et action_type requis")
+    
+    context = {
+        "action": {"type": action_type},
+        "payload": payload,
+        "human_validated": payload.get("human_validated", False),
+        "data_residency": payload.get("data_residency", "EU"),
+        "confidence_bias_score": payload.get("confidence_bias_score"),
+        "contradiction_count": payload.get("contradiction_count", 0),
+    }
+    
+    results = rules_engine.evaluate(vertical, context)
+    triggered = [r for r in results if r.triggered]
+    
+    if any(r.action == "block" for r in triggered):
+        verdict = "BLOCKED"
+        explanation = "Le Trust Box bloque cette action. Elle ne peut pas être exécutée."
+    elif any(r.action == "freeze" for r in triggered):
+        verdict = "FROZEN"
+        explanation = "Le Trust Box gèle cette action. Arbitrage humain obligatoire."
+    elif any(r.action == "arbitrate" for r in triggered):
+        verdict = "ARBITRATION_REQUIRED"
+        explanation = "Le Trust Box demande un arbitrage. L'humain doit valider."
+    elif any(r.action == "warn" for r in triggered):
+        verdict = "WARNED"
+        explanation = "Le Trust Box émet un avertissement."
+    elif any(r.action == "require_audit" for r in triggered):
+        verdict = "AUDIT_REQUIRED"
+        explanation = "Le Trust Box exige un audit trail."
+    else:
+        verdict = "APPROVED"
+        explanation = "Le Trust Box approuve cette action."
+    
+    return {
+        "simulation": True,
+        "vertical": vertical,
+        "action_type": action_type,
+        "verdict": verdict,
+        "explanation": explanation,
+        "rules_checked": len(results),
+        "rules_triggered": len(triggered),
+        "triggered_rules": [
+            {
+                "rule_id": r.rule_id,
+                "rule_name": r.rule_name,
+                "severity": r.severity,
+                "action": r.action,
+                "message": r.message,
+            }
+            for r in triggered
+        ],
+    }
+
+
+# ============================================================
 # ORCHESTRATEUR (authentifié)
 # ============================================================
 
