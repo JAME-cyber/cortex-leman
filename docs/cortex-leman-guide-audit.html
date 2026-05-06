@@ -1,0 +1,1733 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cortex Leman v5 — Guide de Compréhension & Audit</title>
+    <style>
+        :root {
+            --bg: #0a0e17;
+            --surface: #111827;
+            --surface2: #1a2332;
+            --border: #2a3a4e;
+            --text: #e2e8f0;
+            --text2: #94a3b8;
+            --accent: #3b82f6;
+            --accent2: #6366f1;
+            --green: #10b981;
+            --orange: #f59e0b;
+            --red: #ef4444;
+            --purple: #a855f7;
+            --cyan: #06b6d4;
+            --rose: #f43f5e;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+        }
+
+        /* NAV */
+        .nav {
+            position: fixed; top: 0; left: 0; right: 0;
+            background: rgba(10,14,23,0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            z-index: 1000;
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            height: 60px;
+            gap: 1.5rem;
+        }
+        .nav-logo {
+            font-weight: 800;
+            font-size: 1.1rem;
+            background: linear-gradient(135deg, var(--accent), var(--purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            white-space: nowrap;
+        }
+        .nav-links {
+            display: flex; gap: 0.25rem; overflow-x: auto;
+            scrollbar-width: none;
+        }
+        .nav-links::-webkit-scrollbar { display: none; }
+        .nav-links a {
+            color: var(--text2);
+            text-decoration: none;
+            font-size: 0.82rem;
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            white-space: nowrap;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .nav-links a:hover, .nav-links a.active {
+            color: var(--text);
+            background: var(--surface2);
+        }
+        .progress-bar {
+            position: fixed; top: 60px; left: 0; height: 2px;
+            background: linear-gradient(90deg, var(--accent), var(--purple));
+            z-index: 999; transition: width 0.1s;
+        }
+
+        /* LAYOUT */
+        .container { max-width: 1100px; margin: 0 auto; padding: 80px 2rem 4rem; }
+
+        /* HERO */
+        .hero {
+            text-align: center;
+            padding: 4rem 0 3rem;
+        }
+        .hero-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, rgba(59,130,246,0.15), rgba(99,102,241,0.15));
+            border: 1px solid rgba(59,130,246,0.3);
+            padding: 0.4rem 1.2rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: var(--accent);
+            margin-bottom: 1.5rem;
+        }
+        .hero h1 {
+            font-size: 2.8rem;
+            font-weight: 800;
+            line-height: 1.15;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #fff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .hero p {
+            font-size: 1.1rem;
+            color: var(--text2);
+            max-width: 700px;
+            margin: 0 auto 2rem;
+        }
+
+        /* SECTIONS */
+        .section {
+            margin-bottom: 4rem;
+            scroll-margin-top: 80px;
+        }
+        .section-label {
+            display: inline-block;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+        }
+        .section h2 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        .section .subtitle {
+            color: var(--text2);
+            font-size: 0.95rem;
+            margin-bottom: 2rem;
+        }
+
+        /* CARDS */
+        .grid { display: grid; gap: 1.25rem; }
+        .grid-2 { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+        .grid-3 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.3s;
+        }
+        .card:hover { border-color: var(--accent); transform: translateY(-2px); }
+        .card-icon {
+            width: 40px; height: 40px;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+        .card h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.5rem; }
+        .card p { color: var(--text2); font-size: 0.88rem; }
+        .card .tag {
+            display: inline-block;
+            font-size: 0.7rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            margin-top: 0.75rem;
+            font-weight: 600;
+        }
+
+        /* ACCORDION */
+        .accordion { margin-top: 1rem; }
+        .acc-item {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-bottom: 0.5rem;
+            overflow: hidden;
+        }
+        .acc-header {
+            padding: 1rem 1.25rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: background 0.2s;
+            user-select: none;
+        }
+        .acc-header:hover { background: var(--surface2); }
+        .acc-header .chevron {
+            transition: transform 0.3s;
+            color: var(--text2);
+            font-size: 0.8rem;
+        }
+        .acc-item.open .chevron { transform: rotate(90deg); }
+        .acc-body {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease;
+        }
+        .acc-item.open .acc-body { max-height: 5000px; }
+        .acc-content {
+            padding: 0 1.25rem 1.25rem;
+            color: var(--text2);
+            font-size: 0.9rem;
+        }
+
+        /* CODE */
+        pre {
+            background: #0d1117;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            overflow-x: auto;
+            font-size: 0.82rem;
+            line-height: 1.6;
+            margin: 0.75rem 0;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+        }
+        code {
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 0.82rem;
+            background: rgba(59,130,246,0.1);
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+        }
+        .kw { color: #c678dd; }
+        .fn { color: #61afef; }
+        .str { color: #98c379; }
+        .cm { color: #5c6370; font-style: italic; }
+        .dec { color: #e5c07b; }
+        .num { color: #d19a66; }
+        .op { color: #56b6c2; }
+
+        /* FLOW DIAGRAM */
+        .flow {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0;
+            margin: 2rem 0;
+        }
+        .flow-node {
+            background: var(--surface);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem 2rem;
+            text-align: center;
+            min-width: 260px;
+            position: relative;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .flow-node:hover { border-color: var(--accent); transform: scale(1.02); }
+        .flow-node.active { border-color: var(--green); box-shadow: 0 0 20px rgba(16,185,129,0.15); }
+        .flow-node h4 { font-size: 0.9rem; margin-bottom: 0.25rem; }
+        .flow-node p { font-size: 0.75rem; color: var(--text2); }
+        .flow-node .node-icon { font-size: 1.5rem; margin-bottom: 0.25rem; }
+        .flow-arrow {
+            width: 2px; height: 24px;
+            background: var(--border);
+            position: relative;
+        }
+        .flow-arrow::after {
+            content: '▼';
+            position: absolute;
+            bottom: -8px;
+            left: -5px;
+            font-size: 0.6rem;
+            color: var(--border);
+        }
+
+        /* TIMELINE */
+        .timeline {
+            position: relative;
+            padding-left: 2rem;
+            margin: 1.5rem 0;
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 7px;
+            top: 0; bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, var(--accent), var(--purple), var(--green));
+        }
+        .tl-item {
+            position: relative;
+            margin-bottom: 1.5rem;
+            padding-left: 1.5rem;
+        }
+        .tl-item::before {
+            content: '';
+            position: absolute;
+            left: -1.55rem;
+            top: 6px;
+            width: 12px; height: 12px;
+            border-radius: 50%;
+            border: 2px solid var(--accent);
+            background: var(--bg);
+        }
+        .tl-item h4 { font-size: 0.95rem; margin-bottom: 0.25rem; }
+        .tl-item p { color: var(--text2); font-size: 0.85rem; }
+        .tl-item .badge {
+            display: inline-block;
+            font-size: 0.65rem;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            margin-left: 0.5rem;
+            font-weight: 600;
+        }
+
+        /* TABLE */
+        .table-wrap {
+            overflow-x: auto;
+            margin: 1rem 0;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+        th {
+            background: var(--surface2);
+            text-align: left;
+            padding: 0.75rem 1rem;
+            font-weight: 600;
+            color: var(--accent);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        td {
+            padding: 0.65rem 1rem;
+            border-top: 1px solid var(--border);
+        }
+        tr:hover td { background: rgba(59,130,246,0.04); }
+
+        /* TABS */
+        .tabs {
+            display: flex;
+            gap: 0.25rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0;
+        }
+        .tab-btn {
+            padding: 0.6rem 1.2rem;
+            background: none;
+            border: none;
+            color: var(--text2);
+            font-size: 0.85rem;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+        .tab-btn:hover { color: var(--text); }
+        .tab-btn.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* QUIZ */
+        .quiz-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .quiz-q {
+            font-weight: 600;
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+        }
+        .quiz-options { display: flex; flex-direction: column; gap: 0.5rem; }
+        .quiz-opt {
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.88rem;
+        }
+        .quiz-opt:hover { border-color: var(--accent); background: rgba(59,130,246,0.05); }
+        .quiz-opt.correct { border-color: var(--green); background: rgba(16,185,129,0.1); color: var(--green); }
+        .quiz-opt.wrong { border-color: var(--red); background: rgba(239,68,68,0.1); color: var(--red); }
+        .quiz-expl {
+            margin-top: 0.75rem;
+            padding: 0.75rem;
+            background: rgba(16,185,129,0.05);
+            border: 1px solid rgba(16,185,129,0.2);
+            border-radius: 8px;
+            font-size: 0.85rem;
+            color: var(--green);
+            display: none;
+        }
+
+        /* SEARCH */
+        .search-box {
+            position: relative;
+            margin-bottom: 2rem;
+        }
+        .search-box input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.5rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            font-size: 0.9rem;
+            outline: none;
+        }
+        .search-box input:focus { border-color: var(--accent); }
+        .search-box::before {
+            content: '🔍';
+            position: absolute;
+            left: 0.8rem;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        /* STATS */
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+        .stat {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.25rem;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent), var(--purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .stat-label { font-size: 0.75rem; color: var(--text2); margin-top: 0.25rem; }
+
+        /* ALERT */
+        .alert {
+            padding: 1rem 1.25rem;
+            border-radius: 10px;
+            margin: 1rem 0;
+            font-size: 0.88rem;
+            border-left: 3px solid;
+        }
+        .alert-info { background: rgba(59,130,246,0.08); border-color: var(--accent); }
+        .alert-warn { background: rgba(245,158,11,0.08); border-color: var(--orange); }
+        .alert-success { background: rgba(16,185,129,0.08); border-color: var(--green); }
+
+        /* MARKERS */
+        .marker { padding: 0.1rem 0.3rem; border-radius: 3px; font-size: 0.8rem; }
+        .m-blue { background: rgba(59,130,246,0.15); color: #60a5fa; }
+        .m-green { background: rgba(16,185,129,0.15); color: #34d399; }
+        .m-orange { background: rgba(245,158,11,0.15); color: #fbbf24; }
+        .m-red { background: rgba(239,68,68,0.15); color: #f87171; }
+        .m-purple { background: rgba(168,85,247,0.15); color: #c084fc; }
+        .m-cyan { background: rgba(6,182,212,0.15); color: #22d3ee; }
+
+        /* FILE TREE */
+        .file-tree {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1rem 1.5rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            line-height: 1.8;
+        }
+        .ft-dir { color: var(--accent); font-weight: 600; }
+        .ft-file { color: var(--text2); }
+        .ft-desc { color: var(--text2); font-style: italic; font-size: 0.75rem; }
+
+        /* INTERACTIVE DIAGRAM */
+        .arch-diagram {
+            position: relative;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 1.5rem 0;
+            min-height: 400px;
+        }
+
+        /* VISIBILITY */
+        .hidden { display: none !important; }
+        .highlight-search { background: rgba(245,158,11,0.3); border-radius: 2px; }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .nav { padding: 0 1rem; gap: 1rem; }
+            .container { padding: 70px 1rem 3rem; }
+            .hero h1 { font-size: 1.8rem; }
+            .grid-2, .grid-3 { grid-template-columns: 1fr; }
+            .stat-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        /* SCROLL ANIMATION */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s, transform 0.6s;
+        }
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* SCORE */
+        .score-ring {
+            width: 120px; height: 120px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: 800;
+            margin: 0 auto 1rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- NAV -->
+    <nav class="nav">
+        <div class="nav-logo">🌊 Cortex Leman v5</div>
+        <div class="nav-links">
+            <a href="#hero" class="active">Accueil</a>
+            <a href="#vue-ensemble">Vue d'ensemble</a>
+            <a href="#architecture">Architecture</a>
+            <a href="#agents">5 Agents</a>
+            <a href="#mediateur">Médiateur</a>
+            <a href="#trust-box">Trust Box</a>
+            <a href="#securite">Sécurité</a>
+            <a href="#data">Données</a>
+            <a href="#api">API</a>
+            <a href="#conformite">Conformité</a>
+            <a href="#deploiement">Déploiement</a>
+            <a href="#quiz">Quiz Audit</a>
+        </div>
+    </nav>
+    <div class="progress-bar" id="progressBar" style="width:0%"></div>
+
+    <div class="container">
+
+        <!-- ==================== HERO ==================== -->
+        <section class="hero" id="hero">
+            <div class="hero-badge">📖 Guide de Compréhension Interactif</div>
+            <h1>Comprendre Cortex Leman v5<br>pour le défendre en audit</h1>
+            <p>
+                Ce document interactif t'explique chaque ligne de ton projet, 
+                chaque décision d'architecture, et chaque pattern de sécurité — 
+                pour que tu puisses répondre à TOUTES les questions d'un auditeur.
+            </p>
+            <div class="stat-grid" style="max-width:700px;margin:0 auto;">
+                <div class="stat">
+                    <div class="stat-value">5</div>
+                    <div class="stat-label">Agents pair-à-pair</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">6</div>
+                    <div class="stat-label">Verticales régulées</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">50+</div>
+                    <div class="stat-label">Endpoints API</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">0%</div>
+                    <div class="stat-label">LLM dans le Médiateur</div>
+                </div>
+            </div>
+
+            <div class="alert alert-success" style="max-width:700px;margin:1.5rem auto 0;text-align:left;">
+                <strong>🟢 Stack en ligne !</strong> Tous les services tournent sur <code>192.168.0.25</code><br>
+                Dashboard: <a href="http://192.168.0.25:8090" style="color:var(--green);">http://192.168.0.25:8090</a> —
+                API: <a href="http://192.168.0.25:8000/docs" style="color:var(--green);">http://192.168.0.25:8000/docs</a> —
+                Health: <a href="http://192.168.0.25:8000/health" style="color:var(--green);">http://192.168.0.25:8000/health</a>
+            </div>
+        </section>
+
+        <!-- ==================== VUE D'ENSEMBLE ==================== -->
+        <section class="section fade-in" id="vue-ensemble">
+            <div class="section-label">01 — Vue d'ensemble</div>
+            <h2>Qu'est-ce que Cortex Leman v5 ?</h2>
+            <p class="subtitle">La réponse courte que tu peux donner à un auditeur</p>
+
+            <div class="alert alert-info">
+                <strong>💬 En audit, tu dis :</strong><br>
+                « Cortex Leman est une <strong>infrastructure de confiance IA</strong> pour les 
+                <strong>professions régulées franco-suisses</strong> (comptables, avocats, santé, banque, startups, RH). 
+                Le système utilise <strong>5 agents IA pair-à-pair</strong> sur un bus NATS, 
+                avec un <strong>Médiateur 100% déterministe</strong> (0% LLM) qui peut geler 
+                toute action à risque, et un <strong>arbitrage humain obligatoire</strong> pour 
+                les décisions critiques. Toutes les décisions sont tracées dans un 
+                <strong>journal append-only hash-chainé SHA-256</strong>. »
+            </div>
+
+            <div class="grid grid-3" style="margin-top:2rem;">
+                <div class="card">
+                    <div class="card-icon" style="background:rgba(59,130,246,0.15);">🏗️</div>
+                    <h3>Infrastructure</h3>
+                    <p>Backend Python (FastAPI), Frontend React/TypeScript, Bus NATS JetStream, PostgreSQL, Redis, ChromaDB, n8n</p>
+                    <span class="tag" style="background:rgba(59,130,246,0.15);color:#60a5fa;">Full-stack</span>
+                </div>
+                <div class="card">
+                    <div class="card-icon" style="background:rgba(16,185,129,0.15);">⚖️</div>
+                    <h3>Conformité</h3>
+                    <p>RGPD Art. 22, AI Act (Limited/High), Secret professionnel FR-CH (Art. 321 CP, Art. 47 LB), ISO/IEC 42001</p>
+                    <span class="tag" style="background:rgba(16,185,129,0.15);color:#34d399;">6 cadres légaux</span>
+                </div>
+                <div class="card">
+                    <div class="card-icon" style="background:rgba(168,85,247,0.15);">🤖</div>
+                    <h3>IA Responsable</h3>
+                    <p>Jamais de décision IA seule. Arbitrage humain obligatoire. Reflection Node (JP Morgan). Guardrails IN/OUT.</p>
+                    <span class="tag" style="background:rgba(168,85,247,0.15);color:#c084fc;">Human-in-the-loop</span>
+                </div>
+            </div>
+
+            <h3 style="margin-top:2.5rem;margin-bottom:1rem;">📁 Structure du projet</h3>
+            <div class="file-tree">
+<span class="ft-dir">cortex-leman-v5/</span>
+├── <span class="ft-dir">api/</span>                    <span class="ft-desc">→ Point d'entrée FastAPI (main.py = toutes les routes)</span>
+│   ├── main.py              <span class="ft-desc">→ 50+ endpoints REST</span>
+│   └── dependencies.py      <span class="ft-desc">→ Auth JWT, RBAC, rate limiting</span>
+├── <span class="ft-dir">core/</span>                   <span class="ft-desc">→ Cœur métier du système</span>
+│   ├── <span class="ft-dir">agents/</span>             <span class="ft-desc">→ 5 agents + saga + reflection + prompts</span>
+│   ├── <span class="ft-dir">bus/</span>                <span class="ft-desc">→ NATS client + registry des sujets</span>
+│   ├── <span class="ft-dir">orchestrator/</span>       <span class="ft-desc">→ Orchestrateur conversationnel + intention store + router</span>
+│   ├── <span class="ft-dir">mediator/</span>           <span class="ft-desc">→ Médiateur + moteur de règles JsonLogic</span>
+│   ├── <span class="ft-dir">security/</span>           <span class="ft-desc">→ Auth JWT, circuit breaker, chiffrement Fernet, guardrails, locks distribués</span>
+│   ├── <span class="ft-dir">journal/</span>            <span class="ft-desc">→ Journal append-only WORM hash-chainé SHA-256</span>
+│   ├── <span class="ft-dir">arbitration/</span>        <span class="ft-desc">→ Service d'arbitrage humain + précédents</span>
+│   ├── <span class="ft-dir">compliance/</span>         <span class="ft-desc">→ Gateway conformité + générateur rapports (DPIA, AI Act, ISO)</span>
+│   ├── <span class="ft-dir">db/</span>                 <span class="ft-desc">→ SQLAlchemy models + session + migrations Alembic</span>
+│   ├── <span class="ft-dir">integrations/</span>       <span class="ft-desc">→ LLM provider, RAG ChromaDB, n8n, MCP, Knowledge Vault</span>
+│   ├── <span class="ft-dir">serment/</span>            <span class="ft-desc">→ Serments numériques par profession (YAML)</span>
+│   ├── <span class="ft-dir">onboarding/</span>         <span class="ft-desc">→ Service onboarding nouveaux clients</span>
+│   └── config.py            <span class="ft-desc">→ Configuration Pydantic Settings (.env)</span>
+├── <span class="ft-dir">frontend/</span>               <span class="ft-desc">→ React + TypeScript + Vite</span>
+├── <span class="ft-dir">tests/</span>                  <span class="ft-desc">→ 15+ fichiers de tests unitaires et E2E</span>
+├── <span class="ft-dir">data/</span>                   <span class="ft-desc">→ Vault, rapports, intentions, précédents</span>
+├── <span class="ft-dir">n8n-workflows/</span>          <span class="ft-desc">→ Workflows n8n préconfigurés</span>
+├── <span class="ft-dir">edge/</span>                   <span class="ft-desc">→ Déploiement edge K3s + Ollama</span>
+├── <span class="ft-dir">monitoring/</span>             <span class="ft-desc">→ Métriques Prometheus + tracing OpenTelemetry</span>
+├── docker-compose.yml       <span class="ft-desc">→ Dév: NATS + Redis + Postgres + API + n8n</span>
+├── docker-compose.prod.yml  <span class="ft-desc">→ Prod: NATS + Redis + Postgres + API + Nginx ← ACTUEL</span>
+├── scripts/deploy-full.sh   <span class="ft-desc">→ Script déploiement complet (arrêt, build, start, seed)</span>
+├── Dockerfile               <span class="ft-desc">→ Image Docker API (utilisé en prod)</span>
+├── Dockerfile.prod          <span class="ft-desc">→ Multi-stage frontend+API</span>
+└── requirements.txt         <span class="ft-desc">→ Dépendances Python (litellm, chromadb, etc.)</span>
+            </div>
+        </section>
+
+        <!-- ==================== ARCHITECTURE ==================== -->
+        <section class="section fade-in" id="architecture">
+            <div class="section-label">02 — Architecture</div>
+            <h2>Comment tout s'articule ?</h2>
+            <p class="subtitle">Le flux de bout en bout, de la requête utilisateur à la réponse finale</p>
+
+            <h3 style="margin-bottom:1rem;">🔄 Flux d'une intention (cycle de vie complet)</h3>
+
+            <div class="flow" id="flowDiagram">
+                <div class="flow-node" onclick="highlightFlow(this)" data-info="L'utilisateur soumet une requête via l'API (POST /api/v1/intentions) ou le chat Le Léman. L'API FastAPI reçoit la requête, vérifie le JWT, puis publie un événement INTENTION_NEW sur le bus NATS.">
+                    <div class="node-icon">👤</div>
+                    <h4>Utilisateur / Client</h4>
+                    <p>Soumet une intention métier</p>
+                </div>
+                <div class="flow-arrow"></div>
+                <div class="flow-node" onclick="highlightFlow(this)" data-info="L'orchestrateur reçoit l'événement INTENTION_NEW. Il crée une Intention (objet versionné), la journalise dans le WORM, route dynamiquement vers les agents via le Router, et dispatche en parallèle sur les sujets NATS DATA_QUERY, REASONING_ANALYZE, ACTION_EXECUTE.">
+                    <div class="node-icon">🎯</div>
+                    <h4>Orchestrateur Conversationnel</h4>
+                    <p>Crée l'intention, route, dispatche en parallèle</p>
+                </div>
+                <div class="flow-arrow"></div>
+                <div style="display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;">
+                    <div class="flow-node" onclick="highlightFlow(this)" data-info="L'Agent Data souscrit au sujet cleman.data.query. Pipeline: vérification data residency → reformulation LLM → RAG ChromaDB → Knowledge Vault plein texte → extraction structurée LLM → compilation avec score de confiance. En mode Haute Protection: sources locales uniquement.">
+                        <div class="node-icon">📊</div>
+                        <h4>Agent Data</h4>
+                        <p>Recherche + RAG + extraction</p>
+                    </div>
+                    <div class="flow-node" onclick="highlightFlow(this)" data-info="L'Agent Raisonnement souscrit à cleman.reasoning.analyze. Pipeline: analyse contextuelle → appel LLM avec skill prompt + RAG → parsing réponse structurée → Reflection Node (auto-critique JP Morgan) → vérification triggers de révision. Génère recommandations avec score de confiance.">
+                        <div class="node-icon">🧠</div>
+                        <h4>Agent Raisonnement</h4>
+                        <p>Analyse LLM + recommandations</p>
+                    </div>
+                    <div class="flow-node" onclick="highlightFlow(this)" data-info="L'Agent Action souscrit à cleman.action.execute. AVANT d'exécuter, il vérifie: 1) si l'intention est gelée (gel complet OU dégradé) → bloque. 2) acquiert un verrou distribué Redis. 3) crée une Saga (enregistre chaque étape avec sa compensation). 4) exécute séquentiellement. 5) si échec → compense en ordre inverse. 6) relâche le verrou.">
+                        <div class="node-icon">⚡</div>
+                        <h4>Agent Action</h4>
+                        <p>Exécution + Saga + Compensation</p>
+                    </div>
+                </div>
+                <div class="flow-arrow" style="margin-top:1rem;"></div>
+                <div class="flow-node" onclick="highlightFlow(this)" data-info="TOUS les résultats d'agents sont publiés sur cleman.agent.result. Le Médiateur intercepte CES résultats. Il: 1) évalue les règles JsonLogic de la verticale. 2) détecte les conflits entre agents. 3) si violation → GEL (complet ou dégradé). 4) prépare un dossier contradictoire pour l'arbitrage humain. IMPORTANT: le Médiateur n'utilise JAMAIS de LLM. 100% déterministe.">
+                    <div class="node-icon">🛡️</div>
+                    <h4>Médiateur (Trust Box)</h4>
+                    <p>100% déterministe — 0% LLM — gel automatique</p>
+                </div>
+                <div class="flow-arrow"></div>
+                <div class="flow-node" onclick="highlightFlow(this)" data-info="Si le Médiateur gèle → demande d'arbitrage envoyée. L'humain voit les positions de chaque agent, les règles violées, et décide: approve, reject, ou modify. La décision est journalisée, signée, et peut servir de précédent. Chaîne d'escalade: expert → expert_suppléant → associé.">
+                    <div class="node-icon">👨‍⚖️</div>
+                    <h4>Arbitrage Humain</h4>
+                    <p>Décision contradictoire — signée — avec précédents</p>
+                </div>
+            </div>
+
+            <div id="flowInfo" class="alert alert-info hidden" style="margin-top:1rem;">
+                <strong>Cliquez sur un bloc</strong> du diagramme ci-dessus pour voir le détail de son fonctionnement.
+            </div>
+
+            <h3 style="margin-top:2.5rem;">🗺️ Sujets NATS (le système nerveux)</h3>
+            <p style="color:var(--text2);font-size:0.9rem;margin-bottom:1rem;">Tous les agents communiquent via le bus NATS JetStream. Voici les sujets (channels) :</p>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr><th>Sujet NATS</th><th>Qui publie</th><th>Qui écoute</th><th>Quand</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>cleman.intention.new</code></td><td>Orchestrateur</td><td>Orchestrateur</td><td>Nouvelle requête client</td></tr>
+                        <tr><td><code>cleman.data.query</code></td><td>Orchestrateur</td><td>Agent Data</td><td>Recherche de données</td></tr>
+                        <tr><td><code>cleman.reasoning.analyze</code></td><td>Orchestrateur</td><td>Agent Raisonnement</td><td>Analyse LLM</td></tr>
+                        <tr><td><code>cleman.action.execute</code></td><td>Orchestrateur</td><td>Agent Action</td><td>Exécution d'action</td></tr>
+                        <tr><td><code>cleman.agent.result</code></td><td>Tous les agents</td><td>Médiateur + Superviseur</td><td>Après chaque traitement</td></tr>
+                        <tr><td><code>cleman.mediator.check</code></td><td>Orchestrateur</td><td>Médiateur</td><td>Vérification continue</td></tr>
+                        <tr><td><code>cleman.mediator.freeze</code></td><td>Médiateur</td><td>Tous</td><td>Gel complet d'une intention</td></tr>
+                        <tr><td><code>cleman.mediator.degraded_freeze</code></td><td>Médiateur</td><td>Action seul bloqué</td><td>Gel dégradé (Data+Raisonnement continuent)</td></tr>
+                        <tr><td><code>cleman.arbitration.request</code></td><td>Médiateur</td><td>Dashboard arbitrage</td><td>Demande de décision humaine</td></tr>
+                        <tr><td><code>cleman.arbitration.decision</code></td><td>Arbitre humain</td><td>Orchestrateur + Médiateur</td><td>Décision rendue → dégel</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="alert alert-warn" style="margin-top:1.5rem;">
+                <strong>⚡ Question audit type :</strong> « Pourquoi NATS et pas Kafka ? »<br>
+                <strong>Réponse :</strong> NATS JetStream est plus léger, plus rapide (latence sub-millisecond), parfait pour l'event-driven pair-à-pair. Kafka serait surdimensionné pour notre scale. NATS offre le streaming persistant (JetStream) avec replay, exactement ce qu'il nous faut pour le journal d'audit.
+            </div>
+        </section>
+
+        <!-- ==================== 5 AGENTS ==================== -->
+        <section class="section fade-in" id="agents">
+            <div class="section-label">03 — Les 5 Agents</div>
+            <h2>Chaque agent a un rôle précis</h2>
+            <p class="subtitle">Tous héritent de BaseAgent, souscrivent au bus NATS, et publient leurs résultats</p>
+
+            <div class="tabs">
+                <button class="tab-btn active" onclick="showTab('agents', 0)">BaseAgent</button>
+                <button class="tab-btn" onclick="showTab('agents', 1)">📊 Data</button>
+                <button class="tab-btn" onclick="showTab('agents', 2)">🧠 Raisonnement</button>
+                <button class="tab-btn" onclick="showTab('agents', 3)">⚡ Action</button>
+                <button class="tab-btn" onclick="showTab('agents', 4)">👁️ Superviseur</button>
+            </div>
+
+            <div class="tab-content active" data-tabs="agents" data-index="0">
+                <div class="card">
+                    <h3>📐 BaseAgent — La classe abstraite commune</h3>
+                    <p style="margin:0.75rem 0;">Tous les agents héritent de <code>BaseAgent</code>. Le cycle de vie est identique :</p>
+                    <div class="timeline">
+                        <div class="tl-item">
+                            <h4>1. <code>start()</code> — Connexion au bus</h4>
+                            <p>S'abonne aux sujets NATS définis dans <code>subscribe_subjects</code>. Chaque agent a sa propre queue group (<code>"agent-{name}"</code>).</p>
+                        </div>
+                        <div class="tl-item">
+                            <h4>2. <code>_handle_message()</code> — Réception protégée</h4>
+                            <p>Vérifie le circuit breaker. Si bloqué → ignore. Sinon → appelle <code>process()</code>.</p>
+                        </div>
+                        <div class="tl-item">
+                            <h4>3. <code>process()</code> — Traitement métier <span class="badge" style="background:rgba(168,85,247,0.2);color:#c084fc;">ABSTRAIT</span></h4>
+                            <p>Chaque agent implémente SA logique. C'est le cœur de l'agent.</p>
+                        </div>
+                        <div class="tl-item">
+                            <h4>4. <code>_publish_result()</code> — Publication</h4>
+                            <p>Publie le résultat sur <code>cleman.agent.result</code> avec intention_id, agent_source, timestamp.</p>
+                        </div>
+                    </div>
+                    <pre><span class="cm"># Le pattern clé — chaque agent suit ce modèle :</span>
+<span class="kw">class</span> <span class="dec">BaseAgent</span>(ABC):
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, name, subscribe_subjects):
+        self.name = name
+        self.agent_id = f<span class="str">"{name}-{uuid4().hex[:8]}"</span>
+
+    <span class="kw">async def</span> <span class="fn">_handle_message</span>(self, data, meta):
+        <span class="cm"># 1. Vérifier circuit breaker</span>
+        <span class="kw">if not</span> cb.allow_request(): <span class="kw">return</span>
+        <span class="kw">try</span>:
+            result = <span class="kw">await</span> self.process(data, meta)  <span class="cm"># ABSTRAIT</span>
+            cb.record_success()
+            <span class="kw">await</span> self._publish_result(result)
+        <span class="kw">except</span>:
+            cb.record_failure()  <span class="cm"># → le circuit breaker s'ouvre</span></pre>
+                </div>
+            </div>
+
+            <div class="tab-content" data-tabs="agents" data-index="1">
+                <div class="card">
+                    <h3>📊 Agent Data — Recherche & Collecte</h3>
+                    <p><strong>Sujet :</strong> <code>cleman.data.query</code> + <code>cleman.data.complement</code></p>
+                    <p style="margin:0.75rem 0;">L'Agent Data est le "chercheur" du système. Son pipeline en 6 phases :</p>
+                    <div class="timeline">
+                        <div class="tl-item">
+                            <h4>Phase 0: Data Residency</h4>
+                            <p>Vérifie si la verticale autorise les recherches externes. En mode Haute Protection: local uniquement. Avocat/Banque/Santé: avertissement si cloud.</p>
+                        </div>
+                        <div class="tl-item">
+                            <h4>Phase 1: Reformulation LLM</h4>
+                            <p>Le LLM reformule la requête pour optimiser la recherche. Si LLM indisponible → utilise la requête brute (mode dégradé).</p>
+                        </div>
+                        <div class="tl-item">
+                            <h4>Phase 2: RAG Vectoriel (ChromaDB)</h4>
+                            <p>Recherche sémantique dans les embeddings. Retourne les chunks les plus pertinents avec score de distance.</p>
+                        </div>
+                        <div class="tl-item">
+                            <h4>Phase 3: Knowledge Vault (plein texte)</h4>
+                            <p>Recherche dans les documents stockés du client. Vault = espace de stockage isolé par client.</p>
+                        </div>
+                        <div class="tl-item">
+                            <h4>Phase 4 & 5: Extraction structurée LLM</h4>
+                            <p>Le LLM extrait les faits des sources bruts en JSON structuré. Chaque fait a: description, source, confidence, timestamp, ID unique.</p>
+                        </div>
+                        <div class="tl-item">
+                            <h4>Phase 6: Compilation</h4>
+                            <p>Score de confiance = 40% pertinence sources + 60% confiance faits. Identification des risques.</p>
+                        </div>
+                    </div>
+                    <div class="alert alert-info">
+                        <strong>💬 En audit :</strong> « L'Agent Data sépare la recherche (faits) de l'analyse (opinions). Il ne produit JAMAIS d'avis, uniquement des faits sourcés et horodatés. Le mode dégradé (sans LLM) retourne les sources brutes. »
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-content" data-tabs="agents" data-index="2">
+                <div class="card">
+                    <h3>🧠 Agent Raisonnement — Analyse & Recommandations</h3>
+                    <p><strong>Sujet :</strong> <code>cleman.reasoning.analyze</code></p>
+                    <p style="margin:0.75rem 0;">C'est le "cerveau" du système. Pipeline en 5 phases :</p>
+                    <div class="timeline">
+                        <div class="tl-item">
+                            <h4>Phase 1: Analyse rapide programmatique</h4>
+                            <p>Analyse contextuelle SANS LLM. Classification de la requête (comparison, risk_assessment, recommendation, general). Score de confiance de base (0.75).</p>
+                        </div>
+                        <div class="tl-item">
+                            <h4>Phase 2: Analyse LLM</h4>
+                            <p>Appelle le LLM avec un skill prompt métier + contexte RAG. Le prompt demande du JSON structuré: textes applicables, confidence, risques, recommandations. Utilise le routing par verticale (Claude pour juridique, GPT-4o pour santé, etc.).</p>
+                        </div>
+                        <div class="tl-item">
+                            <h4>Phase 3: Recommandations fusionnées</h4>
+                            <p>Fusion des résultats programmatiques + LLM. Si non conforme → requires_review.</p>
+                        </div>
+                        <div class="tl-item">
+                            <h4>Phase 4: ★ Reflection Node (JP Morgan) ★</h4>
+                            <p>Inspiré du pattern "Ask David" de JP Morgan. Un DEUXIÈME appel LLM en mode "réviseur" critique l'analyse. Il peut: confirmer (delta < 0.3) ou réviser à la baisse. Les issues trouvées sont ajoutées aux risques.</p>
+                        </div>
+                        <div class="tl-item">
+                            <h4>Phase 5: Triggers de révision</h4>
+                            <p>Si incohérence détectée → publie sur <code>cleman.intention.revise</code> pour reformuler la requête.</p>
+                        </div>
+                    </div>
+                    <pre><span class="cm"># Le calcul de confiance finale ( Pondération ):</span>
+final = <span class="num">0.4</span> × confidence_programmatique + <span class="num">0.6</span> × confidence_llm
+<span class="cm"># Le Reflection Node peut ajuster ce score à la baisse</span>
+<span class="cm"># s'il détecte des faiblesses dans l'analyse.</span></pre>
+                </div>
+            </div>
+
+            <div class="tab-content" data-tabs="agents" data-index="3">
+                <div class="card">
+                    <h3>⚡ Agent Action — Exécution avec Saga Pattern</h3>
+                    <p><strong>Sujet :</strong> <code>cleman.action.execute</code></p>
+                    <p style="margin:0.75rem 0;">Le seul agent qui exécute des actions. Protégé par 3 verrous :</p>
+
+                    <div class="grid grid-3">
+                        <div class="card" style="border-color:var(--red);">
+                            <h4 style="color:var(--red);">🔒 Verrou 1: Gel Médiateur</h4>
+                            <p style="font-size:0.8rem;">Si l'intention est gelée (complet OU dégradé) → l'Action est bloqué. Il ne PEUT PAS exécuter. Le code vérifie <code>intention_store.is_action_blocked()</code> AVANT tout traitement.</p>
+                        </div>
+                        <div class="card" style="border-color:var(--orange);">
+                            <h4 style="color:var(--orange);">🔒 Verrou 2: Verrou distribué Redis</h4>
+                            <p style="font-size:0.8rem;">Acquiert un lock Redis sur <code>intention:{id}</code>. Empêche 2 agents d'exécuter la même intention simultanément. Auto-expiration 30s.</p>
+                        </div>
+                        <div class="card" style="border-color:var(--green);">
+                            <h4 style="color:var(--green);">🔒 Verrou 3: Circuit Breaker</h4>
+                            <p style="font-size:0.8rem;">Si l'Action échoue 5 fois → circuit OPEN → bloque tout pendant 60s → HALF_OPEN → teste la récupération.</p>
+                        </div>
+                    </div>
+
+                    <h4 style="margin-top:1.5rem;">Pattern Saga (compensation)</h4>
+                    <p style="font-size:0.88rem;color:var(--text2);">Chaque action est enregistrée comme étape de saga avec sa fonction de compensation :</p>
+                    <div class="table-wrap">
+                        <table>
+                            <thead><tr><th>Action</th><th>Compensation</th><th>Quand</th></tr></thead>
+                            <tbody>
+                                <tr><td>workflow_trigger</td><td>cancel_workflow</td><td>Déclencher un workflow n8n</td></tr>
+                                <tr><td>payment</td><td>refund_payment</td><td>Traitement de paiement</td></tr>
+                                <tr><td>notification</td><td>cancel_notification</td><td>Envoyer une alerte</td></tr>
+                                <tr><td>email</td><td>recall_email</td><td>Envoi d'email</td></tr>
+                                <tr><td>ecriture_comptable</td><td>contre_passation</td><td>Écriture comptable (audit trail)</td></tr>
+                                <tr><td>document_generation</td><td>delete_document</td><td>Génération de document</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <pre><span class="cm"># Saga: si étape 3 échoue → compense 2 puis 1 (ordre inverse)</span>
+Étape 1: notification ✅ → Étape 2: email ✅ → Étape 3: paiement ❌
+                                                    ↓
+                        <span class="cm">COMPENSATION: recall_email → cancel_notification</span></pre>
+                </div>
+            </div>
+
+            <div class="tab-content" data-tabs="agents" data-index="4">
+                <div class="card">
+                    <h3>👁️ Agent Superviseur — Observateur Continu</h3>
+                    <p><strong>Sujets :</strong> <code>cleman.validate.request</code> + écoute <code>agent.result</code>, <code>mediator.conflict</code>, <code>mediator.freeze</code>, <code>arbitration.decision</code></p>
+                    <p style="margin:0.75rem 0;">Le Superviseur est l'observateur permanent. Il ne prend PAS de décision — il prépare les dossiers et alerte.</p>
+                    <div class="grid grid-2">
+                        <div class="card">
+                            <h4>📋 Health Board</h4>
+                            <p style="font-size:0.85rem;">Maintient un tableau de bord par intention: confiance globale, agents ayant répondu, conflits détectés, gels, inactivité.</p>
+                        </div>
+                        <div class="card">
+                            <h4>🔍 4 Vérifications</h4>
+                            <p style="font-size:0.85rem;">1) <strong>State:</strong> résultat vide/malformé? 2) <strong>Hallucination:</strong> confiance < 0.3? 3) <strong>Coherence:</strong> recommandation présente? 4) <strong>Context:</strong> trop de conflits ou stale?</p>
+                        </div>
+                    </div>
+                    <div class="alert alert-info" style="margin-top:1rem;">
+                        <strong>💬 En audit :</strong> « Le Superviseur est un observateur passif. Il ne bloque JAMAIS rien. Il journalise chaque observation et alerte si dégradation. Il prépare les dossiers d'arbitrage. C'est un watchdog, pas un décideur. »
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== MÉDIATEUR ==================== -->
+        <section class="section fade-in" id="mediateur">
+            <div class="section-label">04 — Le Médiateur</div>
+            <h2>🛡️ Le cœur de la confiance</h2>
+            <p class="subtitle">100% déterministe — 0% LLM — Jamais une IA ne décide seule</p>
+
+            <div class="alert alert-success">
+                <strong>💬 En audit, tu dis :</strong><br>
+                « Le Médiateur est un agent transverse qui intercepte TOUS les résultats des autres agents en temps réel. 
+                Il utilise un <strong>moteur de règles JsonLogic</strong> — c'est du code déterministe, PAS de LLM. 
+                Si une règle est violée, il <strong>gèle automatiquement l'intention</strong> et demande un <strong>arbitrage humain obligatoire</strong>. 
+                Il existe deux modes de gel: <strong>complet</strong> (tous les agents bloqués) ou <strong>dégradé</strong> (seul l'Action est bloqué, Data et Raisonnement continuent d'enrichir le dossier pour l'arbitre). »
+            </div>
+
+            <div class="grid grid-2" style="margin-top:1.5rem;">
+                <div class="card">
+                    <h4>🔍 Détection de conflits</h4>
+                    <p style="font-size:0.85rem;">Le Médiateur compare les positions des agents entre eux. Conflit si:<br>
+                    • 2 agents recommandent des actions différentes<br>
+                    • Différence de confiance > 0.7 entre agents<br>
+                    • Un agent identifie un risque ignoré par un autre<br>
+                    • Montant ≥ seuil vertical sans validation humaine</p>
+                </div>
+                <div class="card">
+                    <h4>⚡ Modes de gel</h4>
+                    <p style="font-size:0.85rem;">
+                    <span class="marker m-red">GEL COMPLET</span> → Tous les agents bloqués. Conflit critique, règle "block".<br><br>
+                    <span class="marker m-orange">GEL DÉGRADÉ</span> → Seul l'Agent Action est bloqué. Data et Raisonnement continuent d'enrichir le dossier d'arbitrage. L'humain reçoit un dossier plus complet.<br><br>
+                    <span class="marker m-cyan">CONSOLIDATION</span> → Après un dégel, fenêtre de 5s pour capturer les résultats "en vol".</p>
+                </div>
+            </div>
+
+            <h3 style="margin-top:2rem;">📐 Moteur de règles JsonLogic</h3>
+            <p style="color:var(--text2);font-size:0.9rem;margin-bottom:1rem;">Les règles sont des fichiers JSON purs. Pas de LLM. Pas d'incertitude.</p>
+            <pre><span class="cm">// Exemple: comptable-001 — Aucune décision fiscale automatique</span>
+{
+  <span class="str">"id"</span>: <span class="str">"comptable-001"</span>,
+  <span class="str">"name"</span>: <span class="str">"Aucune décision fiscale automatique"</span>,
+  <span class="str">"severity"</span>: <span class="str">"critical"</span>,
+  <span class="str">"condition"</span>: {
+    <span class="str">"and"</span>: [
+      { <span class="str">"=="</span>: [{ <span class="str">"var"</span>: <span class="str">"action.type"</span> }, <span class="str">"decision_fiscale"</span>] },
+      { <span class="str">"!"</span>: [{ <span class="str">"var"</span>: <span class="str">"human_validated"</span> }] }
+    ]
+  },
+  <span class="str">"action"</span>: <span class="str">"freeze"</span>,   <span class="cm">// → gel + arbitrage obligatoire</span>
+  <span class="str">"message"</span>: <span class="str">"Art. 22 RGPD: Les décisions fiscales ne peuvent être
+             entièrement automatisées. Validation humaine obligatoire."</span>
+}</pre>
+
+            <h3 style="margin-top:1.5rem;">Règles par verticale</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>ID</th><th>Nom</th><th>Sévérité</th><th>Action</th><th>Référence</th></tr></thead>
+                    <tbody>
+                        <tr><td>comptable-001</td><td>Pas de décision fiscale auto</td><td><span class="marker m-red">CRITICAL</span></td><td><span class="marker m-red">freeze</span></td><td>RGPD Art. 22</td></tr>
+                        <tr><td>comptable-002</td><td>Données EU uniquement</td><td><span class="marker m-orange">HIGH</span></td><td><span class="marker m-red">block</span></td><td>Data residency</td></tr>
+                        <tr><td>comptable-003</td><td>Montant > 10K€</td><td><span class="marker m-orange">HIGH</span></td><td><span class="marker m-orange">arbitrate</span></td><td>Anti-blanchiment</td></tr>
+                        <tr><td>comptable-005</td><td>Audit trail obligatoire</td><td><span class="marker m-red">CRITICAL</span></td><td><span class="marker m-cyan">require_audit</span></td><td>Traçabilité</td></tr>
+                        <tr><td>comptable-006</td><td>Déduction > 50K CHF</td><td><span class="marker m-orange">HIGH</span></td><td><span class="marker m-red">freeze</span></td><td>Gel préventif</td></tr>
+                        <tr><td>comptable-007</td><td>Conflit de sources</td><td><span class="marker m-orange">HIGH</span></td><td><span class="marker m-red">freeze</span></td><td>Cohérence</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3 style="margin-top:1.5rem;">Seuils de gel par verticale</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Verticale</th><th>Seuil montant</th><th>Raison</th></tr></thead>
+                    <tbody>
+                        <tr><td>Comptable</td><td>10 000 (défaut)</td><td>Anti-blanchiment</td></tr>
+                        <tr><td>Avocat</td><td>0 (gel par type d'action)</td><td>Secret professionnel absolu</td></tr>
+                        <tr><td>Banque</td><td>15 000 CHF</td><td>KYC renforcé FINMA</td></tr>
+                        <tr><td>Santé</td><td>0 (gel par type de données)</td><td>LPM + HDS</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ==================== TRUST BOX ==================== -->
+        <section class="section fade-in" id="trust-box">
+            <div class="section-label">05 — Trust Box</div>
+            <h2>🔐 Le concept produit</h2>
+            <p class="subtitle">Inspiré d'Ant Group T-Box — La couche de confiance déterministe</p>
+
+            <div class="card" style="border-color:var(--accent);margin-bottom:1.5rem;">
+                <h3>🌊 Le Serment du Trust Box</h3>
+                <pre style="border:none;background:transparent;padding:0;font-family:inherit;font-size:0.9rem;line-height:1.8;">« Ne jamais laisser l'IA prendre une décision seule dans les moments critiques. »</pre>
+            </div>
+
+            <div class="grid grid-2">
+                <div class="card">
+                    <h4>1. Déterminisme critique</h4>
+                    <p style="font-size:0.85rem;">Les décisions de gel et blocage sont <strong>100% déterministes</strong>. Moteur JsonLogic pur. Pas de probabilité, pas d'incertitude. Si la condition est vraie, l'action est gelée. Point.</p>
+                </div>
+                <div class="card">
+                    <h4>2. Gel préventif</h4>
+                    <p style="font-size:0.85rem;">Si une règle est violée, l'action est gelée <strong>AVANT</strong> exécution. L'Agent Action vérifie le statut de l'intention <strong>avant chaque traitement</strong>. C'est un fail-safe, pas un correctif.</p>
+                </div>
+                <div class="card">
+                    <h4>3. Arbitrage humain obligatoire</h4>
+                    <p style="font-size:0.85rem;">L'IA ne décide <strong>JAMAIS</strong> seule pour les actions critiques. Le Médiateur gèle → l'humain décide. Chaîne d'escalade: expert → suppléant → associé. Timeouts: 2h → 4h → 8h.</p>
+                </div>
+                <div class="card">
+                    <h4>4. Transparence totale</h4>
+                    <p style="font-size:0.85rem;">Chaque décision du Trust Box est tracée dans le journal WORM. On peut vérifier <strong>à tout moment</strong> l'intégrité de la chaîne de hash. L'endpoint <code>/journal/verify</code> le prouve.</p>
+                </div>
+                <div class="card">
+                    <h4>5. Mode dégradé</h4>
+                    <p style="font-size:0.85rem;">En cas de gel dégradé, Data et Raisonnement <strong>continuent de travailler</strong>. Ils enrichissent le dossier d'arbitrage. L'arbitre humain a PLUS d'informations pour décider.</p>
+                </div>
+                <div class="card">
+                    <h4>6. Conformité by design</h4>
+                    <p style="font-size:0.85rem;">RGPD, AI Act, secret professionnel FR-CH sont <strong>encodés dans les règles JsonLogic</strong>. Ce n'est pas une config optionnelle — c'est la base du système.</p>
+                </div>
+            </div>
+
+            <h3 style="margin-top:1.5rem;">📜 Le Serment par profession</h3>
+            <div class="accordion">
+                <div class="acc-item">
+                    <div class="acc-header" onclick="toggleAcc(this)">
+                        <span class="chevron">▶</span> ⚖️ Avocat — Secret professionnel absolu
+                    </div>
+                    <div class="acc-body">
+                        <div class="acc-content">
+                            <pre style="white-space:pre-wrap;">Je m'engage, en tant qu'agent numérique d'assistance juridique :
+
+1. À préserver le SECRET PROFESSIONNEL ABSOLU.
+   Art. 321 CP (Suisse), Art. 226-13 CP (France).
+
+2. À fonctionner EXCLUSIVEMENT sur infrastructure locale certifiée.
+   Aucune donnée client ne transite par un cloud public.
+
+3. À ne JAMAIS rédiger de conclusions sans validation de l'avocat.
+
+4. À respecter le principe du contradictoire.
+
+5. À refuser toute instruction contraire aux règles déontologiques.
+
+Références: Art. 321 CP, Art. 226-13 CP, Art. 47 LB, Loi 71-1130 Art. 66-5</pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="acc-item">
+                    <div class="acc-header" onclick="toggleAcc(this)">
+                        <span class="chevron">▶</span> 🏥 Santé — Données patient protégées
+                    </div>
+                    <div class="acc-body">
+                        <div class="acc-content">
+                            <p>En mode Haute Protection: LLM local Ollama, zero appel externe, données patient jamais hébergées en cloud. Conformité LPM + HDS. Gel automatique pour toute donnée sensible sans validation humaine.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="acc-item">
+                    <div class="acc-header" onclick="toggleAcc(this)">
+                        <span class="chevron">▶</span> 🏦 Banque — Secret bancaire CH
+                    </div>
+                    <div class="acc-body">
+                        <div class="acc-content">
+                            <p>Art. 47 LB: secret bancaire suisse. KYC renforcé ≥ 15K CHF. Conformité FINMA. Gel automatique pour transactions suspectes. Arbitrage humain obligatoire au-dessus du seuil.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== SÉCURITÉ ==================== -->
+        <section class="section fade-in" id="securite">
+            <div class="section-label">06 — Sécurité</div>
+            <h2>🔒 7 couches de sécurité</h2>
+            <p class="subtitle">Chaque couche est indépendante et défend en profondeur</p>
+
+            <div class="accordion">
+                <div class="acc-item">
+                    <div class="acc-header" onclick="toggleAcc(this)">
+                        <span class="chevron">▶</span> <span class="marker m-blue">1</span> Authentification JWT + RBAC
+                    </div>
+                    <div class="acc-body">
+                        <div class="acc-content">
+                            <p><strong>Comment ça marche :</strong> Double token (access 30min + refresh 7j). Password hashé bcrypt. Refresh token stocké hashé en DB (jamais en clair). 4 rôles RBAC :</p>
+                            <div class="table-wrap">
+                                <table>
+                                    <thead><tr><th>Rôle</th><th>Utilisateurs</th><th>Intentions</th><th>Arbitrage</th><th>Admin</th></tr></thead>
+                                    <tbody>
+                                        <tr><td><span class="marker m-red">admin</span></td><td>CRUD</td><td>CRUD + freeze</td><td>Décider + déléguer</td><td>✅ Total</td></tr>
+                                        <tr><td><span class="marker m-purple">expert</span></td><td>Read</td><td>CRUD</td><td><strong>Décider</strong></td><td>❌</td></tr>
+                                        <tr><td><span class="marker m-blue">operator</span></td><td>—</td><td>Create + Read</td><td>Read</td><td>❌</td></tr>
+                                        <tr><td><span class="marker m-green">viewer</span></td><td>—</td><td>Read</td><td>Read</td><td>❌</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <p><strong>Clés API :</strong> Format <code>cl_xxxx...</code>. Hash SHA-256 stocké en DB. Préfixe visible pour identification. Expiration configurable. Scopes par clé.</p>
+                            <p><strong>Rate limiting :</strong> Login: 5 tentatives/minute par IP. Compteur réinitialisé après succès.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="acc-item">
+                    <div class="acc-header" onclick="toggleAcc(this)">
+                        <span class="chevron">▶</span> <span class="marker m-blue">2</span> Journal Append-Only (WORM)
+                    </div>
+                    <div class="acc-body">
+                        <div class="acc-content">
+                            <p><strong>Comment ça marche :</strong> Chaque événement est écrit dans un fichier JSON-L (un par jour). Chaque entrée contient:</p>
+                            <ul style="margin:0.5rem 0;padding-left:1.5rem;">
+                                <li><strong>entry_hash</strong> = SHA-256(contenu + previous_hash)</li>
+                                <li><strong>signature</strong> = HMAC-SHA256(contenu + hash, signing_key)</li>
+                                <li><strong>previous_hash</strong> → chaîne vers l'entrée précédente</li>
+                            </ul>
+                            <pre><span class="cm"># Chaîne de confiance:</span>
+GENESIS → Entry#1 (hash_1) → Entry#2 (hash_2) → Entry#3 (hash_3) → ...
+              ↑                   ↑                   ↑
+         previous_hash=GENESIS  previous_hash=hash_1  previous_hash=hash_2
+
+<span class="cm"># Vérification d'intégrité: /api/v1/journal/verify</span>
+<span class="cm"># Recalcule TOUTE la chaîne et compare chaque hash</span></pre>
+                            <p><strong>Propriétés :</strong> Append-only (jamais de modification/suppression). Atomic write (fichier .tmp → rename). Persistance fichier (survit au redémarrage). Vérifiable à tout moment.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="acc-item">
+                    <div class="acc-header" onclick="toggleAcc(this)">
+                        <span class="chevron">▶</span> <span class="marker m-blue">3</span> Circuit Breaker
+                    </div>
+                    <div class="acc-body">
+                        <div class="acc-content">
+                            <p>Protège contre les agents défaillants. 3 états :</p>
+                            <pre>CLOSED (normal) → 5 échecs → OPEN (bloqué) → 60s → HALF_OPEN (test) →
+    ↑                                                           |
+    └──────────── 3 succès consécutifs ←──────────────────────┘
+                                                    │
+                                              1 échec → OPEN</pre>
+                            <p>Configurable par agent. Le <code>CircuitBreakerRegistry</code> maintient un breaker par agent.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="acc-item">
+                    <div class="acc-header" onclick="toggleAcc(this)">
+                        <span class="chevron">▶</span> <span class="marker m-blue">4</span> Chiffrement Fernet (AES)
+                    </div>
+                    <div class="acc-body">
+                        <div class="acc-content">
+                            <p>Chiffrement au repos des données sensibles (PII, tokens). AES-128-CBC + HMAC-SHA256. Clé dérivée du SECRET_KEY via SHA-256. Supporte la rotation de clé (max 2 clés actives).</p>
+                            <p>Les champs PII (phone, mfa_secret) sont chiffrés avant stockage. Le flag <code>{field}_encrypted = true</code> indique qu'un champ est chiffré.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="acc-item">
+                    <div class="acc-header" onclick="toggleAcc(this)">
+                        <span class="chevron">▶</span> <span class="marker m-blue">5</span> Verrous distribués Redis
+                    </div>
+                    <div class="acc-body">
+                        <div class="acc-content">
+                            <p>L'Agent Action acquiert un lock Redis avant d'exécuter: <code>intention:{id}</code>. Auto-expiration 30s. Empêche l'exécution concurrente de la même intention. Le lock est TOUJOURS relâché dans un <code>finally</code> (même en cas d'erreur).</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="acc-item">
+                    <div class="acc-header" onclick="toggleAcc(this)">
+                        <span class="chevron">▶</span> <span class="marker m-blue">6</span> Guardrails (IN + OUT)
+                    </div>
+                    <div class="acc-body">
+                        <div class="acc-content">
+                            <p>Le LLM Service applique des guardrails en 2 passes :</p>
+                            <p><strong>IN (input):</strong> Détection PII, injection de prompt, contenu non autorisé. Si bloqué → retourne erreur.</p>
+                            <p><strong>OUT (output):</strong> Vérification safety, conformité, pas de données sensibles dans la réponse. Si bloqué → réponse filtrée.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="acc-item">
+                    <div class="acc-header" onclick="toggleAcc(this)">
+                        <span class="chevron">▶</span> <span class="marker m-blue">7</span> State Machine des intentions
+                    </div>
+                    <div class="acc-body">
+                        <div class="acc-content">
+                            <pre>created → routed → processing → <span class="m-red" style="color:var(--red)">frozen</span> → arbitrating → unfrozen → processing → completed
+                                       ↓               ↑
+                                  <span class="m-orange" style="color:var(--orange)">degraded_frozen</span> → arbitrating → unfrozen
+                                       ↓
+                                   failed / cancelled</pre>
+                            <p style="margin-top:0.75rem;">Chaque transition est <strong>validée</strong>. Impossible de passer de <code>completed</code> à <code>frozen</code> par exemple. L'historique complet de chaque intention est conservé (from, to, trigger, reason, timestamp).</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== DONNÉES ==================== -->
+        <section class="section fade-in" id="data">
+            <div class="section-label">07 — Couche Données</div>
+            <h2>💾 Base de données, RAG et Knowledge Vault</h2>
+            <p class="subtitle">3 systèmes de stockage complémentaires</p>
+
+            <div class="grid grid-3">
+                <div class="card">
+                    <div class="card-icon" style="background:rgba(59,130,246,0.15);">🐘</div>
+                    <h3>PostgreSQL</h3>
+                    <p>Données relationnelles: users, api_keys, audit_logs, tenants. SQLAlchemy ORM + Alembic migrations. SQLite en dév.</p>
+                    <span class="tag" style="background:rgba(59,130,246,0.15);color:#60a5fa;">Relationnel</span>
+                </div>
+                <div class="card">
+                    <div class="card-icon" style="background:rgba(16,185,129,0.15);">🧬</div>
+                    <h3>ChromaDB (RAG)</h3>
+                    <p>Recherche sémantique vectorielle. Embeddings des textes réglementaires. Index par client + verticale. Droit à l'oubli RGPD: DELETE client.</p>
+                    <span class="tag" style="background:rgba(16,185,129,0.15);color:#34d399;">Vectoriel</span>
+                </div>
+                <div class="card">
+                    <div class="card-icon" style="background:rgba(168,85,247,0.15);">🗄️</div>
+                    <h3>Knowledge Vault</h3>
+                    <p>Documents clients: plein texte + métadonnées. Espace isolé par client. Recherche textuelle. Catalog global. Stockage fichier JSON.</p>
+                    <span class="tag" style="background:rgba(168,85,247,0.15);color:#c084fc;">Documents</span>
+                </div>
+            </div>
+
+            <h3 style="margin-top:2rem;">🤖 LLM Service — Model-Agnostic via LiteLLM</h3>
+            <div class="alert alert-info">
+                <strong>💬 En audit :</strong> « Le système est model-agnostic grâce à LiteLLM. On peut changer de provider sans toucher au code. En mode Standard, on route par verticale (Claude pour juridique, GPT-4o pour santé, Mistral pour startup). En mode Haute Protection, tout passe par Ollama local. »
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Verticale</th><th>Modèle (Standard)</th><th>Pourquoi</th></tr></thead>
+                    <tbody>
+                        <tr><td>Comptable</td><td>Claude Sonnet 4</td><td>Précision fiscale, rédaction structurée</td></tr>
+                        <tr><td>Avocat</td><td>Claude Sonnet 4</td><td>Raisonnement juridique, secret professionnel</td></tr>
+                        <tr><td>Santé</td><td>GPT-4o</td><td>Terminologie médicale, données patient</td></tr>
+                        <tr><td>Banque</td><td>Claude Sonnet 4</td><td>KYC/AML, conformité FINMA</td></tr>
+                        <tr><td>Startup</td><td>Mistral Small 3.1</td><td>Rapide, économique</td></tr>
+                        <tr><td>RH</td><td>GPT-4o-mini</td><td>Anti-discrimination, RGPD Art. 22</td></tr>
+                        <tr><td>Toutes (Haute Protection)</td><td>Llama 3.1 8B (Ollama)</td><td>Local, zero appel externe</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ==================== API ==================== -->
+        <section class="section fade-in" id="api">
+            <div class="section-label">08 — API REST</div>
+            <h2>🌐 Endpoints principaux</h2>
+            <p class="subtitle">FastAPI — 50+ endpoints — Documentation auto Swagger</p>
+
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Catégorie</th><th>Endpoints</th><th>Auth</th><th>Usage</th></tr></thead>
+                    <tbody>
+                        <tr><td><strong>Auth</strong></td><td><code>POST /auth/login, /auth/refresh, /auth/register, /auth/me, /auth/api-keys</code></td><td>Public / JWT</td><td>Connexion, tokens, clés API</td></tr>
+                        <tr><td><strong>Intentions</strong></td><td><code>POST /intentions, GET /intentions/{id}, GET /intentions</code></td><td>JWT</td><td>Soumettre et suivre les requêtes</td></tr>
+                        <tr><td><strong>Arbitrage</strong></td><td><code>GET /arbitrations, POST /arbitrations/{id}/decide, GET /precedents</code></td><td>Expert+</td><td>Décisions humaines</td></tr>
+                        <tr><td><strong>Journal</strong></td><td><code>GET /journal, GET /journal/verify</code></td><td>Operator+</td><td>Audit trail inviolable</td></tr>
+                        <tr><td><strong>Agents</strong></td><td><code>GET /agents/status</code></td><td>Operator+</td><td>Circuit breakers + conflits</td></tr>
+                        <tr><td><strong>Compliance</strong></td><td><code>GET /compliance/report/daily, /dpia, /ai-act, /iso27001, /data-residency</code></td><td>Expert+</td><td>Rapports réglementaires</td></tr>
+                        <tr><td><strong>Médiateur</strong></td><td><code>GET /mediator/rules, /mediator/conflicts</code></td><td>Operator+</td><td>Règles et conflits actifs</td></tr>
+                        <tr><td><strong>Trust Box</strong></td><td><code>GET /trust-box/status, POST /trust-box/evaluate, /trust-box/simulate, /trust-box/serment</code></td><td>Mixte</td><td>Statut et simulation</td></tr>
+                        <tr><td><strong>LLM</strong></td><td><code>GET /llm/health, /llm/routing, /llm/stats, POST /llm/generate</code></td><td>Operator+</td><td>Infos modèles</td></tr>
+                        <tr><td><strong>Vault</strong></td><td><code>POST /vault/clients, /vault/documents, GET /vault/search, /vault/stats</code></td><td>Expert+</td><td>Documents clients</td></tr>
+                        <tr><td><strong>RAG</strong></td><td><code>GET /rag/search, POST /rag/index, /rag/regulatory/seed, DELETE /rag/client/{id}</code></td><td>Mixte</td><td>Recherche vectorielle</td></tr>
+                        <tr><td><strong>Le Léman</strong></td><td><code>POST /le-leman/chat, GET /le-leman/info</code></td><td>JWT</td><td>Chat persona principal</td></tr>
+                        <tr><td><strong>Admin</strong></td><td><code>GET/PATCH/DELETE /admin/users, GET /admin/audit</code></td><td>Admin</td><td>Gestion utilisateurs</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="alert alert-info" style="margin-top:1rem;">
+                <strong>💡 Le Léman</strong> est le persona IA accessible via <code>POST /api/v1/le-leman/chat</code>. 
+                C'est la face visible de Cortex Leman. Pipeline: Persona prompt → RAG context → LLM → Reflection Node → Guardrails → Réponse avec signature et trust score.
+            </div>
+        </section>
+
+        <!-- ==================== CONFORMITÉ ==================== -->
+        <section class="section fade-in" id="conformite">
+            <div class="section-label">09 — Conformité réglementaire</div>
+            <h2>⚖️ Cadres légaux couverts</h2>
+            <p class="subtitle">Chaque cadre est encodé dans les règles JsonLogic et les serments</p>
+
+            <div class="grid grid-2">
+                <div class="card" style="border-left:3px solid var(--green);">
+                    <h3>🇪🇺 RGPD — Règlement Général</h3>
+                    <div style="font-size:0.85rem;color:var(--text2);">
+                        <p><strong>Art. 22:</strong> Pas de décision entièrement automatisée → gel automatique + arbitrage humain</p>
+                        <p><strong>Art. 32:</strong> Chiffrement au repos (Fernet AES) + sécurité par design</p>
+                        <p><strong>Art. 35:</strong> DPIA générable via <code>GET /compliance/audit/dpia</code></p>
+                        <p><strong>Droit à l'oubli:</strong> <code>DELETE /rag/client/{id}</code> supprime TOUTES les données vectorielles</p>
+                        <p><strong>DPO:</strong> Attestation générable via <code>GET /compliance/audit/dpo-attestation</code></p>
+                    </div>
+                </div>
+                <div class="card" style="border-left:3px solid var(--accent);">
+                    <h3>🇪🇺 AI Act</h3>
+                    <div style="font-size:0.85rem;color:var(--text2);">
+                        <p><strong>Risque limité:</strong> Startups — transparence requise</p>
+                        <p><strong>Risque élevé:</strong> Santé, Banque, RH — conformité stricte</p>
+                        <p><strong>Checklist:</strong> <code>GET /compliance/audit/ai-act</code></p>
+                        <p><strong>Transparence:</strong> Journal WORM + Trust Box status publics</p>
+                        <p><strong>Supervision humaine:</strong> Arbitrage obligatoire pour actions critiques</p>
+                    </div>
+                </div>
+                <div class="card" style="border-left:3px solid var(--red);">
+                    <h3>🇨🇭🇫🇷 Secret professionnel</h3>
+                    <div style="font-size:0.85rem;color:var(--text2);">
+                        <p><strong>Art. 321 CP (CH):</strong> Secret professionnel absolu — gel par type d'action</p>
+                        <p><strong>Art. 226-13 CP (FR):</strong> Secret professionnel français</p>
+                        <p><strong>Art. 47 LB (CH):</strong> Secret bancaire — seuil 15K CHF</p>
+                        <p><strong>LPM (CH):</strong> Loi sur les produits médicaux</p>
+                        <p><strong>Mode Haute Protection:</strong> Infrastructure locale, zero cloud</p>
+                    </div>
+                </div>
+                <div class="card" style="border-left:3px solid var(--purple);">
+                    <h3>📋 ISO / Standards</h3>
+                    <div style="font-size:0.85rem;color:var(--text2);">
+                        <p><strong>ISO/IEC 42001:</strong> Système de management IA — prêt pour certification</p>
+                        <p><strong>ISO 27001:</strong> Pack de preuves générable via <code>GET /compliance/audit/iso27001</code></p>
+                        <p><strong>OSCAL:</strong> Conformité vérifiée par les règles JsonLogic</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== DÉPLOIEMENT ==================== -->
+        <section class="section fade-in" id="deploiement">
+            <div class="section-label">10 — Déploiement</div>
+            <h2>🚀 2 modes de déploiement</h2>
+            <p class="subtitle">Standard (cloud) vs Haute Protection (local)</p>
+
+            <div class="grid grid-2">
+                <div class="card" style="border-color:var(--green);">
+                    <div class="alert alert-success" style="margin:-0.5rem -0.5rem 0.75rem;padding:0.5rem 0.75rem;font-size:0.75rem;">🟢 ACTUELLEMENT DÉPLOYÉ — 192.168.0.25</div>
+                    <h3>☁️ Mode Standard (Production)</h3>
+                    <div class="table-wrap" style="border:none;margin:0;">
+                        <table>
+                            <tbody>
+                                <tr><td><strong>LLM</strong></td><td>OpenRouter → DeepSeek V4 Flash + routing vertical</td></tr>
+                                <tr><td><strong>Bus</strong></td><td>NATS JetStream local (port 4222)</td></tr>
+                                <tr><td><strong>Cache</strong></td><td>Redis local (port 6379)</td></tr>
+                                <tr><td><strong>DB</strong></td><td>PostgreSQL 16 local (port 5432)</td></tr>
+                                <tr><td><strong>Reverse Proxy</strong></td><td>Nginx (port 8090) → Frontend + API</td></tr>
+                                <tr><td><strong>Data Residency</strong></td><td>EU par défaut</td></tr>
+                                <tr><td><strong>Routing</strong></td><td>Par verticale (Claude, GPT-4o, Mistral, DeepSeek)</td></tr>
+                                <tr><td><strong>Accès réseau</strong></td><td><code>http://192.168.0.25:8090</code></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <span class="tag" style="background:rgba(16,185,129,0.15);color:#34d399;">docker-compose.prod.yml</span>
+                </div>
+                <div class="card" style="border-color:var(--purple);">
+                    <h3>🔒 Mode Haute Protection (Edge)</h3>
+                    <div class="table-wrap" style="border:none;margin:0;">
+                        <table>
+                            <tbody>
+                                <tr><td><strong>LLM</strong></td><td>Ollama local (Llama 3.1 8B)</td></tr>
+                                <tr><td><strong>Bus</strong></td><td>NATS on-premise</td></tr>
+                                <tr><td><strong>Cache</strong></td><td>Redis local</td></tr>
+                                <tr><td><strong>DB</strong></td><td>PostgreSQL on-premise</td></tr>
+                                <tr><td><strong>Edge</strong></td><td>K3s appliance</td></tr>
+                                <tr><td><strong>Data Residency</strong></td><td>Local uniquement</td></tr>
+                                <tr><td><strong>Appels externes</strong></td><td><strong>ZÉRO</strong></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <span class="tag" style="background:rgba(168,85,247,0.15);color:#c084fc;">edge/k3s-install.sh</span>
+                </div>
+            </div>
+
+            <div class="alert alert-warn" style="margin-top:1rem;">
+                <strong>🔧 Déployer sur une autre machine du réseau :</strong>
+                <pre style="border:none;background:transparent;padding:0;margin:0.5rem 0 0;font-size:0.8rem;"><span class="cm"># 1. Copier le projet</span>
+scp -r /home/tars/cortex-leman-v5 user@192.168.0.X:~/
+<span class="cm"># 2. Installer Docker</span>
+curl -fsSL https://get.docker.com | sh
+<span class="cm"># 3. Configurer .env</span>
+cd ~/cortex-leman-v5 && cp .env.example .env && nano .env
+<span class="cm"># 4. Déployer</span>
+bash scripts/deploy-full.sh --build</pre>
+            </div>
+
+            <h3 style="margin-top:2rem;">🐳 Stack Docker PROD — Actuellement en ligne</h3>
+            <div class="alert alert-success"><strong>🟢 5 services actifs sur 192.168.0.25</strong></div>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Service</th><th>Image</th><th>Port</th><th>Rôle</th><th>Status</th></tr></thead>
+                    <tbody>
+                        <tr><td><strong>nats</strong></td><td>nats:2.10-alpine</td><td>4222, 8222</td><td>Bus JetStream persistant</td><td><span class="marker m-green">✅ healthy</span></td></tr>
+                        <tr><td><strong>redis</strong></td><td>redis:7-alpine</td><td>6379</td><td>Cache + verrous distribués</td><td><span class="marker m-green">✅ healthy</span></td></tr>
+                        <tr><td><strong>postgres</strong></td><td>postgres:16-alpine</td><td>5432</td><td>Base de données relationnelle</td><td><span class="marker m-green">✅ healthy</span></td></tr>
+                        <tr><td><strong>api</strong></td><td>cortex-leman-v5:latest</td><td>8000</td><td>FastAPI + 5 agents + médiateur</td><td><span class="marker m-green">✅ healthy</span></td></tr>
+                        <tr><td><strong>nginx</strong></td><td>nginx:alpine</td><td>8090</td><td>Frontend React + reverse proxy</td><td><span class="marker m-green">✅ healthy</span></td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h4 style="margin-top:1rem;">📋 Commandes de gestion</h4>
+            <pre><span class="cm"># Tout-en-un (depuis cortex-leman-v5/)</span>
+bash scripts/deploy-full.sh --stop-old --build
+
+<span class="cm"># Manuel</span>
+docker compose -f docker-compose.prod.yml up -d     <span class="cm"># Démarrer</span>
+docker compose -f docker-compose.prod.yml ps         <span class="cm"># Status</span>
+docker compose -f docker-compose.prod.yml logs -f api <span class="cm"># Logs API</span>
+docker compose -f docker-compose.prod.yml down        <span class="cm"># Arrêter</span></pre>
+        </section>
+
+        <!-- ==================== QUIZ AUDIT ==================== -->
+        <section class="section fade-in" id="quiz">
+            <div class="section-label">11 — Quiz Audit</div>
+            <h2>🧪 Teste ta compréhension</h2>
+            <p class="subtitle">Les questions qu'un auditeur pourrait te poser — et les bonnes réponses</p>
+
+            <div id="quizContainer">
+                <div class="quiz-card" data-q="0">
+                    <div class="quiz-q">Q1: « Pourquoi le Médiateur n'utilise-t-il jamais de LLM ? »</div>
+                    <div class="quiz-options">
+                        <div class="quiz-opt" onclick="checkAnswer(this, false)">A) Parce que les LLM sont trop lents pour le temps réel</div>
+                        <div class="quiz-opt" onclick="checkAnswer(this, true)">B) Parce qu'une décision de gel doit être 100% déterministe et reproductible. Un LLM peut produire des résultats différents pour la même entrée, ce qui est inacceptable pour la conformité réglementaire.</div>
+                        <div class="quiz-opt" onclick="checkAnswer(this, false)">C) Parce qu'on n'a pas les budgets pour les appels LLM</div>
+                    </div>
+                    <div class="quiz-expl">✅ <strong>Bonne réponse !</strong> Le JsonLogic est déterministe: même entrée = même résultat, toujours. C'est essentiel pour la traçabilité réglementaire (RGPD Art. 22, AI Act). Un LLM pourrait ne pas geler une action critique à cause d'une variation aléatoire.</div>
+                </div>
+
+                <div class="quiz-card" data-q="1">
+                    <div class="quiz-q">Q2: « Que se passe-t-il si l'Agent Data et l'Agent Raisonnement sont en conflit ? »</div>
+                    <div class="quiz-options">
+                        <div class="quiz-opt" onclick="checkAnswer(this, false)">A) L'Agent Raisonnement a toujours raison car il utilise le LLM</div>
+                        <div class="quiz-opt" onclick="checkAnswer(this, true)">B) Le Médiateur détecte le conflit (divergence de recommandation ou de confiance), gèle l'intention, et prépare un dossier contradictoire pour l'arbitrage humain.</div>
+                        <div class="quiz-opt" onclick="checkAnswer(this, false)">C) Le système crash et redémarre</div>
+                    </div>
+                    <div class="quiz-expl">✅ <strong>Bonne réponse !</strong> Le Médiateur compare les positions (recommendation, confidence, risks). Si divergence → gel (complet ou dégradé) + arbitrage. L'humain voit les positions contradictoires et décide.</div>
+                </div>
+
+                <div class="quiz-card" data-q="2">
+                    <div class="quiz-q">Q3: « Comment prouvez-vous que le journal d'audit n'a pas été modifié ? »</div>
+                    <div class="quiz-options">
+                        <div class="quiz-opt" onclick="checkAnswer(this, false)">A) On a des sauvegardes quotidiennes</div>
+                        <div class="quiz-opt" onclick="checkAnswer(this, false)">B) Seul l'admin peut le modifier</div>
+                        <div class="quiz-opt" onclick="checkAnswer(this, true)">C) Le journal est hash-chainé SHA-256. Chaque entrée contient le hash de la précédente. L'endpoint /journal/verify recalcule TOUTE la chaîne et compare. Si un seul bit a changé, la vérification échoue. De plus, chaque entrée est signée HMAC-SHA256.</div>
+                    </div>
+                    <div class="quiz-expl">✅ <strong>Bonne réponse !</strong> Le journal est immuable par design (append-only = WORM). La chaîne de hash SHA-256 garantit l'intégrité. La signature HMAC garantit l'authenticité. L'atomic write (fichier .tmp → rename) garantit la résistance aux crashes.</div>
+                </div>
+
+                <div class="quiz-card" data-q="3">
+                    <div class="quiz-q">Q4: « C'est quoi le "gel dégradé" et pourquoi il existe ? »</div>
+                    <div class="quiz-options">
+                        <div class="quiz-opt" onclick="checkAnswer(this, false)">A) C'est quand le système fonctionne mal mais accepte quand même</div>
+                        <div class="quiz-opt" onclick="checkAnswer(this, true)">B) C'est un mode où seul l'Agent Action est bloqué, mais Data et Raisonnement continuent d'enrichir le dossier d'arbitrage. L'arbitre humain reçoit un dossier PLUS complet pour prendre sa décision.</div>
+                        <div class="quiz-opt" onclick="checkAnswer(this, false)">C) C'est un bug qu'on est en train de corriger</div>
+                    </div>
+                    <div class="quiz-expl">✅ <strong>Bonne réponse !</strong> Le gel dégradé est un choix d'architecture délibéré. Au lieu de tout geler (l'humain attend avec un dossier incomplet), on laisse les agents de recherche travailler. Le résultat: un arbitrage plus informé, plus rapide, plus juste.</div>
+                </div>
+
+                <div class="quiz-card" data-q="4">
+                    <div class="quiz-q">Q5: « Qu'est-ce que le Reflection Node et pourquoi est-il inspiré de JP Morgan ? »</div>
+                    <div class="quiz-options">
+                        <div class="quiz-opt" onclick="checkAnswer(this, true)">A) C'est un deuxième appel LLM qui critique l'analyse du premier. JP Morgan a publié un papier ("Ask David") montrant qu'un LLM qui révise sa propre analyse améliore significativement la qualité. On applique ce pattern.</div>
+                        <div class="quiz-opt" onclick="checkAnswer(this, false)">B) C'est un système de backup de la base de données</div>
+                        <div class="quiz-opt" onclick="checkAnswer(this, false)">C) C'est le nom du Médiateur dans le code</div>
+                    </div>
+                    <div class="quiz-expl">✅ <strong>Bonne réponse !</strong> Le Reflection Node est un pattern "LLM-as-judge". Après l'analyse du ReasoningAgent, un DEUXIÈME appel LLM (température basse = 0.3, rôle "réviseur") critique l'analyse. Si le delta de confiance > 0.3, l'analyse est révisée. C'est documenté, journalisé, et désactivable.</div>
+                </div>
+
+                <div class="quiz-card" data-q="5">
+                    <div class="quiz-q">Q6: « Comment fonctionne le pattern Saga de l'Agent Action ? »</div>
+                    <div class="quiz-options">
+                        <div class="quiz-opt" onclick="checkAnswer(this, false)">A) Chaque action est exécutée en parallèle pour plus de rapidité</div>
+                        <div class="quiz-opt" onclick="checkAnswer(this, true)">B) Chaque action est une étape de saga enregistrée avec sa compensation. Les étapes s'exécutent séquentiellement. Si l'étape 3 échoue, on compense les étapes 2 puis 1 en ordre inverse. Toute la séquence est journalisée.</div>
+                        <div class="quiz-opt" onclick="checkAnswer(this, false)">C) C'est un système de cache qui mémorise les actions réussies</div>
+                    </div>
+                    <div class="quiz-expl">✅ <strong>Bonne réponse !</strong> Le Saga pattern garantit la cohérence transactionnelle. Exemple: envoyer email + notification + paiement. Si le paiement échoue → on rappelle l'email et on annule la notification. Chaque étape a sa fonction de compensation enregistrée AVANT exécution.</div>
+                </div>
+
+                <div class="quiz-card" data-q="6">
+                    <div class="quiz-q">Q7: « Pourquoi avoir choisi LiteLLM comme couche d'abstraction LLM ? »</div>
+                    <div class="quiz-options">
+                        <div class="quiz-opt" onclick="checkAnswer(this, true)">A) LiteLLM est model-agnostic: il supporte 18+ providers avec la même interface. On peut changer de modèle sans toucher au code. Le routing par verticale est configurable via .env. En mode Haute Protection, on bascule sur Ollama local sans modification.</div>
+                        <div class="quiz-opt" onclick="checkAnswer(this, false)">B) C'est le seul provider gratuit</div>
+                        <div class="quiz-opt" onclick="checkAnswer(this, false)">C) On a prévu de le remplacer bientôt</div>
+                    </div>
+                    <div class="quiz-expl">✅ <strong>Bonne réponse !</strong> LiteLLM offre une abstraction provider-agnostic. On peut switcher entre OpenRouter, Anthropic, OpenAI, Ollama, DeepSeek, etc. sans changer une ligne de code métier. Le ModelRouter résout le modèle en fonction de la verticale et du mode de déploiement.</div>
+                </div>
+            </div>
+
+            <div id="quizResult" class="card hidden" style="margin-top:2rem;text-align:center;border-color:var(--green);">
+                <div class="score-ring" style="border:4px solid var(--green);color:var(--green);">
+                    <span id="scoreValue">0</span>/7
+                </div>
+                <h3 id="scoreMessage" style="margin-top:0.5rem;"></h3>
+                <p style="color:var(--text2);font-size:0.9rem;" id="scoreDetail"></p>
+            </div>
+        </section>
+
+        <!-- ==================== LEXIQUE ==================== -->
+        <section class="section fade-in" id="lexique">
+            <div class="section-label">12 — Lexique</div>
+            <h2>📖 Glossaire technique</h2>
+            <p class="subtitle">Les termes que tu dois connaître par cœur</p>
+
+            <div class="search-box">
+                <input type="text" placeholder="Rechercher un terme..." oninput="filterGlossary(this.value)">
+            </div>
+
+            <div id="glossaryList">
+                <div class="card glossary-item" style="margin-bottom:0.5rem;" data-term="nats jetstream append-only worm hash-chainé jwt rbac bcrypt fernet saga circuit breaker jsonlogic rag chromadb mcp liteLLM guardrails reflection node trust box médiateur orchestrateur intention state machine degraded freeze consolidation">
+                    <div class="grid grid-2" style="gap:0.75rem;">
+                        <div>
+                            <h4 style="font-size:0.88rem;">🏗️ <strong>NATS JetStream</strong></h4>
+                            <p style="font-size:0.8rem;">Bus de messages persistant. Les agents communiquent par événements (publish/subscribe). JetStream ajoute la persistance et le replay.</p>
+                        </div>
+                        <div>
+                            <h4 style="font-size:0.88rem;">📝 <strong>Append-Only / WORM</strong></h4>
+                            <p style="font-size:0.8rem;">Write Once Read Many. Journal immuable: on ne fait qu'ajouter, jamais modifier ou supprimer. Format JSON-L.</p>
+                        </div>
+                        <div>
+                            <h4 style="font-size:0.88rem;">🔗 <strong>Hash-chainé SHA-256</strong></h4>
+                            <p style="font-size:0.8rem;">Chaque entrée du journal contient le hash de la précédente. Comme une blockchain simplifiée. Si on modifie une entrée, toute la chaîne se brise.</p>
+                        </div>
+                        <div>
+                            <h4 style="font-size:0.88rem;">🔑 <strong>JWT + RBAC</strong></h4>
+                            <p style="font-size:0.8rem;">JSON Web Token + Role-Based Access Control. 4 rôles (admin, expert, operator, viewer). Access token 30min, refresh 7 jours.</p>
+                        </div>
+                        <div>
+                            <h4 style="font-size:0.88rem;">🔐 <strong>Fernet (AES)</strong></h4>
+                            <p style="font-size:0.8rem;">Chiffrement symétrique AES-128-CBC + HMAC-SHA256. Utilisé pour chiffrer les données sensibles au repos (PII, secrets).</p>
+                        </div>
+                        <div>
+                            <h4 style="font-size:0.88rem;">⚡ <strong>Saga Pattern</strong></h4>
+                            <p style="font-size:0.8rem;">Pattern transactionnel: chaque étape enregistre sa compensation. Si échec → compensation en ordre inverse. Garantit la cohérence.</p>
+                        </div>
+                        <div>
+                            <h4 style="font-size:0.88rem;">🔌 <strong>Circuit Breaker</strong></h4>
+                            <p style="font-size:0.8rem;">Protection: si un agent échoue 5 fois → OPEN (bloqué) pendant 60s → HALF_OPEN (test) → recovery ou re-blocage.</p>
+                        </div>
+                        <div>
+                            <h4 style="font-size:0.88rem;">📐 <strong>JsonLogic</strong></h4>
+                            <p style="font-size:0.8rem;">Moteur de règles en JSON pur. Déterministe: même entrée = même résultat. Utilisé par le Médiateur. 0% LLM.</p>
+                        </div>
+                        <div>
+                            <h4 style="font-size:0.88rem;">🧬 <strong>RAG (ChromaDB)</strong></h4>
+                            <p style="font-size:0.8rem;">Retrieval-Augmented Generation. Recherche sémantique dans les embeddings vectoriels. Enrichit le contexte LLM avec des faits réglementaires.</p>
+                        </div>
+                        <div>
+                            <h4 style="font-size:0.88rem;">🤖 <strong>LiteLLM</strong></h4>
+                            <p style="font-size:0.8rem;">Abstraction provider-agnostic. Même code pour OpenRouter, Anthropic, Ollama, OpenAI, etc. 18+ providers supportés.</p>
+                        </div>
+                        <div>
+                            <h4 style="font-size:0.88rem;">🛡️ <strong>Guardrails</strong></h4>
+                            <p style="font-size:0.8rem;">Filtres IN (PII, injection) et OUT (safety, compliance) autour des appels LLM. Bloque les contenus non conformes.</p>
+                        </div>
+                        <div>
+                            <h4 style="font-size:0.88rem;">🔍 <strong>Reflection Node</strong></h4>
+                            <p style="font-size:0.8rem;">Auto-critique LLM (pattern JP Morgan "Ask David"). Un 2e appel LLM révise l'analyse du 1er. Ajuste le score de confiance si nécessaire.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== FOOTER ==================== -->
+        <footer style="text-align:center;padding:3rem 0 2rem;border-top:1px solid var(--border);margin-top:4rem;">
+            <p style="color:var(--text2);font-size:0.8rem;">
+                🌊 Cortex Leman v5 — Graphe de Confiance — Guide de compréhension interactif<br>
+                <em>Déterministe là où il faut. Intelligent là où on peut.</em>
+            </p>
+        </footer>
+    </div>
+
+    <script>
+    // ===== SCROLL PROGRESS =====
+    window.addEventListener('scroll', () => {
+        const h = document.documentElement;
+        const pct = (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100;
+        document.getElementById('progressBar').style.width = pct + '%';
+
+        // Active nav link
+        const sections = document.querySelectorAll('.section, .hero');
+        let current = '';
+        sections.forEach(s => {
+            if (s.getBoundingClientRect().top < 120) current = s.id;
+        });
+        document.querySelectorAll('.nav-links a').forEach(a => {
+            a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+        });
+    });
+
+    // ===== FADE IN ON SCROLL =====
+    const observer = new IntersectionObserver(entries => {
+        entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+    // ===== TABS =====
+    function showTab(group, index) {
+        document.querySelectorAll(`[data-tabs="${group}"]`).forEach((el, i) => {
+            el.classList.toggle('active', i === index);
+        });
+        document.querySelectorAll(`.tab-btn`).forEach(btn => {
+            if (btn.closest(`#${group}`) || btn.closest('.section')) {
+                // Find the parent section
+            }
+        });
+        // Simpler: find the parent section and update its tab buttons
+        const section = event.target.closest('.section');
+        if (section) {
+            section.querySelectorAll('.tab-btn').forEach((btn, i) => {
+                btn.classList.toggle('active', i === index);
+            });
+        }
+    }
+
+    // ===== ACCORDION =====
+    function toggleAcc(header) {
+        const item = header.parentElement;
+        item.classList.toggle('open');
+    }
+
+    // ===== FLOW DIAGRAM =====
+    function highlightFlow(node) {
+        document.querySelectorAll('.flow-node').forEach(n => n.classList.remove('active'));
+        node.classList.add('active');
+        const info = document.getElementById('flowInfo');
+        info.classList.remove('hidden');
+        info.innerHTML = '<strong>💡 ' + node.querySelector('h4').textContent + '</strong><br>' + node.dataset.info;
+    }
+
+    // ===== QUIZ =====
+    let score = 0;
+    const answered = new Set();
+    function checkAnswer(opt, correct) {
+        const card = opt.closest('.quiz-card');
+        const qIndex = parseInt(card.dataset.q);
+        if (answered.has(qIndex)) return;
+        answered.add(qIndex);
+
+        const opts = card.querySelectorAll('.quiz-opt');
+        opts.forEach(o => {
+            o.style.pointerEvents = 'none';
+        });
+
+        if (correct) {
+            opt.classList.add('correct');
+            score++;
+        } else {
+            opt.classList.add('wrong');
+            // Find the correct one
+            opts.forEach(o => {
+                if (o.getAttribute('onclick').includes('true')) o.classList.add('correct');
+            });
+        }
+
+        card.querySelector('.quiz-expl').style.display = 'block';
+
+        if (answered.size === 7) {
+            const result = document.getElementById('quizResult');
+            result.classList.remove('hidden');
+            document.getElementById('scoreValue').textContent = score;
+            const msg = document.getElementById('scoreMessage');
+            const detail = document.getElementById('scoreDetail');
+            if (score === 7) {
+                msg.textContent = '🎉 Parfait ! Tu es prêt pour l\'audit !';
+                detail.textContent = 'Tu maîtrises chaque aspect de Cortex Leman v5.';
+            } else if (score >= 5) {
+                msg.textContent = '👍 Très bien !';
+                detail.textContent = 'Relis les sections où tu as eu des erreurs et tu seras au top.';
+            } else {
+                msg.textContent = '📚 Continue à apprendre';
+                detail.textContent = 'Relis le document en cliquant sur les blocs interactifs et retente le quiz.';
+            }
+            result.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }
+
+    // ===== GLOSSARY SEARCH =====
+    function filterGlossary(query) {
+        const q = query.toLowerCase();
+        const item = document.querySelector('.glossary-item');
+        if (!item) return;
+        if (q.length === 0) {
+            item.style.display = '';
+            return;
+        }
+        const terms = item.dataset.term.toLowerCase();
+        const content = item.textContent.toLowerCase();
+        item.style.display = (terms.includes(q) || content.includes(q)) ? '' : 'none';
+    }
+
+    // ===== SMOOTH SCROLL =====
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+        a.addEventListener('click', e => {
+            e.preventDefault();
+            const target = document.querySelector(a.getAttribute('href'));
+            if (target) target.scrollIntoView({ behavior: 'smooth' });
+        });
+    });
+    </script>
+</body>
+</html>

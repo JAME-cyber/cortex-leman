@@ -1,16 +1,18 @@
 """
-Cortex Leman v5 — Agent Raisonnement (LLM-wired)
+Cortex Leman v5 — Agent Raisonnement (LLM-wired + Reflection Node)
 
 Responsable de l'analyse, comparaison et recommandations.
 - Compare specs/risques via LLM
 - Intègre contexte RAG réglementaire
 - Génère recommandations structurées
+- Reflection Node: auto-critique LLM avant livraison (pattern JP Morgan)
 - PEUT demander une révision d'intention si incohérence détectée
 
 Couches:
 - Skill prompt: core/agents/prompts/reasoning.md
 - RAG: ChromaDB contexte réglementaire
 - LLM: OpenRouter (standard) / Ollama (haute protection)
+- Reflection: Nœud de réflexion (critique + confirmation)
 - Guardrails: PII masking + topic control + output safety
 """
 import json
@@ -24,14 +26,15 @@ logger = logging.getLogger(__name__)
 
 class ReasoningAgent(BaseAgent):
     """
-    Agent Raisonnement — Analyse et recommandations avec LLM.
+    Agent Raisonnement — Analyse et recommandations avec LLM + Reflection Node.
     
     Pipeline:
     1. Recevoir les données de l'Agent Data
     2. Construire le prompt avec skill + contexte RAG
     3. Appeler le LLM (via LLMService.generate_for_agent)
     4. Parser et structurer la réponse
-    5. Vérifier les triggers de révision
+    5. ★ Reflection Node: auto-critique de l'analyse (pattern JP Morgan)
+    6. Vérifier les triggers de révision
     """
 
     def __init__(self):
@@ -77,7 +80,40 @@ class ReasoningAgent(BaseAgent):
             analysis, compliance_check, vertical
         )
 
-        # === Phase 4: Vérification des triggers de révision ===
+        # === Phase 4: Reflection Node (auto-critique JP Morgan pattern) ===
+        reflection_data = None
+        try:
+            from core.agents.reflection import reflection_node
+            reflection = await reflection_node.reflect(
+                query=query,
+                vertical=vertical,
+                analysis=analysis,
+                compliance=compliance_check,
+                recommendations=recommendations,
+                client_id=client_id,
+                intention_id=intention_id or "unknown",
+            )
+            if reflection:
+                reflection_data = reflection.to_dict()
+                # Ajuster la confiance finale si la réflexion est significative
+                if not reflection.confirmed:
+                    final_confidence = reflection.revised_confidence
+                    logger.info(
+                        f"Reflection Node: confiance ajustée "
+                        f"{reflection.original_confidence:.2f} → "
+                        f"{reflection.revised_confidence:.2f}"
+                    )
+                    # Si la réflexion a trouvé des problèmes, les ajouter aux risques
+                    for issue in reflection.issues_found:
+                        compliance_check.setdefault("risks", []).append(
+                            f"reflection: {issue}"
+                        )
+        except ImportError:
+            logger.debug("Reflection Node non disponible")
+        except Exception as e:
+            logger.warning(f"Reflection Node erreur: {e}")
+
+        # === Phase 5: Vérification des triggers de révision ===
         if self._should_request_revision(analysis, compliance_check, context) and intention_id:
             from core.bus.nats_client import bus
             from core.bus.subjects import subjects
@@ -115,6 +151,7 @@ class ReasoningAgent(BaseAgent):
             "llm_used": llm_result.get("text") is not None and llm_result.get("text") != "",
             "llm_model": llm_result.get("model"),
             "llm_provider": llm_result.get("provider"),
+            "reflection": reflection_data,
         }
 
     async def _llm_analyze(

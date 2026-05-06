@@ -69,11 +69,14 @@ def init_db():
         bind=_engine,
     )
 
-    # Créer les tables si pas de migration (dev uniquement)
-    if settings.app_env == "development":
+    # Créer les tables si pas de migration
+    # En production, on utilise Alembic — mais create_all est safe si tables existent déjà
+    try:
         from core.db.models import Base
         Base.metadata.create_all(bind=_engine)
-        logger.info("Tables créées (mode dev)")
+        logger.info("Tables vérifiées/créées")
+    except Exception as e:
+        logger.warning(f"Création tables: {e}")
 
 
 def init_async_db():

@@ -1,0 +1,44 @@
+{
+  "name": "Cortex Leman — Arbitrage Notification",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "cortex-arbitration",
+        "httpMethod": "POST"
+      },
+      "id": "webhook",
+      "name": "Webhook Arbitrage",
+      "type": "n8n-nodes-base.webhook",
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "fromEmail": "trust-box@cortex-leman.com",
+        "toEmail": "={{ $json.body.arbiter_email || 'expert@cortex-leman.com' }}",
+        "subject": "🌊 Arbitrage requis — Intention {{ $json.body.intention_id }}",
+        "html": "<h2>⚖️ Demande d'Arbitrage</h2><p><strong>Intention:</strong> {{ $json.body.intention_id }}</p><p><strong>Verticale:</strong> {{ $json.body.vertical }}</p><p><strong>Raison:</strong> {{ $json.body.reason }}</p><p><strong>Sévérité:</strong> {{ $json.body.severity }}</p><p><strong>Positions:</strong></p><pre>{{ JSON.stringify($json.body.positions, null, 2) }}</pre><hr><p><a href=\"https://cortex-leman.com/arbitration/{{ $json.body.conflict_id }}\">Décider →</a></p>"
+      },
+      "id": "email",
+      "name": "Email Arbiter",
+      "type": "n8n-nodes-base.emailSend",
+      "position": [250, 0]
+    },
+    {
+      "parameters": {
+        "channel": "#cortex-arbitration",
+        "text": "⚖️ Arbitrage requis\n\nIntention: {{ $json.body.intention_id }}\nVerticale: {{ $json.body.vertical }}\nRaison: {{ $json.body.reason }}\nSévérité: {{ $json.body.severity }}\n\n→ https://cortex-leman.com/arbitration/{{ $json.body.conflict_id }}"
+      },
+      "id": "slack",
+      "name": "Slack Notification",
+      "type": "n8n-nodes-base.slack",
+      "position": [250, 150]
+    }
+  ],
+  "connections": {
+    "Webhook Arbitrage": {"main": [[
+      {"node": "Email Arbiter", "type": "main", "index": 0},
+      {"node": "Slack Notification", "type": "main", "index": 0}
+    ]]}
+  },
+  "tags": [{"name": "cortex-leman"}, {"name": "arbitration"}, {"name": "notification"}]
+}

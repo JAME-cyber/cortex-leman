@@ -40,13 +40,33 @@ class Settings(BaseSettings):
     redis_password: Optional[str] = None
     redis_lock_timeout: int = 30
 
-    # LLM
-    llm_provider: str = "openrouter"
+    # LLM — Provider principal (LiteLLM, 18+ providers)
+    llm_provider: str = "openrouter"  # openrouter | ollama | anthropic | openai | deepseek | groq | etc.
     llm_model: str = "mistralai/mistral-small-3.1-24b-instruct"
     llm_base_url: str = "https://openrouter.ai/api/v1"
     llm_api_key: Optional[str] = None
     llm_timeout: int = 60
     llm_max_tokens: int = 4096
+
+    # LLM — Routing par verticale (model-agnostic)
+    # Chaque verticale peut utiliser un modèle différent optimisé pour son domaine.
+    # Format: {"verticale": "provider/model"}
+    # Si une verticale n'est pas listée, le modèle par défaut (llm_model) est utilisé.
+    llm_vertical_routing: dict = {
+        # Mode Standard (cloud) — meilleurs modèles pour chaque domaine
+        "comptable": "anthropic/claude-sonnet-4-20250514",  # Précision fiscale, rédaction structurée
+        "avocat": "anthropic/claude-sonnet-4-20250514",     # Raisonnement juridique, secret professionnel
+        "sante": "openai/gpt-4o",                         # Données médicales, terminologie
+        "banque": "anthropic/claude-sonnet-4-20250514",     # KYC/AML, conformité FINMA
+        "startup": "mistralai/mistral-small-3.1-24b-instruct",  # Rapide, économique
+        "rh": "openai/gpt-4o-mini",                        # Anti-discrimination, RGPD art. 22
+    }
+    # Override pour Mode Haute Protection (local uniquement)
+    llm_high_protection_model: str = "llama3.1:8b"  # Modèle Ollama par défaut
+
+    # Reflection Node (pattern JP Morgan "Ask David")
+    reflection_enabled: bool = True  # Auto-critique LLM avant livraison
+    reflection_max_confidence_delta: float = 0.3  # Seuil de confirmation
 
     # Mediator
     mediator_rules_dir: str = "./core/mediator/rules"

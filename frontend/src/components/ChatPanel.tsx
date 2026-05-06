@@ -10,7 +10,7 @@ const VERTICALS = [
 ]
 
 const AGENTS = [
-  { id: 'reasoning', icon: '⚖️', label: 'Raisonnement', type: 'LLM' },
+  { id: 'reasoning', icon: '🧠', label: 'Le Léman', type: 'LLM', persona: true },
   { id: 'data',      icon: '📊', label: 'Data',         type: 'LLM' },
   { id: 'orchestrator', icon: '🎯', label: 'Orchestrateur', type: 'LLM' },
 ]
@@ -92,11 +92,14 @@ export function ChatPanel() {
       <div style={{ flex: 1, overflowY: 'auto', padding: '1rem' }}>
         {messages.length === 0 && (
           <div style={{ textAlign: 'center', paddingTop: '3rem', color: 'var(--text-dim)' }}>
-            <div style={{ fontSize: '2rem', marginBottom: '0.75rem' }}>🤖</div>
-            <div style={{ fontSize: '0.875rem', fontWeight: 600 }}>Agent {AGENTS.find(a => a.id === agent)?.label}</div>
-            <div style={{ fontSize: '0.75rem', marginTop: '0.25rem' }}>Posez votre question — le contexte réglementaire sera injecté automatiquement.</div>
+            <div style={{ fontSize: '2rem', marginBottom: '0.75rem' }}>🌊</div>
+            <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--cyan)' }}>Le Léman</div>
+            <div style={{ fontSize: '0.75rem', marginTop: '0.25rem', fontWeight: 500 }}>Conseil de confiance franco-suisse</div>
+            <div style={{ fontSize: '0.6875rem', marginTop: '0.5rem', maxWidth: '360px', margin: '0.5rem auto 0' }}>
+              Posez votre question — les agents analysent, le Trust Box vérifie, et je vous recommande avec transparence.
+            </div>
           </div>
-        )}
+        )}}
         {messages.map((m, i) => (
           <div key={i} style={{
             marginBottom: '0.75rem', display: 'flex', justifyContent: m.role === 'user' ? 'flex-end' : 'flex-start',
@@ -131,7 +134,7 @@ export function ChatPanel() {
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSend()}
-          placeholder="Posez votre question réglementaire..."
+          placeholder="Posez votre question à Le Léman..."
           style={{
             flex: 1, padding: '0.625rem 1rem', borderRadius: '0.5rem',
             background: 'var(--bg-card-solid)', border: '1px solid var(--border)',

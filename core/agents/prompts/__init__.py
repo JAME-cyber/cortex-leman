@@ -12,7 +12,7 @@ from typing import Optional
 PROMPTS_DIR = Path(__file__).parent
 
 # Agents qui utilisent un LLM (Sprint 2+)
-LLM_AGENTS = {"reasoning", "orchestrator", "data"}
+LLM_AGENTS = {"reasoning", "orchestrator", "data", "le_leman"}
 
 # Agents purement programmatiques (JAMAIS de LLM)
 PROGRAMMATIC_AGENTS = {"action", "mediator", "supervisor"}

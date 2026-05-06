@@ -1,0 +1,92 @@
+{
+  "name": "Cortex Leman — Lead Gen Comptable",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{"field": "days", "daysInterval": 1}]
+        }
+      },
+      "id": "trigger",
+      "name": "Quotidien",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "url": "https://api.cortex-leman.com/api/v1/intentions",
+        "method": "POST",
+        "body": {
+          "client_id": "={{ $json.client_id || 'scan-auto' }}",
+          "vertical": "comptable",
+          "query": "Scanner les cabinets d'expertise comptable FR-CH ayant une maturité numérique intermédiaire, besoin de conformité IA, et 5-50 collaborateurs",
+          "context": {"source": "socialpulse", "workflow": "lead-gen-comptable"}
+        },
+        "options": {"authentication": "genericCredentialType", "genericAuthType": "httpHeaderAuth"}
+      },
+      "id": "scan",
+      "name": "Scanner Leads",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [250, 0]
+    },
+    {
+      "parameters": {
+        "url": "https://api.cortex-leman.com/trust-box/evaluate",
+        "method": "POST",
+        "body": {
+          "vertical": "comptable",
+          "context": "={{ $json }}"
+        },
+        "options": {"authentication": "genericCredentialType", "genericAuthType": "httpHeaderAuth"}
+      },
+      "id": "trust-check",
+      "name": "Trust Box Check",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [500, 0]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [{"value1": "={{ $json.rules_triggered }}", "operation": "equal", "value2": 0}]
+        }
+      },
+      "id": "filter",
+      "name": "Filtrer Conformes",
+      "type": "n8n-nodes-base.if",
+      "position": [750, 0]
+    },
+    {
+      "parameters": {
+        "fromEmail": "le-leman@cortex-leman.com",
+        "toEmail": "={{ $json.lead_email }}",
+        "subject": "🌊 Le Léman — Votre assistant IA conforme pour votre cabinet",
+        "text": "Bonjour {{ $json.lead_name }},\n\nJe suis Le Léman, le conseil de confiance IA de Cortex Leman.\n\nJ'ai identifié que votre cabinet pourrait bénéficier de notre solution d'assistance IA conforme RGPD, AI Act et normes DEC/OEC.\n\nCe qui nous différencie :\n- Médiateur 100% déterministe (pas de boîte noire)\n- Arbitrage humain obligatoire\n- Journal inviolable (hash-chain SHA-256)\n- Mode Haute Protection disponible (données locales)\n\nSouhaitez-vous une démonstration ?\n\nCordialement,\nLe Léman\n🌊 Cortex Leman v5"
+      },
+      "id": "email",
+      "name": "Email Personalisé",
+      "type": "n8n-nodes-base.emailSend",
+      "position": [1000, -100]
+    },
+    {
+      "parameters": {
+        "url": "https://api.cortex-leman.com/api/v1/journal",
+        "method": "GET",
+        "options": {"authentication": "genericCredentialType", "genericAuthType": "httpHeaderAuth"}
+      },
+      "id": "log",
+      "name": "Logger Audit",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [1000, 100]
+    }
+  ],
+  "connections": {
+    "Quotidien": {"main": [[{"node": "Scanner Leads", "type": "main", "index": 0}]]},
+    "Scanner Leads": {"main": [[{"node": "Trust Box Check", "type": "main", "index": 0}]]},
+    "Trust Box Check": {"main": [[{"node": "Filtrer Conformes", "type": "main", "index": 0}]]},
+    "Filtrer Conformes": {"main": [
+      [{"node": "Email Personalisé", "type": "main", "index": 0}],
+      [{"node": "Logger Audit", "type": "main", "index": 0}]
+    ]}
+  },
+  "tags": [{"name": "cortex-leman"}, {"name": "lead-gen"}, {"name": "comptable"}]
+}

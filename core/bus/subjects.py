@@ -31,6 +31,7 @@ class Subjects:
     REASONING_RESULT: str = "cleman.reasoning.result"
     REASONING_COMPARE: str = "cleman.reasoning.compare"
     REASONING_RECOMMEND: str = "cleman.reasoning.recommend"
+    REASONING_REFLECT: str = "cleman.reflection.check"  # Reflection Node (JP Morgan pattern)
 
     # Agent Action
     ACTION_EXECUTE: str = "cleman.action.execute"

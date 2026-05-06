@@ -1,0 +1,54 @@
+# Cortex Leman v5 — MCP Configuration
+# 
+# Pour utiliser Cortex Leman dans Claude Desktop, Cursor, Windsurf, etc.
+# Copier la section correspondante dans votre config MCP client.
+
+# ── Claude Desktop (claude_desktop_config.json) ──
+# Emplacement: ~/Library/Application Support/Claude/claude_desktop_config.json (macOS)
+#              %APPDATA%\Claude\claude_desktop_config.json (Windows)
+#
+# Option A: SSE (serveur Cortex Leman déjà lancé)
+{
+  "mcpServers": {
+    "cortex-leman": {
+      "url": "http://localhost:8002/sse",
+      "description": "Cortex Leman v5 — Trust Box, Le Léman, RAG réglementaire, n8n workflows"
+    }
+  }
+}
+
+# Option B: stdio (lancement automatique)
+{
+  "mcpServers": {
+    "cortex-leman": {
+      "command": "python",
+      "args": ["-m", "core.integrations.mcp_cortex_server", "--transport", "stdio"],
+      "cwd": "/path/to/cortex-leman-v5",
+      "env": {
+        "PYTHONPATH": "/path/to/cortex-leman-v5"
+      }
+    }
+  }
+}
+
+# ── Cursor (.cursor/mcp.json) ──
+{
+  "mcpServers": {
+    "cortex-leman": {
+      "url": "http://localhost:8002/sse"
+    }
+  }
+}
+
+# ── n8n MCP Client ──
+# Dans n8n, ajouter un node "MCP Client":
+# URL: http://host.docker.internal:8002/sse
+# (si n8n tourne dans Docker)
+
+# ── Démarrage du serveur MCP ──
+# Mode SSE (recommandé):
+#   cd /home/tars/cortex-leman-v5
+#   PYTHONPATH=. python -m core.integrations.mcp_cortex_server --transport sse --port 8002
+#
+# Mode stdio (CLI):
+#   PYTHONPATH=. python -m core.integrations.mcp_cortex_server --transport stdio

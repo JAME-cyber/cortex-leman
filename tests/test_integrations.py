@@ -139,11 +139,13 @@ class TestLLMService:
     """Tests du service LLM"""
 
     def test_provider_selection_openrouter(self):
-        """En mode standard, OpenRouter est sélectionné"""
-        from core.integrations.llm.provider import OpenRouterProvider
-        service = LLMService()
-        # Le provider par défaut selon .env
-        assert service.provider_name in ("openrouter", "ollama")
+        """LiteLLM ModelRouter remplace l'ancien OpenRouterProvider"""
+        from core.integrations.llm.provider import ModelRouter
+        router = ModelRouter()
+        # Le router doit pouvoir mapper les verticales
+        for v in ["comptable", "avocat", "sante", "banque", "startup", "rh"]:
+            model_id, provider = router.resolve_model(vertical=v)
+            assert model_id is not None, f"Pas de modèle pour verticale {v}"
 
     def test_is_local_property(self):
         service = LLMService()

@@ -815,6 +815,44 @@ async def agents_status(
 # COMPLIANCE (authentifié)
 # ============================================================
 
+@app.get("/api/v1/compliance/audit/dpia")
+async def generate_dpia(
+    client_id: str = None,
+    auth: AuthContext = Depends(require_expert),
+):
+    """Générer une AIPD / DPIA (RGPD Art. 35)"""
+    from core.compliance.audit_generator import audit_generator
+    return audit_generator.generate_dpia(client_id)
+
+
+@app.get("/api/v1/compliance/audit/dpo-attestation")
+async def generate_dpo_attestation(
+    client_id: str = None,
+    auth: AuthContext = Depends(require_expert),
+):
+    """Générer une attestation DPO (brouillon à faire signer)"""
+    from core.compliance.audit_generator import audit_generator
+    return audit_generator.generate_dpo_attestation(client_id)
+
+
+@app.get("/api/v1/compliance/audit/ai-act")
+async def generate_ai_act_checklist(
+    auth: AuthContext = Depends(require_expert),
+):
+    """Générer la checklist AI Act"""
+    from core.compliance.audit_generator import audit_generator
+    return audit_generator.generate_ai_act_checklist()
+
+
+@app.get("/api/v1/compliance/audit/iso27001")
+async def generate_iso27001_evidence(
+    auth: AuthContext = Depends(require_expert),
+):
+    """Générer le pack de preuves ISO 27001"""
+    from core.compliance.audit_generator import audit_generator
+    return audit_generator.generate_iso27001_evidence()
+
+
 @app.get("/api/v1/compliance/report/daily")
 async def daily_report(
     client_id: str = None,
@@ -1177,7 +1215,50 @@ async def llm_health(
 ):
     """Vérifier le provider LLM"""
     from core.integrations.llm import llm_service
-    return await llm_service.health_check()
+    health = await llm_service.health_check()
+    health["routing"] = llm_service.get_routing_table()
+    return health
+
+
+@app.get("/api/v1/llm/routing")
+async def llm_routing(
+    auth: AuthContext = Depends(require_operator),
+):
+    """Table de routing modèle par verticale"""
+    from core.integrations.llm import llm_service
+    return llm_service.get_routing_table()
+
+
+@app.get("/api/v1/llm/stats")
+async def llm_stats(
+    auth: AuthContext = Depends(require_operator),
+):
+    """Statistiques d'utilisation LLM"""
+    from core.integrations.llm import llm_service
+    return llm_service.get_stats()
+
+
+@app.get("/api/v1/llm/providers")
+async def llm_providers():
+    """Lister les providers LLM disponibles (public)"""
+    return {
+        "providers": [
+            {"id": "openrouter", "name": "OpenRouter", "type": "cloud", "models": "200+"},
+            {"id": "anthropic", "name": "Anthropic", "type": "cloud", "models": "Claude family"},
+            {"id": "openai", "name": "OpenAI", "type": "cloud", "models": "GPT-4 family"},
+            {"id": "ollama", "name": "Ollama", "type": "local", "models": "Llama, Mistral, etc."},
+            {"id": "deepseek", "name": "DeepSeek", "type": "cloud", "models": "DeepSeek V3/R1"},
+            {"id": "groq", "name": "Groq", "type": "cloud", "models": "Llama, Mixtral (fast)"},
+            {"id": "mistral", "name": "Mistral AI", "type": "cloud", "models": "Mistral family"},
+            {"id": "xai", "name": "xAI", "type": "cloud", "models": "Grok"},
+            {"id": "google", "name": "Google AI", "type": "cloud", "models": "Gemini family"},
+            {"id": "bedrock", "name": "AWS Bedrock", "type": "cloud", "models": "Multi-provider"},
+            {"id": "azure", "name": "Azure OpenAI", "type": "cloud", "models": "GPT-4 (EU)"},
+            {"id": "sambanova", "name": "SambaNova", "type": "cloud", "models": "SN models"},
+        ],
+        "default_provider": settings.llm_provider,
+        "mode": settings.app_mode,
+    }
 
 
 @app.post("/api/v1/llm/generate")
@@ -1410,7 +1491,171 @@ async def rag_delete_client(
 
 
 # ============================================================
-# AGENT CHAT (LLM direct pour le frontend)
+# LE LÉMAN — Chat avec persona (point d'entrée principal)
+# ============================================================
+
+@app.post("/api/v1/le-leman/chat")
+async def le_leman_chat(
+    message: str,
+    vertical: str = "comptable",
+    client_id: str = "unknown",
+    auth: AuthContext = Depends(get_current_user),
+    db: Session = Depends(get_session),
+):
+    """
+    Chat avec Le Léman — Conseil de confiance franco-suisse.
+    
+    Pipeline: Persona prompt → RAG context → LLM → Reflection Node → Réponse.
+    Le Léman est la face visible de Cortex Leman pour les utilisateurs.
+    """
+    from core.integrations.llm import llm_service
+
+    # Charger la persona Le Léman
+    from core.agents.prompts import load_skill
+    persona = load_skill("le_leman") or ""
+
+    # Extraire les instructions clés de la persona
+    from core.agents.prompts import extract_section
+    identity = extract_section(persona, "IDENTITÉ") or "Conseil de confiance IA"
+    personality = extract_section(persona, "PERSONNALITÉ") or "Rigoureux"
+    format_resp = extract_section(persona, "FORMAT DE RÉPONSE") or ""
+    phrases = extract_section(persona, "PHRASES CLÉ") or ""
+    interdictions = extract_section(persona, "CE QUE TU NE FAIS JAMAIS") or ""
+    verticales = extract_section(persona, "VERTICALES") or ""
+
+    system_prompt = f"""Tu es Le Léman, le conseil de confiance IA de Cortex Leman.
+
+{identity}
+
+{personality}
+
+FORMAT DE RÉPONSE:
+{format_resp}
+
+PHRASES À UTILISER:
+{phrases}
+
+INTERDICTIONS:
+{interdictions}
+
+VERTICALE ACTIVE: {vertical}
+{verticales}
+
+RÈGLES IMPÉRATIVES:
+- Tu ne prends JAMAIS de décision autonome
+- Tu signales TOUJOURS les risques de non-conformité
+- Tu recommandes TOUJOURS une validation humaine pour les décisions critiques
+- Tu respectes le RGPD, l'AI Act et le secret professionnel FR-CH
+- Tu fournis des références réglementaires quand possible
+"""
+
+    result = await llm_service.generate_for_agent(
+        agent_name="reasoning",
+        task=message,
+        context={"user_role": auth.role, "user_email": auth.email, "vertical": vertical},
+        vertical=vertical,
+        client_id=client_id,
+    )
+
+    response_text = result.get("text", "")
+
+    # Reflection Node: auto-critique si disponible
+    reflection_info = None
+    try:
+        from core.agents.reflection import reflection_node
+        if reflection_node.enabled and response_text:
+            # La réflexion est déjà faite par le ReasoningAgent,
+            # mais ici on expose les stats
+            reflection_info = reflection_node.get_stats()
+    except ImportError:
+        pass
+
+    log_audit(
+        db, action="le_leman_chat", user_id=auth.user_id,
+        user_email=auth.email, resource_type="le_leman",
+        details={"vertical": vertical, "model": result.get("model"), "reflection": reflection_info is not None},
+    )
+
+    # Trust layer
+    guardrail_flags = result.get("guardrail_flags", [])
+    guardrail_blocked = result.get("error") == "guardrail_blocked"
+
+    # Signature Le Léman
+    signature = "\n\n---\n*🌊 Le Léman — Conseil de confiance · Cortex Leman v5*"
+    if response_text and not guardrail_blocked:
+        response_text += signature
+
+    return {
+        "response": response_text,
+        "persona": "Le Léman",
+        "agent": "reasoning",
+        "model": result.get("model"),
+        "provider": result.get("provider"),
+        "tokens": result.get("tokens", 0),
+        "vertical": vertical,
+        "error": result.get("error"),
+        "guardrail_flags": guardrail_flags,
+        "guardrail_blocked": guardrail_blocked,
+        "trust_score": 1.0 if not guardrail_blocked and not guardrail_flags else (0.5 if guardrail_flags else 0.0),
+        "reflection": reflection_info,
+    }
+
+
+@app.get("/api/v1/le-leman/info")
+async def le_leman_info():
+    """Informations sur Le Léman (public)"""
+    return {
+        "name": "Le Léman",
+        "title": "Conseil de confiance franco-suisse",
+        "description": "L'assistant IA de Cortex Leman qui analyse, recommande, et ne décide jamais seul.",
+        "version": "1.0.0",
+        "verticals": ["comptable", "avocat", "sante", "banque", "startup", "rh"],
+        "capabilities": [
+            "Analyse réglementaire avec références exactes",
+            "Comparaison d'options avec score de confiance",
+            "Auto-critique via Reflection Node (pattern JP Morgan)",
+            "Conformité RGPD/AI Act/secret professionnel by design",
+        ],
+        "philosophy": "Déterministe là où il faut. Intelligent là où on peut.",
+    }
+
+
+# ============================================================
+# REFLECTION NODE (stats + config)
+# ============================================================
+
+@app.get("/api/v1/reflection/stats")
+async def reflection_stats(
+    auth: AuthContext = Depends(require_operator),
+):
+    """Statistiques du Reflection Node"""
+    from core.agents.reflection import reflection_node
+    return reflection_node.get_stats()
+
+
+@app.post("/api/v1/reflection/toggle")
+async def reflection_toggle(
+    enabled: bool,
+    auth: AuthContext = Depends(require_admin),
+    db: Session = Depends(get_session),
+):
+    """Activer/désactiver le Reflection Node (admin)"""
+    from core.agents.reflection import reflection_node
+    if enabled:
+        reflection_node.enable()
+    else:
+        reflection_node.disable()
+
+    log_audit(
+        db, action="reflection_toggle", user_id=auth.user_id,
+        user_email=auth.email, resource_type="reflection",
+        details={"enabled": enabled},
+    )
+    return {"reflection_enabled": enabled}
+
+
+# ============================================================
+# AGENT CHAT (LLM direct pour le frontend — legacy)
 # ============================================================
 
 @app.post("/api/v1/chat")
@@ -1606,9 +1851,9 @@ async def onboarding_status(
 @app.post("/mcp")
 async def mcp_jsonrpc(request: Request):
     """MCP (Model Context Protocol) — JSON-RPC 2.0 complet"""
-    from core.integrations.mcp_server import mcp_server
+    from core.integrations.mcp_cortex_server import cortex_mcp
     body = await request.json()
-    result = mcp_server.handle_request(body)
+    result = cortex_mcp.handle_request(body)
     if result is None:
         return JSONResponse(content={}, status_code=204)
     return JSONResponse(content=result)
@@ -1616,22 +1861,17 @@ async def mcp_jsonrpc(request: Request):
 
 @app.get("/mcp/tools")
 async def mcp_tools_list():
-    """MCP: Liste des tools disponibles (public, pour discovery agents)"""
-    from core.integrations.mcp_server import mcp_server
-    response = mcp_server.handle_request({
-        "jsonrpc": "2.0",
-        "id": 1,
-        "method": "tools/list",
-    })
-    return response.get("result", {"tools": []})
+    """MCP: Liste des 18 tools disponibles"""
+    from core.integrations.mcp_cortex_server import cortex_mcp
+    return {"tools": cortex_mcp.tools, "total": len(cortex_mcp.tools)}
 
 
 @app.post("/mcp/tools/call")
 async def mcp_tools_call(request: Request):
-    """MCP: Appeler un tool (public pour agents externes)"""
-    from core.integrations.mcp_server import mcp_server
+    """MCP: Appeler un tool"""
+    from core.integrations.mcp_cortex_server import cortex_mcp
     body = await request.json()
-    response = mcp_server.handle_request({
+    response = cortex_mcp.handle_request({
         "jsonrpc": "2.0",
         "id": 1,
         "method": "tools/call",

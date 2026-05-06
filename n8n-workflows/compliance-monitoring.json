@@ -1,0 +1,68 @@
+{
+  "name": "Cortex Leman — Conformité Quotidienne",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{"field": "hours", "hoursInterval": 6}]
+        }
+      },
+      "id": "trigger",
+      "name": "Toutes les 6h",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "url": "https://api.cortex-leman.com/api/v1/compliance/report/daily",
+        "options": {"authentication": "genericCredentialType", "genericAuthType": "httpHeaderAuth"}
+      },
+      "id": "report",
+      "name": "Rapport Conformité",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [250, 0]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [{"value1": "={{ $json.compliance_status.status }}", "operation": "notEqual", "value2": "compliant"}]
+        }
+      },
+      "id": "check",
+      "name": "Non-Conforme ?",
+      "type": "n8n-nodes-base.if",
+      "position": [500, 0]
+    },
+    {
+      "parameters": {
+        "channel": "#cortex-alerts",
+        "text": "⚠️ ALERTE CORTEX LEMAN\n\nStatut: {{ $json.compliance_status.status }}\nNiveau: {{ $json.compliance_status.level }}\nConflits: {{ $json.metrics.conflicts_detected }}\nViolations: {{ $json.metrics.compliance_violations }}\n\nJournal: {{ $json.journal_integrity.valid }}\n\n→ Vérifier: https://cortex-leman.com/trust-box"
+      },
+      "id": "slack",
+      "name": "Slack Alerte",
+      "type": "n8n-nodes-base.slack",
+      "position": [750, -100]
+    },
+    {
+      "parameters": {
+        "fromEmail": "trust-box@cortex-leman.com",
+        "toEmail": "dpo@cortex-leman.com",
+        "subject": "⚠️ Alerte Conformité Cortex Leman",
+        "text": "Le Trust Box a détecté un événement non-conforme.\n\nStatut: {{ $json.compliance_status.status }}\nJournal intégrité: {{ $json.journal_integrity.valid }}\n\nVoir le rapport complet: https://cortex-leman.com/api/v1/compliance/report/daily"
+      },
+      "id": "dpo-email",
+      "name": "Email DPO",
+      "type": "n8n-nodes-base.emailSend",
+      "position": [750, 100]
+    }
+  ],
+  "connections": {
+    "Toutes les 6h": {"main": [[{"node": "Rapport Conformité", "type": "main", "index": 0}]]},
+    "Rapport Conformité": {"main": [[{"node": "Non-Conforme ?", "type": "main", "index": 0}]]},
+    "Non-Conforme ?": {"main": [
+      [{"node": "Slack Alerte", "type": "main", "index": 0}],
+      [{"node": "Email DPO", "type": "main", "index": 0}]
+    ]}
+  },
+  "tags": [{"name": "cortex-leman"}, {"name": "compliance"}, {"name": "monitoring"}]
+}
