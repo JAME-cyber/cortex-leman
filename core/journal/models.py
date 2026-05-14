@@ -23,6 +23,26 @@ class JournalEventType(str, Enum):
     AGENT_RESULT = "agent.result"
     AGENT_ERROR = "agent.error"
 
+    # LLM Streaming (inspiration Jonas Templestein, AI Engineer Summit 2026)
+    # Chaque chunk LLM est un événement → permet replay sans rappeler le LLM
+    AGENT_LLM_REQUEST = "agent.llm.request"        # Début d'appel LLM (model, prompt, tokens)
+    AGENT_LLM_CHUNK = "agent.llm.chunk"              # Chunk de streaming (content delta)
+    AGENT_LLM_RESPONSE = "agent.llm.response"        # Réponse complète (aggrégation des chunks)
+    AGENT_LLM_ERROR = "agent.llm.error"              # Erreur LLM (rate limit, timeout)
+
+    # Sub-agents (hiérarchie parent/enfant)
+    SUBAGENT_SPAWNED = "subagent.spawned"              # Agent parent crée un enfant
+    SUBAGENT_RESULT = "subagent.result"                # Enfant retourne un résultat
+    SUBAGENT_FAILED = "subagent.failed"                # Enfant en échec
+
+    # Auto-extension médiationnée
+    # Inspiré de Jonas "dynamic worker configured" mais médiationné par le Médiateur
+    EXTENSION_PROPOSED = "extension.proposed"          # Agent propose une auto-modification
+    EXTENSION_REVIEWED = "extension.reviewed"          # Médiateur a reviewé la proposition
+    EXTENSION_APPROVED = "extension.approved"          # Arbitrage humain a approuvé
+    EXTENSION_REJECTED = "extension.rejected"          # Arbitrage humain a rejeté
+    EXTENSION_APPLIED = "extension.applied"            # Extension appliquée au runtime
+
     # Médiateur
     MEDIATOR_CHECK = "mediator.check"
     MEDIATOR_CONFLICT = "mediator.conflict"
@@ -63,6 +83,12 @@ class JournalEntry(BaseModel):
     agent_source: str  # Nom de l'agent qui a produit l'événement
     intention_id: str  # Référence vers l'intention métier
     payload: dict[str, Any] = Field(default_factory=dict)
+    idempotency_key: Optional[str] = Field(
+        default=None,
+        description=("Clé d'idempotence — garantit qu'un événement identique "
+                     "n'est jamais appendé deux fois (inspiration event sourcing "
+                     "Jonas Templestein). Format: '{agent_source}:{intention_id}:{event_type}:{hash(payload)}'")
+    )
     previous_hash: str = Field(default="GENESIS")
     entry_hash: str = Field(default="", description="Calculé automatiquement")
     signature: Optional[str] = Field(default=None, description="Signature électronique")

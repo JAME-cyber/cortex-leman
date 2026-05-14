@@ -66,17 +66,18 @@
     <div class="header-row">
       <div class="pulse-dot"></div>
       <h1>Cortex Leman v5 — Graphe de Confiance</h1>
-      <span class="badge badge-v5">v5.2</span>
+      <span class="badge badge-v5">v5.3</span>
       <span class="badge badge-score">215/215 tests ✅</span>
-      <span class="badge badge-new">RAG + MCP + A2A + Tracing</span>
+      <span class="badge badge-new">Memory + Context Builder + Agent Tracer</span>
     </div>
     <div class="subtitle">Infrastructure de confiance IA pour professions régulées franco-suisses — 6 verticales, 2 modes de déploiement, 51 endpoints</div>
+    <div class="subtitle" style="color:#f472b6;margin-top:0.25rem">✦ v5.3: Mémoire Procédurale + Failure Memory + Context Builder (5 couches) + Agent Tracer JSONL</div>
   </div>
 
   <!-- STATS BAR -->
   <div class="stats-bar">
-    <div class="stat"><div class="stat-value cyan">118</div><div class="stat-label">Fichiers source</div></div>
-    <div class="stat"><div class="stat-value emerald">28K+</div><div class="stat-label">Lignes de code</div></div>
+    <div class="stat"><div class="stat-value cyan">121</div><div class="stat-label">Fichiers source</div></div>
+    <div class="stat"><div class="stat-value emerald">29K+</div><div class="stat-label">Lignes de code</div></div>
     <div class="stat"><div class="stat-value amber">22</div><div class="stat-label">Règles JsonLogic</div></div>
     <div class="stat"><div class="stat-value violet">6</div><div class="stat-label">Verticales métier</div></div>
     <div class="stat"><div class="stat-value blue">51</div><div class="stat-label">Endpoints API</div></div>
@@ -435,6 +436,56 @@
     </div>
   </div>
 
+  <!-- v5.3 NEW MODULES -->
+  <div class="section-title" style="margin-top:2rem"><div class="dot" style="background:#2dd4bf"></div> Mémoire & Contexte v5.3 <span class="badge badge-new">NEW</span></div>
+  <div class="cards">
+    <div class="card" style="border-color: rgba(45,212,191,0.3);">
+      <div class="card-header"><div class="card-dot teal"></div><h3>ProceduralMemory</h3></div>
+      <ul>
+        <li>Instructions apprises par agent/verticale</li>
+        <li>Compteur de missions par combinaison</li>
+        <li>Persisté dans data/agent_memory/procedural/</li>
+        <li>Alimenté par le Reflection Node</li>
+        <li>Injecté dans les prompts agents</li>
+        <li class="new-tag">Module: core/agents/memory.py</li>
+      </ul>
+    </div>
+    <div class="card" style="border-color: rgba(239,68,68,0.3);">
+      <div class="card-header"><div class="card-dot red"></div><h3>FailureMemory</h3></div>
+      <ul>
+        <li>Enregistrement auto des erreurs agents</li>
+        <li>Déduplication: incrément si erreur répétée</li>
+        <li>Résolution: cause racine + correction</li>
+        <li>Avertissements pré-mission (3x → alerte)</li>
+        <li>Analyse de patterns d'erreurs</li>
+        <li class="new-tag">Stockage: data/agent_memory/failures/</li>
+      </ul>
+    </div>
+    <div class="card" style="border-color: rgba(96,165,250,0.3);">
+      <div class="card-header"><div class="card-dot blue"></div><h3>Context Builder (5 couches)</h3></div>
+      <ul>
+        <li><span class="metric">Layer 1: System</span> → Rôle, capacités, limites</li>
+        <li><span class="metric">Layer 2: Vertical</span> → Connaissances métier</li>
+        <li><span class="metric">Layer 3: Procedural</span> → Leçons apprises</li>
+        <li><span class="metric">Layer 4: Memory</span> → Échecs + vault + RAG</li>
+        <li><span class="metric">Layer 5: Task</span> → Contexte mission en cours</li>
+        <li class="new-tag">Module: core/orchestrator/context_builder.py</li>
+      </ul>
+    </div>
+    <div class="card" style="border-color: rgba(251,191,36,0.3);">
+      <div class="card-header"><div class="card-dot amber"></div><h3>Agent Tracer (JSONL)</h3></div>
+      <ul>
+        <li>Tracing agent-level: action × durée × tokens</li>
+        <li>Stockage JSONL quotidien</li>
+        <li>Métriques: P50/P95, succès/erreur, coût</li>
+        <li>Dashboard par agent/verticale/période</li>
+        <li>Complémentaire OTel (infrastructure) + Prometheus</li>
+        <li class="new-tag">Module: monitoring/agent_tracer.py</li>
+      </ul>
+    </div>
+  </div>
+  </div>
+
   <!-- VERTICALES TABLE -->
   <div class="table-section">
     <div class="section-title"><div class="dot" style="background:#a78bfa"></div> Verticales Métier & Règles</div>
@@ -637,6 +688,7 @@
         <li>Compliance Gateway</li>
         <li class="new-tag">🔑 Chiffrement Fernet (at-rest)</li>
         <li class="new-tag">🛡️ AutoDefense multi-validateurs</li>
+        <li class="new-tag">🧠 Failure Memory + Procedural Memory</li>
       </ul>
     </div>
     <div class="card">
@@ -718,8 +770,8 @@
 
   <!-- FOOTER -->
   <div class="footer">
-    <p>Cortex Leman v5.2 — Graphe de Confiance • 118 fichiers • 28K+ lignes • 215/215 tests ✅ • 51 endpoints • 31 sujets NATS • 22 règles JsonLogic</p>
-    <p style="margin-top:0.5rem">Graphe de confiance. Déterministe là où il faut. Intelligent là où on peut. RAG + MCP + A2A + Tracing.</p>
+    <p>Cortex Leman v5.3 — Graphe de Confiance • 121 fichiers • 29K+ lignes • 215/215 tests ✅ • 51 endpoints • 31 sujets NATS • 22 règles JsonLogic</p>
+    <p style="margin-top:0.5rem">Graphe de confiance. Déterministe là où il faut. Intelligent là où on peut. Mémoire + Contexte + Tracing.</p>
     <p style="margin-top:0.5rem;color:#334155">React 19 • Vite 8 • TypeScript 6 • FastAPI • ChromaDB • PostgreSQL 16 • NATS • Redis 7 • Prometheus • OpenTelemetry</p>
   </div>
 

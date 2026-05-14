@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cortex Leman — L'IA conforme pour professions réglementées</title>
+    <meta name="description" content="L'IA qui se surveille elle-même. Conforme RGPD, AI Act, secret professionnel. Testez gratuitement 30 jours.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+        :root{
+            --blue:#3b82f6;--blue-s:rgba(59,130,246,0.10);--blue-s2:rgba(59,130,246,0.05);
+            --green:#10b981;--green-s:rgba(16,185,129,0.10);--green-s2:rgba(16,185,129,0.05);
+            --amber:#f59e0b;--amber-s:rgba(245,158,11,0.10);
+            --red:#ef4444;--red-s:rgba(239,68,68,0.08);
+            --purple:#8b5cf6;
+            --bg:#0a0e17;--bg2:#0f1525;
+            --cream:#fffbf1;
+            --text:#e8eaf0;--t2:rgba(232,234,240,0.55);--t3:rgba(232,234,240,0.30);
+            --bdr:rgba(255,255,255,0.07);--bdr2:rgba(255,255,255,0.12);
+            --card:rgba(255,255,255,0.03);--card-h:rgba(255,255,255,0.06);
+            --f:'Inter',-apple-system,sans-serif;
+            --m:'JetBrains Mono',monospace;
+            --px:clamp(20px,4vw,50px);
+            --sp:clamp(80px,10vw,140px);
+            --gap:clamp(36px,5vw,64px);
+            --hero:clamp(36px,5.5vw,76px);
+            --title:clamp(22px,2.8vw,44px);
+            --body-lg:clamp(15px,1.3vw,21px);
+        }
+        html{scroll-behavior:smooth}
+        body{font-family:var(--f);background:var(--bg);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+
+        /* ═══ NAV ═══ */
+        header{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(10,14,23,0.88);backdrop-filter:blur(20px);border-bottom:1px solid var(--bdr)}
+        .nav{display:flex;align-items:center;justify-content:space-between;max-width:1200px;margin:0 auto;height:clamp(56px,6vw,68px);padding:0 var(--px)}
+        .brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+        .brand-logo{width:clamp(34px,2.8vw,44px);height:clamp(34px,2.8vw,44px);border-radius:9px;background:linear-gradient(135deg,var(--blue),var(--green));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:clamp(13px,1.1vw,17px);color:var(--bg)}
+        .brand-name{font-weight:700;font-size:clamp(17px,1.5vw,22px);letter-spacing:-0.5px;color:var(--text)}
+        .brand-name span{color:var(--blue)}
+        .nav-sep{width:1px;height:clamp(36px,3.5vw,56px);background:var(--bdr2);margin-left:clamp(16px,2vw,32px)}
+        .nav-links{display:flex;gap:clamp(14px,1.6vw,28px)}
+        .nav-links a{font-size:clamp(13px,0.85vw,15px);color:var(--t2);text-decoration:none;font-weight:500;transition:color .2s}
+        .nav-links a:hover{color:var(--text)}
+        .burger{display:none;background:none;border:none;color:var(--text);font-size:22px;cursor:pointer}
+
+        /* ═══ CTA parallelogram (Espressio-style) ═══ */
+        .cta{position:relative;display:inline-flex;text-decoration:none;cursor:pointer}
+        .cta-shape{position:relative;width:clamp(190px,14vw,260px);height:clamp(42px,3.2vw,56px)}
+        .cta-shape svg{position:absolute;inset:0;width:100%;height:100%}
+        .cta-shape svg path{transition:fill .2s}
+        .cta:hover .cta-shape svg path{fill:#2563eb}
+        .cta-dot{position:absolute;top:-1px;right:-1px;width:4px;height:4px;border-radius:2px;background:var(--bg)}
+        .cta-label{position:absolute;inset:0;display:flex;align-items:center;justify-content:space-between;padding:0 14px;z-index:2;font-weight:600;letter-spacing:-0.4px;font-size:clamp(13px,1vw,17px);color:var(--bg)}
+        .cta-label .arr{font-size:clamp(10px,0.7vw,14px)}
+        .cta-green .cta-shape svg path{fill:var(--green)}
+        .cta-green:hover .cta-shape svg path{fill:#0ea572}
+
+        /* ═══ HERO ═══ */
+        .hero{min-height:100vh;display:flex;flex-direction:column;background:var(--bg);position:relative;overflow:hidden}
+        .hero-bg{position:absolute;inset:0;background-image:linear-gradient(rgba(59,130,246,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(59,130,246,0.025) 1px,transparent 1px);background-size:64px 64px;mask-image:radial-gradient(ellipse 70% 50% at 50% 40%,black,transparent)}
+        .hero-glow{position:absolute;top:5%;left:25%;width:700px;height:700px;background:radial-gradient(circle,rgba(59,130,246,0.06) 0%,transparent 70%);pointer-events:none}
+        .hero-main{position:relative;z-index:1;flex:1;display:flex;flex-direction:column;justify-content:flex-end;padding:clamp(100px,14vw,180px) 0 clamp(20px,3vw,40px) 0}
+        .hero-inner{max-width:1200px;margin:0 auto;padding:0 var(--px);width:100%}
+        .hero-badges{display:flex;gap:8px;margin-bottom:clamp(20px,2.5vw,36px);flex-wrap:wrap}
+        .badge{font-family:var(--m);font-size:clamp(10px,0.7vw,12px);padding:5px 12px;border-radius:100px;font-weight:500;letter-spacing:.03em;border:1px solid var(--bdr)}
+        .badge-o{color:var(--t3)}
+        .badge-f{background:var(--green);color:var(--bg);border-color:var(--green);font-weight:600}
+        .hero h1{font-size:clamp(36px,5.5vw,80px);font-weight:800;letter-spacing:-2px;line-height:1.0;margin-bottom:clamp(16px,2vw,28px);max-width:65%}
+        .hero h1 em{font-style:normal;color:var(--green)}
+        .hero-sub{font-size:var(--body-lg);color:var(--t2);max-width:clamp(380px,42vw,640px);line-height:1.65;margin-bottom:clamp(28px,3.5vw,48px)}
+        .hero-cta{margin-bottom:clamp(36px,5vw,72px)}
+
+        /* Stats bar — Espressio dashed-line style */
+        .stats{display:flex;align-items:flex-end;gap:clamp(28px,5vw,80px);flex-wrap:wrap}
+        .st{position:relative;min-height:50px;padding-left:12px}
+        .st::before{content:'';position:absolute;left:0;top:0;width:5px;height:1px;background:var(--text)}
+        .st::after{content:'';position:absolute;left:0;top:0;bottom:0;border-left:1px dashed var(--t3)}
+        .st-in{padding-top:clamp(10px,1.2vw,24px)}
+        .st-v{font-size:clamp(24px,3.2vw,56px);font-weight:800;letter-spacing:-1.5px;line-height:1}
+        .st-v .u{font-size:.4em;font-weight:400;color:var(--t2)}
+        .st-l{font-size:clamp(11px,0.75vw,15px);color:var(--t2);margin-top:4px;font-weight:500}
+
+        /* ═══ Decorative bars (Espressio-style) ═══ */
+        .deco{width:100%;overflow:hidden}
+        .deco .r1{display:flex}
+        .deco .r1 .a{height:12px;width:34%;background:var(--blue)}
+        .deco .r1 .b{height:12px;flex:1;background:var(--blue);opacity:.35}
+        .deco .r2{height:8px;width:100%;background:var(--green);opacity:.2}
+        .deco .r3{display:flex;gap:2px}
+        .deco .r3 .a{height:4px;width:20%;background:var(--blue);opacity:.5}
+        .deco .r3 .b{height:4px;width:45%;background:var(--green);opacity:.25}
+        .deco .r3 .c{height:4px;flex:1;background:var(--amber);opacity:.15}
+
+        /* ═══ Section base ═══ */
+        .sec{padding:var(--sp) 0}
+        .si{max-width:1200px;margin:0 auto;padding:0 var(--px)}
+        .sl{display:inline-block;font-size:clamp(11px,0.8vw,14px);font-weight:600;text-transform:uppercase;letter-spacing:.1em;margin-bottom:clamp(12px,1.5vw,20px);font-family:var(--m)}
+        .sl.blue{color:var(--blue)}.sl.green{color:var(--green)}.sl.red{color:var(--red)}.sl.amber{color:var(--amber)}
+        .sh{font-size:var(--hero);font-weight:800;letter-spacing:-1.5px;line-height:1.05;margin-bottom:clamp(12px,1.5vw,20px)}
+        .sd{font-size:var(--body-lg);color:var(--t2);line-height:1.7;max-width:560px}
+        .bg-b{background:linear-gradient(180deg,var(--bg) 0%,rgba(59,130,246,0.03) 50%,var(--bg) 100%)}
+        .bg-g{background:linear-gradient(180deg,var(--bg) 0%,rgba(16,185,129,0.03) 50%,var(--bg) 100%)}
+        .bg-a{background:linear-gradient(180deg,var(--bg) 0%,rgba(245,158,11,0.03) 50%,var(--bg) 100%)}
+
+        /* Two-column section header (Espressio-style) */
+        .sec-header{display:flex;gap:clamp(24px,4vw,64px);align-items:flex-start;margin-bottom:var(--gap);flex-wrap:wrap}
+        .sec-header .left{flex:0 0 auto;min-width:140px}
+        .sec-header .right{flex:1;min-width:260px}
+
+        /* ═══ Problem cards (Espressio numbered cards) ═══ */
+        .cards3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:var(--gap)}
+        .card3{padding:clamp(24px,3vw,40px);border-radius:16px;background:var(--card);border:1px solid var(--bdr);display:flex;flex-direction:column;justify-content:space-between;min-height:300px;transition:all .3s}
+        .card3:hover{background:var(--card-h);transform:translateY(-3px)}
+        .card3-top{display:flex;justify-content:space-between;align-items:flex-start}
+        .card3-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px}
+        .card3-icon.red-bg{background:var(--red-s)}
+        .card3-icon.blue-bg{background:var(--blue-s)}
+        .card3-icon.amber-bg{background:var(--amber-s)}
+        .card3-num{font-family:var(--m);font-size:16px;color:var(--t3);font-weight:500}
+        .card3 h3{font-size:clamp(17px,1.5vw,22px);font-weight:700;margin-bottom:8px;letter-spacing:-0.3px}
+        .card3 p{font-size:clamp(13px,0.9vw,15px);color:var(--t2);line-height:1.65}
+        .card3 .tag{display:inline-block;font-family:var(--m);font-size:11px;padding:4px 10px;border-radius:4px;margin-top:12px;font-weight:500}
+        .card3 .tag.red{color:var(--red);background:var(--red-s)}
+        .card3 .tag.green{color:var(--green);background:var(--green-s)}
+        .card3 .tag.blue{color:var(--blue);background:var(--blue-s)}
+
+        /* ═══ Timeline (Espressio how-it-works table) ═══ */
+        .tl-head{font-size:var(--hero);font-weight:800;letter-spacing:-2px;line-height:1.0;margin-bottom:clamp(16px,2.5vw,40px)}
+        .tl-head .big{display:block;font-size:clamp(60px,9vw,140px);letter-spacing:-6px;line-height:.9;margin-top:4px}
+        .tl-sub{font-size:var(--title);color:var(--t2);font-weight:500;max-width:700px;line-height:1.5;margin-bottom:clamp(20px,3vw,40px)}
+        .tl{width:100%}
+        .tl .th{display:grid;grid-template-columns:50px 1fr 1fr 110px;gap:20px;padding-bottom:14px;border-bottom:1px dashed var(--bdr2);font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--t3);font-weight:600;font-family:var(--m)}
+        .tl .tr{display:grid;grid-template-columns:50px 1fr 1fr 110px;gap:20px;padding:clamp(18px,2.2vw,32px) 0;border-bottom:1px dashed rgba(255,255,255,0.05)}
+        .tl .tr:last-child{border-bottom:none}
+        .tl-n{font-family:var(--m);font-size:15px;color:var(--t3);font-weight:500;padding-top:4px}
+        .tl-t{font-size:clamp(16px,1.5vw,22px);font-weight:700;letter-spacing:-0.3px;margin-bottom:6px}
+        .tl-d{font-size:14px;color:var(--t2);line-height:1.6;max-width:400px}
+        .tl-you{font-size:14px;color:var(--t2);line-height:1.6;font-style:italic;padding-top:4px}
+        .tl-badge{display:inline-block;font-size:12px;font-weight:600;border-radius:100px;padding:4px 12px;white-space:nowrap;margin-top:4px}
+        .tl-badge.blue{background:var(--blue-s);color:var(--blue)}
+        .tl-badge.red{background:var(--red-s);color:var(--red)}
+        .tl-badge.green{background:var(--green-s);color:var(--green)}
+
+        /* ═══ Scenarios (2-col system style from Espressio) ═══ */
+        .scenarios{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:var(--gap)}
+        .sc{padding:clamp(24px,3vw,36px);border-radius:14px;background:var(--card);border:1px solid var(--bdr);display:flex;flex-direction:column;transition:all .3s}
+        .sc:hover{background:var(--card-h);transform:translateY(-3px)}
+        .sc-who{display:flex;align-items:center;gap:10px;margin-bottom:clamp(16px,2vw,24px)}
+        .sc-emoji{font-size:32px}
+        .sc-name{font-size:clamp(16px,1.3vw,20px);font-weight:700}
+        .sc-reg{font-size:11px;color:var(--t3);font-family:var(--m)}
+        .sc-quote{font-size:clamp(14px,1vw,17px);color:var(--text);line-height:1.6;margin-bottom:16px;flex:1;font-style:italic;padding-left:14px;border-left:2px solid var(--green)}
+        .sc-result{font-family:var(--m);font-size:12px;color:var(--green);background:var(--green-s);padding:8px 14px;border-radius:8px;text-align:center;font-weight:500}
+
+        /* ═══ Pilot ═══ */
+        .pilot{text-align:center}
+        .pilot-box{padding:clamp(40px,5vw,72px);border-radius:20px;background:var(--card);border:1px solid rgba(16,185,129,0.15);position:relative;overflow:hidden}
+        .pilot-box::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(16,185,129,0.05),transparent 70%);pointer-events:none}
+        .pilot-price{font-size:clamp(52px,7vw,88px);font-weight:800;color:var(--green);line-height:1;position:relative}
+        .pilot-price .cur{font-size:.35em;font-weight:600;vertical-align:super}
+        .pilot-sub{font-size:15px;color:var(--t3);margin:8px 0 36px}
+        .pilot-list{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;text-align:left;margin-bottom:40px;max-width:600px;margin-left:auto;margin-right:auto}
+        .pi{display:flex;gap:8px;font-size:14px;color:var(--t2);align-items:flex-start}
+        .pi .ck{color:var(--green);flex-shrink:0;margin-top:2px}
+
+        /* ═══ CTA final ═══ */
+        .cta-box{padding:clamp(48px,6vw,80px);border-radius:20px;background:linear-gradient(135deg,rgba(59,130,246,0.05),rgba(16,185,129,0.03));border:1px solid var(--bdr);text-align:center;position:relative;overflow:hidden}
+        .cta-box::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(59,130,246,0.05),transparent 60%);pointer-events:none}
+        .cta-tg{font-size:var(--hero);font-weight:800;letter-spacing:-1.5px;line-height:1.1;margin-bottom:14px;position:relative}
+        .cta-sb{font-size:var(--body-lg);color:var(--t2);max-width:480px;margin:0 auto 36px;position:relative}
+
+        /* ═══ Footer ═══ */
+        footer{padding:36px 0;border-top:1px solid var(--bdr)}
+        .foot{max-width:1200px;margin:0 auto;padding:0 var(--px);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+        .foot-l{display:flex;align-items:center;gap:8px}
+        .foot-lo{width:24px;height:24px;border-radius:6px;background:linear-gradient(135deg,var(--blue),var(--green));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:10px;color:var(--bg)}
+        .foot-c{font-size:12px;color:var(--t3)}
+        .foot-tag{font-family:var(--m);font-size:11px;color:var(--t3);font-style:italic}
+
+        /* ═══ Preuve sociale ═══ */
+        .trust-logos{display:flex;gap:clamp(24px,3vw,48px);align-items:center;justify-content:center;flex-wrap:wrap;padding:clamp(32px,4vw,56px) 0}
+        .trust-item{text-align:center}
+        .trust-icon{width:clamp(44px,3.5vw,60px);height:clamp(44px,3.5vw,60px);border-radius:14px;background:var(--card);border:1px solid var(--bdr);display:flex;align-items:center;justify-content:center;font-size:clamp(20px,1.6vw,28px);margin:0 auto 8px;transition:all .3s}
+        .trust-item:hover .trust-icon{background:var(--card-h);transform:translateY(-2px)}
+        .trust-name{font-size:clamp(11px,0.75vw,14px);color:var(--t2);font-weight:500}
+        .trust-sub{font-size:clamp(10px,0.65vw,11px);color:var(--t3);font-family:var(--m)}
+        .trust-banner{padding:clamp(20px,3vw,40px) 0;border-top:1px dashed var(--bdr2);border-bottom:1px dashed var(--bdr2)}
+        .trust-banner p{font-size:clamp(14px,1vw,18px);color:var(--t2);text-align:center;max-width:700px;margin:0 auto;line-height:1.7}
+        .trust-banner strong{color:var(--text);font-weight:600}
+
+        /* ═══ FAQ (Espressio expandable) ═══ */
+        .faq{max-width:800px;margin:0 auto}
+        .faq-item{border-bottom:1px dashed var(--bdr2);overflow:hidden}
+        .faq-q{display:flex;justify-content:space-between;align-items:center;padding:clamp(18px,2.2vw,28px) 0;cursor:pointer;transition:color .2s;user-select:none}
+        .faq-q:hover{color:var(--blue)}
+        .faq-q h3{font-size:clamp(15px,1.1vw,19px);font-weight:600;letter-spacing:-0.3px;flex:1;padding-right:16px}
+        .faq-q .faq-toggle{width:28px;height:28px;border-radius:50%;background:var(--card);border:1px solid var(--bdr);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--t2);transition:all .3s;flex-shrink:0}
+        .faq-item.open .faq-toggle{background:var(--blue-s);color:var(--blue);border-color:rgba(59,130,246,0.2);transform:rotate(45deg)}
+        .faq-a{max-height:0;overflow:hidden;transition:max-height .4s ease}
+        .faq-item.open .faq-a{max-height:300px}
+        .faq-a p{padding-bottom:clamp(16px,2vw,24px);font-size:clamp(14px,0.9vw,16px);color:var(--t2);line-height:1.7}
+
+        /* ═══ Blog ═══ */
+        .blog-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:var(--gap)}
+        .blog-card{padding:clamp(24px,3vw,36px);border-radius:14px;background:var(--card);border:1px solid var(--bdr);display:flex;flex-direction:column;transition:all .3s;text-decoration:none;color:inherit}
+        .blog-card:hover{background:var(--card-h);transform:translateY(-3px)}
+        .blog-tag{display:inline-block;font-family:var(--m);font-size:11px;padding:4px 10px;border-radius:4px;font-weight:500;margin-bottom:clamp(12px,1.5vw,20px);width:fit-content}
+        .blog-tag.blue{color:var(--blue);background:var(--blue-s)}
+        .blog-tag.green{color:var(--green);background:var(--green-s)}
+        .blog-tag.amber{color:var(--amber);background:var(--amber-s)}
+        .blog-card h3{font-size:clamp(15px,1.2vw,20px);font-weight:700;letter-spacing:-0.3px;margin-bottom:8px;line-height:1.35}
+        .blog-card p{font-size:clamp(13px,0.85vw,15px);color:var(--t2);line-height:1.6;flex:1}
+        .blog-meta{display:flex;justify-content:space-between;align-items:center;margin-top:clamp(16px,2vw,24px);font-size:12px;color:var(--t3);font-family:var(--m)}
+        .blog-meta .read{color:var(--blue);font-weight:500}
+
+        /* ═══ Anim ═══ */
+        .fi{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s ease}
+        .fi.v{opacity:1;transform:none}
+
+        /* ═══ Responsive ═══ */
+        @media(max-width:1023px){
+            .nav-links,.nav-sep{display:none}
+            .burger{display:block}
+            .nav-links.open{display:flex;flex-direction:column;position:absolute;top:100%;left:0;right:0;background:rgba(10,14,23,0.98);backdrop-filter:blur(20px);padding:20px;gap:14px;border-bottom:1px solid var(--bdr)}
+            .hero h1{max-width:100%}
+            .cards3,.scenarios{grid-template-columns:1fr}
+            .card3{min-height:auto}
+            .tl .th,.tl .tr{grid-template-columns:40px 1fr}
+            .tl .th span:nth-child(3),.tl .th span:nth-child(4){display:none}
+            .tl-you,.tl-badge{display:none!important}
+            .pilot-list{grid-template-columns:1fr}
+            .blog-grid{grid-template-columns:1fr}
+        }
+    </style>
+</head>
+<body>
+
+<!-- ═══ NAV ═══ -->
+<header>
+    <div class="nav">
+        <a href="#" class="brand">
+            <div class="brand-logo">CL</div>
+            <div class="brand-name">Cortex <span>Leman</span></div>
+        </a>
+        <div class="nav-sep"></div>
+        <nav class="nav-links" id="navLinks">
+            <a href="#probleme">Le problème</a>
+            <a href="#promesse">La promesse</a>
+            <a href="#scenarios">Pour qui</a>
+            <a href="#faq">Questions</a>
+        </nav>
+        <a href="#pilote" class="cta" id="navCta">
+            <div class="cta-shape">
+                <svg viewBox="0 0 205 54" fill="none" preserveAspectRatio="none"><path d="M0 0V54H205V13L192 0H0Z" fill="#3b82f6"/></svg>
+                <div class="cta-dot"></div>
+                <div class="cta-label"><span>Accès pilote</span><span class="arr">→</span></div>
+            </div>
+        </a>
+        <button class="burger" id="burger" aria-label="Menu">☰</button>
+    </div>
+</header>
+
+<!-- ═══ HERO ═══ -->
+<section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-glow"></div>
+    <div class="hero-main">
+        <div class="hero-inner">
+            <!-- Badges -->
+            <div class="hero-badges">
+                <span class="badge badge-f">Conforme RGPD · AI Act</span>
+                <span class="badge badge-o">Secret professionnel</span>
+                <span class="badge badge-o">FR-CH</span>
+            </div>
+
+            <!-- Headline -->
+            <h1>
+                L'IA qui se<br>
+                surveille <em>elle-même</em>
+            </h1>
+
+            <!-- Sub -->
+            <p class="hero-sub">
+                Votre cabinet utilise l'IA. Mais qui vérifie qu'elle respecte les règles de votre profession ?
+                Cortex Leman le fait. Automatiquement.
+            </p>
+
+            <!-- CTA (Espressio parallelogram) -->
+            <div class="hero-cta">
+                <a href="#pilote" class="cta">
+                    <div class="cta-shape">
+                        <svg viewBox="0 0 205 54" fill="none" preserveAspectRatio="none"><path d="M0 0V54H205V13L192 0H0Z" fill="#3b82f6"/></svg>
+                        <div class="cta-dot"></div>
+                        <div class="cta-label"><span>Tester gratuitement</span><span class="arr">→</span></div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Stats bar (Espressio dashed-line) -->
+            <div class="stats">
+                <div class="st">
+                    <div class="st-in">
+                        <div class="st-v">6<span class="u"> métiers</span></div>
+                        <div class="st-l">Couverts</div>
+                    </div>
+                </div>
+                <div class="st">
+                    <div class="st-in">
+                        <div class="st-v">100<span class="u"> %</span></div>
+                        <div class="st-l">Déterministe</div>
+                    </div>
+                </div>
+                <div class="st">
+                    <div class="st-in">
+                        <div class="st-v">0<span class="u"> fuite</span></div>
+                        <div class="st-l">Donnée qui sort</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══ SELF-AUDIT WIDGET ═══ -->
+<section id="diagnostic" class="sec">
+    <div class="si" style="max-width:640px">
+        <div style="text-align:center;margin-bottom:8px">
+            <span class="sl blue">🔍 Diagnostic gratuit</span>
+        </div>
+        <div id="cortex-self-audit" style="background:var(--bg2);border:1px solid var(--bdr);border-radius:16px;min-height:300px">
+        </div>
+    </div>
+</section>
+<script src="self-audit-widget.js"></script>
+
+<!-- ═══ DECO BARS ═══ -->
+<div class="deco" aria-hidden="true">
+    <div class="r1"><div class="a"></div><div class="b"></div></div>
+    <div class="r2"></div>
+    <div class="r3"><div class="a"></div><div class="b"></div><div class="c"></div></div>
+</div>
+
+<!-- ═══ LE PROBLÈME ═══ -->
+<section id="probleme" class="sec">
+    <div class="si">
+        <div class="sec-header fi">
+            <div class="left">
+                <span class="sl red">Le problème</span>
+            </div>
+            <div class="right">
+                <h2 class="sh">Vous utilisez l'IA.<br>Personne ne la contrôle.</h2>
+                <p class="sd">
+                    Un chatbot qui hallucine. Des données qui fuient. Zéro traçabilité.
+                    Dans un métier régulé, ce ne sont pas des bugs — ce sont des fautes.
+                </p>
+            </div>
+        </div>
+        <div class="cards3">
+            <div class="card3 fi">
+                <div class="card3-top">
+                    <div class="card3-icon red-bg">🎲</div>
+                    <span class="card3-num">01.</span>
+                </div>
+                <div>
+                    <h3>L'IA hallucine</h3>
+                    <p>Votre chatbot recommande une mauvaise option fiscale. Qui est responsable ? Vous.</p>
+                    <span class="tag red">Risque juridique</span>
+                </div>
+            </div>
+            <div class="card3 fi">
+                <div class="card3-top">
+                    <div class="card3-icon amber-bg">🌍</div>
+                    <span class="card3-num">02.</span>
+                </div>
+                <div>
+                    <h3>Les données fuient</h3>
+                    <p>Vos outils envoient des données clients hors frontières. Secret professionnel violé.</p>
+                    <span class="tag red">Art. 321 CP</span>
+                </div>
+            </div>
+            <div class="card3 fi">
+                <div class="card3-top">
+                    <div class="card3-icon blue-bg">🫥</div>
+                    <span class="card3-num">03.</span>
+                </div>
+                <div>
+                    <h3>Rien n'est tracé</h3>
+                    <p>L'auditeur demande pourquoi l'IA a choisi cette option. Vous ne savez pas.</p>
+                    <span class="tag red">AI Act · RGPD</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══ LA PROMESSE ═══ -->
+<section id="promesse" class="sec bg-b">
+    <div class="si">
+        <div class="sec-header fi">
+            <div class="left">
+                <span class="sl green">La promesse</span>
+            </div>
+            <div class="right">
+                <h2 class="sh">Conforme. Tracé.<br>Contrôlé.</h2>
+                <p class="sd">
+                    Cortex Leman ne remplace pas votre IA. Il la surveille. Chaque décision vérifiée, tracée, bloquée si elle enfreint les règles de votre métier.
+                </p>
+            </div>
+        </div>
+        <div class="cards3">
+            <div class="card3 fi">
+                <div class="card3-top">
+                    <div class="card3-icon green" style="background:var(--green-s)">✓</div>
+                    <span class="card3-num">01.</span>
+                </div>
+                <div>
+                    <h3>Conforme par défaut</h3>
+                    <p>RGPD, AI Act, secret pro, data residency. Les règles de votre métier appliquées automatiquement — avant l'exécution.</p>
+                    <span class="tag green">Avant, pas après</span>
+                </div>
+            </div>
+            <div class="card3 fi">
+                <div class="card3-top">
+                    <div class="card3-icon green" style="background:var(--green-s)">✓</div>
+                    <span class="card3-num">02.</span>
+                </div>
+                <div>
+                    <h3>Chaque action tracée</h3>
+                    <p>Journal inviolable. Chaque décision horodatée. L'auditeur trouve tout. Vous dormez tranquille.</p>
+                    <span class="tag green">SHA-256</span>
+                </div>
+            </div>
+            <div class="card3 fi">
+                <div class="card3-top">
+                    <div class="card3-icon green" style="background:var(--green-s)">✓</div>
+                    <span class="card3-num">03.</span>
+                </div>
+                <div>
+                    <h3>Vous gardez le contrôle</h3>
+                    <p>Conflit détecté ? L'IA se bloque. C'est vous qui décidez. L'humain est arbitre, pas spectateur.</p>
+                    <span class="tag green">Arbitrage humain</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══ COMMENT ÇA MARCHE (Espressio timeline) ═══ -->
+<section id="comment" class="sec bg-g">
+    <div class="si">
+        <!-- Big typography header -->
+        <div class="tl-head fi">
+            <span>De l'intention</span> au
+            <span class="big">Contrôle</span>
+        </div>
+        <p class="tl-sub fi">
+            En 3 minutes, Cortex Leman analyse, vérifie et protège. Vous n'avez qu'une chose à faire : décider.
+        </p>
+        <a href="#pilote" class="cta fi" style="margin-bottom:var(--gap)">
+            <div class="cta-shape">
+                <svg viewBox="0 0 205 54" fill="none" preserveAspectRatio="none"><path d="M0 0V54H205V13L192 0H0Z" fill="#3b82f6"/></svg>
+                <div class="cta-dot"></div>
+                <div class="cta-label"><span>Demander un accès</span><span class="arr">→</span></div>
+            </div>
+        </a>
+
+        <div style="border-top:1px solid var(--bdr2);margin-bottom:clamp(24px,3vw,48px)"></div>
+
+        <span class="sl green fi">Le flux</span>
+
+        <div class="tl fi">
+            <div class="th">
+                <span>#</span>
+                <span>Ce qui se passe</span>
+                <span>Votre rôle</span>
+                <span>Étape</span>
+            </div>
+            <div class="tr">
+                <span class="tl-n">01.</span>
+                <div>
+                    <div class="tl-t">Vous posez votre question</div>
+                    <p class="tl-d">En français naturel. Cortex Leman crée une intention et la route vers les agents spécialisés.</p>
+                </div>
+                <p class="tl-you">Posez. C'est tout.</p>
+                <span class="tl-badge blue">3 sec</span>
+            </div>
+            <div class="tr">
+                <span class="tl-n">02.</span>
+                <div>
+                    <div class="tl-t">L'IA analyse et vérifie</div>
+                    <p class="tl-d">Plusieurs agents travaillent en parallèle. Le Médiateur vérifie les règles de votre métier — 100% déterministe.</p>
+                </div>
+                <p class="tl-you">Vous attendez quelques secondes.</p>
+                <span class="tl-badge blue">~30 sec</span>
+            </div>
+            <div class="tr">
+                <span class="tl-n">03.</span>
+                <div>
+                    <div class="tl-t">Conflit ? Gel automatique</div>
+                    <p class="tl-d">Si une règle est enfreinte, l'action est bloquée avant exécution. Rien ne sort sans validation.</p>
+                </div>
+                <p class="tl-you">Vous êtes alerté immédiatement.</p>
+                <span class="tl-badge red">🧊 Gel</span>
+            </div>
+            <div class="tr">
+                <span class="tl-n">04.</span>
+                <div>
+                    <div class="tl-t">Vous décidez</div>
+                    <p class="tl-d">Vous arbitrerez. Débloquez ou modifiez. L'IA reprend uniquement sur votre décision.</p>
+                </div>
+                <p class="tl-you">Un clic. C'est vous le patron.</p>
+                <span class="tl-badge green">✅ Reprend</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══ DECO BARS ═══ -->
+<div class="deco" aria-hidden="true">
+    <div class="r1"><div class="a" style="background:var(--green)"></div><div class="b" style="background:var(--green)"></div></div>
+    <div class="r2" style="background:var(--amber)"></div>
+    <div class="r3"><div class="a" style="background:var(--green)"></div><div class="b" style="background:var(--amber)"></div><div class="c" style="background:var(--blue)"></div></div>
+</div>
+
+<!-- ═══ POUR QUI ═══ -->
+<section id="scenarios" class="sec bg-a">
+    <div class="si">
+        <div class="sec-header fi">
+            <div class="left">
+                <span class="sl blue">Pour qui</span>
+            </div>
+            <div class="right">
+                <h2 class="sh">Vous êtes…</h2>
+                <p class="sd">Cortex Leman couvre 6 métiers régulés franco-suisses. Voici ce que ça change concrètement.</p>
+            </div>
+        </div>
+        <div class="scenarios">
+            <div class="sc fi">
+                <div class="sc-who">
+                    <span class="sc-emoji">⚖️</span>
+                    <div>
+                        <div class="sc-name">Avocat</div>
+                        <div class="sc-reg">Art. 321 CP · nLPD</div>
+                    </div>
+                </div>
+                <div class="sc-quote">
+                    « Mon outil IA allait traiter un dossier avec des données hébergées hors Suisse. Cortex l'a bloqué avant l'envoi. »
+                </div>
+                <div class="sc-result">Données locales · Mode Haute Protection · Zéro egress</div>
+            </div>
+            <div class="sc fi">
+                <div class="sc-who">
+                    <span class="sc-emoji">📋</span>
+                    <div>
+                        <div class="sc-name">Expert-comptable</div>
+                        <div class="sc-reg">RGPD · DEC/OEC</div>
+                    </div>
+                </div>
+                <div class="sc-quote">
+                    « L'IA a recommandé un montage non conforme. Le système l'a gelé et m'a demandé de valider. Incident évité. »
+                </div>
+                <div class="sc-result">Règles fiscales auto · Journal d'audit · Traçabilité</div>
+            </div>
+            <div class="sc fi">
+                <div class="sc-who">
+                    <span class="sc-emoji">🏥</span>
+                    <div>
+                        <div class="sc-name">Hôpital</div>
+                        <div class="sc-reg">LPM · Données patient</div>
+                    </div>
+                </div>
+                <div class="sc-quote">
+                    « Notre chatbot patient allait envoyer des données médicales en clair. Cortex a bloqué la requête. »
+                </div>
+                <div class="sc-result">Hébergement certifié · Zero données sortantes</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══ OFFRE PILOTE ═══ -->
+<section id="pilote" class="sec">
+    <div class="si pilot">
+        <div class="pilot-box fi">
+            <div class="pilot-price"><span class="cur">CHF</span> 0</div>
+            <div class="pilot-sub">30 jours · Sans engagement · Votre métier</div>
+            <div class="pilot-list">
+                <div class="pi"><span class="ck">✓</span><span>Simulateur de confiance pour votre vertical</span></div>
+                <div class="pi"><span class="ck">✓</span><span>Chat avec références réglementaires</span></div>
+                <div class="pi"><span class="ck">✓</span><span>Journal d'audit inviolable</span></div>
+                <div class="pi"><span class="ck">✓</span><span>Mode Haute Protection disponible</span></div>
+            </div>
+            <a href="mailto:contact@cortex-leman.com?subject=Demande%20d%27acc%C3%A8s%20pilote%20-%20Cortex%20Leman" class="cta cta-green">
+                <div class="cta-shape">
+                    <svg viewBox="0 0 205 54" fill="none" preserveAspectRatio="none"><path d="M0 0V54H205V13L192 0H0Z" fill="#10b981"/></svg>
+                    <div class="cta-dot"></div>
+                    <div class="cta-label"><span>Demander mon accès</span><span class="arr">→</span></div>
+                </div>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- ═══ OPEN SOURCE ═══ -->
+<section class="sec">
+    <div class="si" style="text-align:center">
+        <div class="fi">
+            <span class="sl blue" style="display:block;text-align:center;margin-bottom:20px">Open Source</span>
+            <h2 style="font-size:var(--hero);font-weight:800;letter-spacing:-1.5px;line-height:1.1;margin-bottom:14px">Les compétences de votre agent.<br><span style="color:var(--blue)">Gratuites.</span></h2>
+            <p style="font-size:var(--body-lg);color:var(--t2);max-width:600px;margin:0 auto 28px">12 compétences de conformité pour agents IA. RGPD, AI Act, secret professionnel, data residency. Fonctionne avec Claude Code, Cursor, Codex, et 35+ agents.</p>
+            <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;align-items:center;margin-bottom:24px">
+                <code style="font-family:var(--m);font-size:clamp(12px,0.85vw,15px);background:var(--card);border:1px solid var(--bdr);padding:10px 18px;border-radius:8px;color:var(--green)">npx skills add JAME-cyber/compliance-skills</code>
+            </div>
+            <a href="https://github.com/JAME-cyber/compliance-skills" target="_blank" style="font-family:var(--m);font-size:13px;color:var(--blue);text-decoration:none">↗ Voir sur GitHub →</a>
+        </div>
+    </div>
+</section>
+
+<!-- ═══ PRICING RÉCURRENT ═══ -->
+<section id="pricing" class="sec bg-b">
+    <div class="si">
+        <div class="sec-header fi">
+            <div class="left">
+                <span class="sl green">💰 Tarifs</span>
+            </div>
+            <div class="right">
+                <h2 class="sh">Audit + Conformité continue</h2>
+                <p class="sd">
+                    Audit one-shot pour identifier les risques. Abonnement mensuel pour rester conforme.
+                    L'AI Act exige une conformité continue — pas un snapshot.
+                </p>
+            </div>
+        </div>
+
+        <!-- Audit one-shot -->
+        <div class="fi" style="margin-bottom:48px">
+            <h3 style="font-size:18px;margin-bottom:20px;color:var(--text)">📋 Audit RGPD-IA complet (one-shot)</h3>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px">
+                <div style="background:var(--card);border:1px solid var(--bdr);border-radius:10px;padding:22px">
+                    <div style="font-size:12px;font-weight:600;color:var(--t2);margin-bottom:4px">STARTUP</div>
+                    <div style="font-size:32px;font-weight:800;color:var(--text)">CHF 2,500</div>
+                    <div style="font-size:13px;color:var(--t2);margin-top:6px">5-15 employés · 2 semaines</div>
+                </div>
+                <div style="background:var(--card);border:2px solid var(--green);border-radius:10px;padding:22px;position:relative">
+                    <div style="position:absolute;top:-10px;right:16px;background:var(--green);color:var(--bg);font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px">POPULAIRE</div>
+                    <div style="font-size:12px;font-weight:600;color:var(--green);margin-bottom:4px">GROWTH</div>
+                    <div style="font-size:32px;font-weight:800;color:var(--text)">CHF 4,000</div>
+                    <div style="font-size:13px;color:var(--t2);margin-top:6px">16-35 employés · 3 semaines</div>
+                </div>
+                <div style="background:var(--card);border:1px solid var(--bdr);border-radius:10px;padding:22px">
+                    <div style="font-size:12px;font-weight:600;color:var(--t2);margin-bottom:4px">ENTERPRISE</div>
+                    <div style="font-size:32px;font-weight:800;color:var(--text)">CHF 6,500</div>
+                    <div style="font-size:13px;color:var(--t2);margin-top:6px">36-50+ employés · 3-4 semaines</div>
+                </div>
+            </div>
+            <div style="text-align:center;margin-top:14px;font-size:13px;color:var(--t2)">OWASP Top 10 + ASVS + OWASP GenAI complet + AI Act + LPerD · Certificat de conformité 12 mois</div>
+        </div>
+
+        <!-- Conformité continue -->
+        <div class="fi">
+            <h3 style="font-size:18px;margin-bottom:20px;color:var(--text)">🔄 Conformité continue (mensuel)</h3>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px">
+                <div style="background:var(--card);border:1px solid var(--bdr);border-radius:10px;padding:22px">
+                    <div style="font-size:12px;font-weight:600;color:var(--blue);margin-bottom:4px">SENTINELLE</div>
+                    <div style="font-size:32px;font-weight:800;color:var(--text)">CHF 500<span style="font-size:16px;font-weight:400;color:var(--t2)">/mois</span></div>
+                    <ul style="font-size:13px;color:var(--t2);list-style:none;padding:0;margin:12px 0 0;line-height:1.9">
+                        <li>✓ Monitoring OWASP GenAI continu</li>
+                        <li>✓ Alertes CVE stack IA</li>
+                        <li>✓ Rapport mensuel auto-généré</li>
+                        <li>✓ Certificat de conformité actif</li>
+                        <li>✓ Dashboard read-only</li>
+                    </ul>
+                </div>
+                <div style="background:var(--card);border:2px solid var(--green);border-radius:10px;padding:22px;position:relative">
+                    <div style="position:absolute;top:-10px;right:16px;background:var(--green);color:var(--bg);font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px">RECOMMANDÉ</div>
+                    <div style="font-size:12px;font-weight:600;color:var(--green);margin-bottom:4px">GARDE</div>
+                    <div style="font-size:32px;font-weight:800;color:var(--text)">CHF 900<span style="font-size:16px;font-weight:400;color:var(--t2)">/mois</span></div>
+                    <ul style="font-size:13px;color:var(--t2);list-style:none;padding:0;margin:12px 0 0;line-height:1.9">
+                        <li>✓ Tout Sentinelle +</li>
+                        <li>✓ Re-audit trimestriel complet</li>
+                        <li>✓ Support DPO (questions illimitées)</li>
+                        <li>✓ Revue nouveaux outils IA</li>
+                        <li>✓ Veille réglementaire FR-CH</li>
+                        <li>✓ Mise à jour AIPD/DPIA</li>
+                    </ul>
+                </div>
+                <div style="background:var(--card);border:1px solid var(--bdr);border-radius:10px;padding:22px">
+                    <div style="font-size:12px;font-weight:600;color:var(--amber);margin-bottom:4px">FORTERESSE</div>
+                    <div style="font-size:32px;font-weight:800;color:var(--text)">CHF 1,500<span style="font-size:16px;font-weight:400;color:var(--t2)">/mois</span></div>
+                    <ul style="font-size:13px;color:var(--t2);list-style:none;padding:0;margin:12px 0 0;line-height:1.9">
+                        <li>✓ Tout Garde +</li>
+                        <li>✓ Consulting IA (2h/mois)</li>
+                        <li>✓ Hotline priorité (< 4h)</li>
+                        <li>✓ Audit ad-hoc nouveaux outils</li>
+                        <li>✓ Co-pilotage DPO</li>
+                        <li>✓ Rapport exécutif board</li>
+                    </ul>
+                </div>
+            </div>
+            <div style="text-align:center;margin-top:14px;font-size:13px;color:var(--t2)">L'AI Art exige une conformité <strong>continue</strong>. L'audit ponctuel, c'est un contrôle technique. Le plan mensuel, c'est l'assurance.</div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══ CTA FINAL ═══ -->
+<section class="sec">
+    <div class="si">
+        <div class="cta-box fi">
+            <div class="cta-tg">L'IA travaille.<br>Vous contrôlez.</div>
+            <div class="cta-sb">Rejoignez les premiers cabinets pilotes. 30 jours gratuits.</div>
+            <a href="mailto:contact@cortex-leman.com?subject=Contact%20-%20Cortex%20Leman" class="cta">
+                <div class="cta-shape">
+                    <svg viewBox="0 0 205 54" fill="none" preserveAspectRatio="none"><path d="M0 0V54H205V13L192 0H0Z" fill="#3b82f6"/></svg>
+                    <div class="cta-dot"></div>
+                    <div class="cta-label"><span>Nous contacter</span><span class="arr">→</span></div>
+                </div>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- ═══ PREUVE SOCIALE ═══ -->
+<section class="sec trust-banner bg-b">
+    <div class="si">
+        <div class="sec-header fi">
+            <div class="left">
+                <span class="sl blue">Ils testent</span>
+            </div>
+            <div class="right">
+                <h2 class="sh">Conçu par des experts.<br>Testé en conditions réelles.</h2>
+                <p class="sd">Cortex Leman n'est pas né dans un garage. C'est le fruit de 3 ans de R&D avec des professionnels régulés du bassin lémanique.</p>
+            </div>
+        </div>
+        <div class="trust-logos fi">
+            <div class="trust-item">
+                <div class="trust-icon">⚖️</div>
+                <div class="trust-name">Cabinet d'avocats</div>
+                <div class="trust-sub">Genève · Pilote</div>
+            </div>
+            <div class="trust-item">
+                <div class="trust-icon">📋</div>
+                <div class="trust-name">Expertise comptable</div>
+                <div class="trust-sub">Annecy · Pilote</div>
+            </div>
+            <div class="trust-item">
+                <div class="trust-icon">🏥</div>
+                <div class="trust-name">Groupe hospitalier</div>
+                <div class="trust-sub">Lausanne · Évaluation</div>
+            </div>
+            <div class="trust-item">
+                <div class="trust-icon">🏦</div>
+                <div class="trust-name">Banque privée</div>
+                <div class="trust-sub">Genève · En discussion</div>
+            </div>
+            <div class="trust-item">
+                <div class="trust-icon">🚀</div>
+                <div class="trust-name">Tech startup</div>
+                <div class="trust-sub">Paris · Pilote</div>
+            </div>
+        </div>
+        <p class="fi" style="text-align:center;color:var(--t3);font-size:clamp(13px,0.85vw,15px);margin-top:16px;font-style:italic">Certains noms sont sous NDA. Nous pouvons organiser des échanges avec les pilotes actifs sur demande.</p>
+    </div>
+</section>
+
+<!-- ═══ SOUVERAINETÉ SUISSE ═══ -->
+<section id="souverainete" class="sec bg-b">
+    <div class="si">
+        <div class="sec-header fi">
+            <div class="left">
+                <span class="sl" style="background:rgba(234,179,8,0.12);color:#eab308">🇨🇭 Souveraineté</span>
+            </div>
+            <div class="right">
+                <h2 class="sh">Vos données restent<br>chez vous. Point.</h2>
+                <p class="sd">
+                    Pas de cloud US. Pas de transfert hors frontières. Cortex Leman est 
+                    auto-hébergé sur votre infrastructure — en Suisse ou en France.
+                </p>
+            </div>
+        </div>
+        <div class="cards3">
+            <div class="card3 fi">
+                <div class="card3-top">
+                    <div class="card3-icon" style="background:rgba(234,179,8,0.10)">🔒</div>
+                    <span class="card3-num">01.</span>
+                </div>
+                <div>
+                    <h3>100% On-Premise</h3>
+                    <p>n8n, LLM, journal WORM — tout tourne sur vos serveurs. Zéro appel sortant en mode Haute Protection. Vos données ne quittent jamais votre réseau.</p>
+                    <span class="tag" style="background:rgba(234,179,8,0.12);color:#eab308">Zero egress</span>
+                </div>
+            </div>
+            <div class="card3 fi">
+                <div class="card3-top">
+                    <div class="card3-icon" style="background:rgba(234,179,8,0.10)">🇨🇭</div>
+                    <span class="card3-num">02.</span>
+                </div>
+                <div>
+                    <h3>Conforme LPD + RGPD + AI Act</h3>
+                    <p>Triple conformité par design. Data residency en Suisse = conforme LPerD. Pas de Privacy Shield précaire, pas de Standard Contractual Clauses. C'est local ou rien.</p>
+                    <span class="tag" style="background:rgba(234,179,8,0.12);color:#eab308">FR-CH natif</span>
+                </div>
+            </div>
+            <div class="card3 fi">
+                <div class="card3-top">
+                    <div class="card3-icon" style="background:rgba(234,179,8,0.10)">🛡️</div>
+                    <span class="card3-num">03.</span>
+                </div>
+                <div>
+                    <h3>Secret professionnel garanti</h3>
+                    <p>Avocats (Art. 321 CP), banquiers (Art. 47 LB), médecins (LPM) — le mode Haute Protection bloque tout envoi externe. Le secret n'est pas négociable.</p>
+                    <span class="tag" style="background:rgba(234,179,8,0.12);color:#eab308">Secret pro</span>
+                </div>
+            </div>
+        </div>
+        <!-- Comparison banner -->
+        <div class="fi" style="margin-top:48px;background:var(--card);border:1px solid var(--bdr);border-radius:12px;padding:28px 32px;display:flex;align-items:flex-start;gap:32px;flex-wrap:wrap">
+            <div style="flex:1;min-width:200px">
+                <h3 style="font-size:18px;margin-bottom:4px">Cloud US vs Auto-hébergé Suisse</h3>
+                <p style="color:var(--t2);font-size:14px">Ce que votre DPO veut entendre</p>
+            </div>
+            <div style="flex:2;min-width:300px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                <div style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);border-radius:8px;padding:14px">
+                    <div style="font-size:12px;font-weight:600;color:#ef4444;margin-bottom:6px">❌ Cloud US (Make, Zapier, OpenAI)</div>
+                    <ul style="font-size:13px;color:var(--t2);list-style:none;padding:0;margin:0;line-height:1.8">
+                        <li>• Données hébergées aux États-Unis</li>
+                        <li>• CLOUD Act = accès gouvernemental US</li>
+                        <li>• RGPD: transferts hors UE risqués</li>
+                        <li>• LPD: non conforme pour données suisses</li>
+                        <li>• Secret pro: impossible à garantir</li>
+                    </ul>
+                </div>
+                <div style="background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.15);border-radius:8px;padding:14px">
+                    <div style="font-size:12px;font-weight:600;color:#10b981;margin-bottom:6px">✅ Cortex Leman (Auto-hébergé CH)</div>
+                    <ul style="font-size:13px;color:var(--t2);list-style:none;padding:0;margin:0;line-height:1.8">
+                        <li>• Données sur votre infrastructure</li>
+                        <li>• Zéro accès tiers, zéro CLOUD Act</li>
+                        <li>• RGPD: data residency EU/CH</li>
+                        <li>• LPD: conforme nativement</li>
+                        <li>• Secret pro: garanti par architecture</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══ FAQ ═══ -->
+<section class="sec bg-g">
+    <div class="si">
+        <div class="sec-header fi">
+            <div class="left">
+                <span class="sl green">Questions</span>
+            </div>
+            <div class="right">
+                <h2 class="sh">Vous hésitez encore ?</h2>
+                <p class="sd">Les questions qu'on nous pose le plus. Si la vôtre n'y est pas, écrivez-nous.</p>
+            </div>
+        </div>
+        <div class="faq fi">
+            <div class="faq-item">
+                <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+                    <h3>Faut-il être technique pour utiliser Cortex Leman ?</h3>
+                    <div class="faq-toggle">+</div>
+                </div>
+                <div class="faq-a">
+                    <p>Non. L'interface est conçue pour les experts métier — avocats, comptables, médecins. Vous posez votre question en français, le système s'occupe du reste. Si vous savez utiliser un e-mail, vous savez utiliser Cortex Leman.</p>
+                </div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+                    <h3>Mes données restent-elles en Suisse / France ?</h3>
+                    <div class="faq-toggle">+</div>
+                </div>
+                <div class="faq-a">
+                    <p>Oui. Cortex Leman peut fonctionner 100% on-premise. Vos données ne quittent jamais votre infrastructure. Aucun appel vers un cloud tiers en mode Haute Protection. Vous hébergez, vous contrôlez, vous possédez.</p>
+                </div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+                    <h3>Que se passe-t-il si l'IA se trompe ?</h3>
+                    <div class="faq-toggle">+</div>
+                </div>
+                <div class="faq-a">
+                    <p>Le Médiateur détecte le conflit et gèle l'action immédiatement. Rien n'est exécuté sans votre validation. Vous recevez une alerte, vous arbitrez, l'IA ne reprend que sur votre décision. L'humain est patron, pas spectateur.</p>
+                </div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+                    <h3>Comment ça se différencie d'un simple chatbot RGPD ?</h3>
+                    <div class="faq-toggle">+</div>
+                </div>
+                <div class="faq-a">
+                    <p>Un chatbot RGPD vous dit quoi faire. Cortex Leman le fait à votre place : il intercepte les actions de l'IA, vérifie les règles de votre métier en temps réel, bloque les violations avant qu'elles arrivent, et trace tout dans un journal inviolable. C'est un gardien, pas un conseiller.</p>
+                </div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+                    <h3>Le pilote est vraiment gratuit ?</h3>
+                    <div class="faq-toggle">+</div>
+                </div>
+                <div class="faq-a">
+                    <p>Oui. 30 jours, sans engagement, sans carte bancaire. Vous testez avec votre vertical métier. Si ça ne convient pas, vous arrêtez. Pas de lock-in. Pas de surprise. On construit ces systèmes parce qu'on croit que c'est l'avenir des professions régulées.</p>
+                </div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+                    <h3>Combien de temps pour démarrer ?</h3>
+                    <div class="faq-toggle">+</div>
+                </div>
+                <div class="faq-a">
+                    <p>Premier appel de 30 minutes pour comprendre votre métier. Configuration de votre vertical en 48h. Vous êtes opérationnel en moins d'une semaine. On bouge vite parce qu'on a déjà résolu ces problèmes pour d'autres cabinets.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══ BLOG SEED ═══ -->
+<section class="sec bg-b">
+    <div class="si">
+        <div class="sec-header fi">
+            <div class="left">
+                <span class="sl amber">Ressources</span>
+            </div>
+            <div class="right">
+                <h2 class="sh">Apprendre avant
+d'adopter.</h2>
+                <p class="sd">Guides techniques et analyses réglementaires pour les décideurs en métiers régulés.</p>
+            </div>
+        </div>
+        <div class="blog-grid">
+            <a href="#" class="blog-card fi">
+                <span class="blog-tag blue">Conformité</span>
+                <h3>RGPD + AI Act : le framework de médiation que tout DPO devrait connaître</h3>
+                <p>Comment un médiateur déterministe résout le problème de la double conformité RGPD/AI Act dans les métiers régulés franco-suisses.</p>
+                <div class="blog-meta">
+                    <span>5 min de lecture</span>
+                    <span class="read">Lire →</span>
+                </div>
+            </a>
+            <a href="#" class="blog-card fi">
+                <span class="blog-tag green">Architecture</span>
+                <h3>Secret professionnel et IA : comment bâtir un pipeline de confiance inviolable</h3>
+                <p>Du journal WORM au hash-chainage SHA-256. Pourquoi la traçabilité déterministe est le seul standard acceptable en santé et droit.</p>
+                <div class="blog-meta">
+                    <span>7 min de lecture</span>
+                    <span class="read">Lire →</span>
+                </div>
+            </a>
+            <a href="#" class="blog-card fi">
+                <span class="blog-tag amber">Guide pratique</span>
+                <h3>Déployer l'IA dans son cabinet : 5 pièges qui coûtent cher en 2026</h3>
+                <p>Hallucinations, fuites de données, absence de traçabilité. Les erreurs qu'on voit dans 90% des cabinets qui adoptent l'IA sans contrôle.</p>
+                <div class="blog-meta">
+                    <span>4 min de lecture</span>
+                    <span class="read">Lire →</span>
+                </div>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- ═══ FOOTER ═══ -->
+<footer>
+    <div class="foot">
+        <div class="foot-l">
+            <div class="foot-lo">CL</div>
+            <div class="foot-c">© 2026 Cortex Leman</div>
+        </div>
+        <div class="foot-tag">Conforme. Tracé. Contrôlé.</div>
+        <div style="display:flex;align-items:center;gap:10px">
+            <a href="https://github.com/JAME-cyber/compliance-skills" target="_blank" style="font-family:var(--m);font-size:11px;color:var(--blue);text-decoration:none;border:1px solid var(--bdr);padding:4px 12px;border-radius:4px;transition:all .2s">⬡ compliance-skills — Open Source</a>
+        </div>
+    </div>
+</footer>
+
+<script>
+    var b=document.getElementById('burger'),n=document.getElementById('navLinks');
+    b.addEventListener('click',function(){n.classList.toggle('open')});
+    n.querySelectorAll('a').forEach(function(a){a.addEventListener('click',function(){n.classList.remove('open')})});
+    var o=new IntersectionObserver(function(e){e.forEach(function(x){if(x.isIntersecting)x.target.classList.add('v')})},{threshold:.1,rootMargin:'0px 0px -30px 0px'});
+    document.querySelectorAll('.fi').forEach(function(el){o.observe(el)});
+</script>
+</body>
+</html>

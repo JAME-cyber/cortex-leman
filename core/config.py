@@ -53,14 +53,23 @@ class Settings(BaseSettings):
     # Format: {"verticale": "provider/model"}
     # Si une verticale n'est pas listée, le modèle par défaut (llm_model) est utilisé.
     llm_vertical_routing: dict = {
-        # Mode Standard (cloud) — meilleurs modèles pour chaque domaine
-        "comptable": "anthropic/claude-sonnet-4-20250514",  # Précision fiscale, rédaction structurée
-        "avocat": "anthropic/claude-sonnet-4-20250514",     # Raisonnement juridique, secret professionnel
-        "sante": "openai/gpt-4o",                         # Données médicales, terminologie
-        "banque": "anthropic/claude-sonnet-4-20250514",     # KYC/AML, conformité FINMA
-        "startup": "mistralai/mistral-small-3.1-24b-instruct",  # Rapide, économique
-        "rh": "openai/gpt-4o-mini",                        # Anti-discrimination, RGPD art. 22
+        # Mode Standard (cloud) — modèles validés sur OpenRouter
+        # GLM 5.1 = top agentic model (HuggingFace AI Engineer Summit 2026, Merve Noyan)
+        # DeepSeek V4 Flash = fallback rapide et économique
+        "comptable": "thudm/glm-5.1",                      # Précision fiscale, rédaction structurée
+        "avocat": "thudm/glm-5.1",                         # Raisonnement juridique, secret professionnel
+        "sante": "thudm/glm-5.1",                          # Données médicales, haute protection
+        "banque": "thudm/glm-5.1",                         # KYC/AML, conformité FINMA
+        "startup": "deepseek/deepseek-v4-flash",           # Rapide, économique
+        "rh": "thudm/glm-5.1",                             # Anti-discrimination, RGPD art. 22
+        "agent-ia": "thudm/glm-5.1",                       # Conformité agents IA
     }
+    # Fallback chain si GLM 5.1 indisponible
+    llm_fallback_models: list = [
+        "deepseek/deepseek-v4-flash",
+        "google/gemini-2.0-flash-001",
+        "mistralai/mistral-small-3.1-24b-instruct",
+    ]
     # Override pour Mode Haute Protection (local uniquement)
     llm_high_protection_model: str = "llama3.1:8b"  # Modèle Ollama par défaut
 
@@ -124,6 +133,13 @@ class Settings(BaseSettings):
 
     # Vertical
     active_vertical: str = "comptable"
+
+    # Stripe Billing
+    stripe_secret_key: Optional[str] = None  # sk_test_... or sk_live_...
+    stripe_webhook_secret: Optional[str] = None  # whsec_...
+    stripe_price_sentinelle: Optional[str] = None  # price_... CHF 500/mois
+    stripe_price_garde: Optional[str] = None  # price_... CHF 900/mois
+    stripe_price_forteresse: Optional[str] = None  # price_... CHF 1500/mois
 
     model_config = ConfigDict(
         env_file=".env",

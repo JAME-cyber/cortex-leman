@@ -66,6 +66,21 @@ class Subjects:
     COMPLIANCE_CHECK: str = "cleman.compliance.check"
     COMPLIANCE_REPORT: str = "cleman.compliance.report"
 
+    # Sub-agents (hiérarchie parent/enfant, inspiration Jonas Templestein)
+    # Pattern: agent parent spawn un enfant sur un path NATS hiérarchique
+    # L'enfant publie ses résultats, le parent est automatiquement notifié
+    SUBAGENT_SPAWN: str = "cleman.subagent.spawn"
+    SUBAGENT_RESULT: str = "cleman.subagent.result"
+    SUBAGENT_FAILED: str = "cleman.subagent.failed"
+
+    # Auto-extension médiationnée
+    # L'agent propose → le Médiateur évalue → l'humain arbitre
+    EXTENSION_PROPOSE: str = "cleman.extension.propose"
+    EXTENSION_REVIEW: str = "cleman.extension.review"
+    EXTENSION_APPROVE: str = "cleman.extension.approve"
+    EXTENSION_REJECT: str = "cleman.extension.reject"
+    EXTENSION_APPLY: str = "cleman.extension.apply"
+
     @classmethod
     def for_client(cls, client_id: str) -> str:
         """Prefix subject with client namespace for isolation"""
@@ -75,6 +90,29 @@ class Subjects:
     def for_vertical(cls, vertical: str) -> str:
         """Prefix subject with vertical namespace"""
         return f"cleman.vertical.{vertical}"
+
+    @classmethod
+    def for_subagent(cls, parent_agent: str, child_name: str) -> str:
+        """Subject hiérarchique pour sub-agent.
+        
+        Pattern inspiré de Jonas Templestein (AI Engineer 2026):
+        les sub-agents sont comme des fichiers dans un filesystem.
+        Le parent s'abonne au path de l'enfant pour recevoir les résultats.
+        
+        Example:
+          for_subagent("data", "scan_rgpd") → "cleman.agent.data.scan_rgpd"
+          for_subagent("reasoning", "compare_sources") → "cleman.agent.reasoning.compare_sources"
+        """
+        return f"cleman.agent.{parent_agent}.{child_name}"
+
+    @classmethod
+    def subagent_wildcard(cls, parent_agent: str) -> str:
+        """Wildcard pour écouter tous les sub-agents d'un parent.
+        
+        Example:
+          subagent_wildcard("data") → "cleman.agent.data.*"
+        """
+        return f"cleman.agent.{parent_agent}.*"
 
 
 subjects = Subjects()

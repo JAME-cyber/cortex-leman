@@ -634,9 +634,9 @@
 │   ├── main.py              <span class="ft-desc">→ 50+ endpoints REST</span>
 │   └── dependencies.py      <span class="ft-desc">→ Auth JWT, RBAC, rate limiting</span>
 ├── <span class="ft-dir">core/</span>                   <span class="ft-desc">→ Cœur métier du système</span>
-│   ├── <span class="ft-dir">agents/</span>             <span class="ft-desc">→ 5 agents + saga + reflection + prompts</span>
+│   ├── <span class="ft-dir">agents/</span>             <span class="ft-desc">→ 5 agents + saga + reflection + prompts + memory</span>
 │   ├── <span class="ft-dir">bus/</span>                <span class="ft-desc">→ NATS client + registry des sujets</span>
-│   ├── <span class="ft-dir">orchestrator/</span>       <span class="ft-desc">→ Orchestrateur conversationnel + intention store + router</span>
+│   ├── <span class="ft-dir">orchestrator/</span>       <span class="ft-desc">→ Orchestrateur conversationnel + intention store + router + context builder</span>
 │   ├── <span class="ft-dir">mediator/</span>           <span class="ft-desc">→ Médiateur + moteur de règles JsonLogic</span>
 │   ├── <span class="ft-dir">security/</span>           <span class="ft-desc">→ Auth JWT, circuit breaker, chiffrement Fernet, guardrails, locks distribués</span>
 │   ├── <span class="ft-dir">journal/</span>            <span class="ft-desc">→ Journal append-only WORM hash-chainé SHA-256</span>
@@ -652,7 +652,7 @@
 ├── <span class="ft-dir">data/</span>                   <span class="ft-desc">→ Vault, rapports, intentions, précédents</span>
 ├── <span class="ft-dir">n8n-workflows/</span>          <span class="ft-desc">→ Workflows n8n préconfigurés</span>
 ├── <span class="ft-dir">edge/</span>                   <span class="ft-desc">→ Déploiement edge K3s + Ollama</span>
-├── <span class="ft-dir">monitoring/</span>             <span class="ft-desc">→ Métriques Prometheus + tracing OpenTelemetry</span>
+├── <span class="ft-dir">monitoring/</span>             <span class="ft-desc">→ Métriques Prometheus + tracing OTel + agent tracer JSONL</span>
 ├── docker-compose.yml       <span class="ft-desc">→ Dév: NATS + Redis + Postgres + API + n8n</span>
 ├── docker-compose.prod.yml  <span class="ft-desc">→ Prod: NATS + Redis + Postgres + API + Nginx ← ACTUEL</span>
 ├── scripts/deploy-full.sh   <span class="ft-desc">→ Script déploiement complet (arrêt, build, start, seed)</span>
@@ -858,6 +858,7 @@
                         <div class="tl-item">
                             <h4>Phase 4: ★ Reflection Node (JP Morgan) ★</h4>
                             <p>Inspiré du pattern "Ask David" de JP Morgan. Un DEUXIÈME appel LLM en mode "réviseur" critique l'analyse. Il peut: confirmer (delta < 0.3) ou réviser à la baisse. Les issues trouvées sont ajoutées aux risques.</p>
+                            <p style="margin-top:0.5rem;color:var(--accent);"><strong>v5.3:</strong> Injecte les échecs passés (FailureMemory) et les leçons apprises (ProceduralMemory) dans le prompt de critique. Les améliorations détectées alimentent automatiquement la mémoire procédurale.</p>
                         </div>
                         <div class="tl-item">
                             <h4>Phase 5: Triggers de révision</h4>
@@ -1255,6 +1256,38 @@ GENESIS → Entry#1 (hash_1) → Entry#2 (hash_2) → Entry#3 (hash_3) → ...
                 </div>
             </div>
 
+            <!-- v5.3: MEMORY & CONTEXT -->
+            <div class="section-label" style="margin-top:2rem;color:var(--orange);">✦ v5.3 — Mémoire Agent & Context Builder</div>
+            <h3 style="margin-top:0.5rem;">🧠 3 couches de mémoire + 5 couches de contexte</h3>
+            <p class="subtitle">Les agents apprennent de leurs erreurs et s'améliorent avec chaque mission</p>
+
+            <div class="grid grid-2">
+                <div class="card" style="border-color:rgba(245,158,11,0.3);">
+                    <div class="card-icon" style="background:rgba(245,158,11,0.15);">📝</div>
+                    <h3>Mémoire Procédurale</h3>
+                    <p>Instructions apprises par agent × verticale. Après 50 dossiers "avocat", l'Agent Raisonnement sait mieux que son prompt de base. Alimenté automatiquement par le Reflection Node.</p>
+                    <span class="tag" style="background:rgba(245,158,11,0.15);color:#f59e0b;">ProceduralMemory</span>
+                </div>
+                <div class="card" style="border-color:rgba(239,68,68,0.3);">
+                    <div class="card-icon" style="background:rgba(239,68,68,0.15);">🔴</div>
+                    <h3>Mémoire d'Échecs</h3>
+                    <p>Chaque erreur agent est enregistrée avec sa cause racine et sa correction. Avant chaque mission, les échecs non résolus sont injectés comme avertissements. 3x la même erreur = alerte critique.</p>
+                    <span class="tag" style="background:rgba(239,68,68,0.15);color:#ef4444;">FailureMemory</span>
+                </div>
+                <div class="card" style="border-color:rgba(59,130,246,0.3);">
+                    <div class="card-icon" style="background:rgba(59,130,246,0.15);">🏗️</div>
+                    <h3>Context Builder (5 couches)</h3>
+                    <p><strong>Layer 1:</strong> Système (rôle agent) → <strong>Layer 2:</strong> Vertical (contraintes métier) → <strong>Layer 3:</strong> Procédural (leçons apprises) → <strong>Layer 4:</strong> Mémoire (échecs + vault) → <strong>Layer 5:</strong> Tâche (mission en cours). Compose un prompt système enrichi pour chaque agent.</p>
+                    <span class="tag" style="background:rgba(59,130,246,0.15);color:#60a5fa;">ContextBuilder</span>
+                </div>
+                <div class="card" style="border-color:rgba(251,191,36,0.3);">
+                    <div class="card-icon" style="background:rgba(251,191,36,0.15);">📊</div>
+                    <h3>Agent Tracer (JSONL)</h3>
+                    <p>Tracing agent-level: chaque action est tracée avec timing, tokens, coût. Stockage JSONL quotidien. Métriques P50/P95, taux de succès par agent/verticale. Dashboard texte intégré.</p>
+                    <span class="tag" style="background:rgba(251,191,36,0.15);color:#fbbf24;">AgentTracer</span>
+                </div>
+            </div>
+
             <h3 style="margin-top:2rem;">🤖 LLM Service — Model-Agnostic via LiteLLM</h3>
             <div class="alert alert-info">
                 <strong>💬 En audit :</strong> « Le système est model-agnostic grâce à LiteLLM. On peut changer de provider sans toucher au code. En mode Standard, on route par verticale (Claude pour juridique, GPT-4o pour santé, Mistral pour startup). En mode Haute Protection, tout passe par Ollama local. »
@@ -1537,7 +1570,7 @@ docker compose -f docker-compose.prod.yml down        <span class="cm"># Arrête
             </div>
 
             <div id="glossaryList">
-                <div class="card glossary-item" style="margin-bottom:0.5rem;" data-term="nats jetstream append-only worm hash-chainé jwt rbac bcrypt fernet saga circuit breaker jsonlogic rag chromadb mcp liteLLM guardrails reflection node trust box médiateur orchestrateur intention state machine degraded freeze consolidation">
+                <div class="card glossary-item" style="margin-bottom:0.5rem;" data-term="nats jetstream append-only worm hash-chainé jwt rbac bcrypt fernet saga circuit breaker jsonlogic rag chromadb mcp liteLLM guardrails reflection node trust box médiateur orchestrateur intention state machine degraded freeze consolidation procedural memory failure memory context builder agent tracer">
                     <div class="grid grid-2" style="gap:0.75rem;">
                         <div>
                             <h4 style="font-size:0.88rem;">🏗️ <strong>NATS JetStream</strong></h4>
@@ -1585,7 +1618,23 @@ docker compose -f docker-compose.prod.yml down        <span class="cm"># Arrête
                         </div>
                         <div>
                             <h4 style="font-size:0.88rem;">🔍 <strong>Reflection Node</strong></h4>
-                            <p style="font-size:0.8rem;">Auto-critique LLM (pattern JP Morgan "Ask David"). Un 2e appel LLM révise l'analyse du 1er. Ajuste le score de confiance si nécessaire.</p>
+                            <p style="font-size:0.8rem;">Auto-critique LLM (pattern JP Morgan "Ask David"). Un 2e appel LLM révise l'analyse du 1er. Ajuste le score de confiance si nécessaire. v5.3: injecte les échecs passés et leçons apprises.</p>
+                        </div>
+                        <div>
+                            <h4 style="font-size:0.88rem;">🧠 <strong>ProceduralMemory</strong></h4>
+                            <p style="font-size:0.8rem;">v5.3 — Instructions apprises par agent × verticale. Un agent qui a traité 50 dossiers "avocat" accumule des leçons qui enrichissent automatiquement ses prompts futurs.</p>
+                        </div>
+                        <div>
+                            <h4 style="font-size:0.88rem;">🔴 <strong>FailureMemory</strong></h4>
+                            <p style="font-size:0.8rem;">v5.3 — Journal des échecs agents. Chaque erreur est enregistrée avec cause racine + correction. Les erreurs répétées (3x) déclenchent des alertes avant les missions futures.</p>
+                        </div>
+                        <div>
+                            <h4 style="font-size:0.88rem;">🏗️ <strong>Context Builder</strong></h4>
+                            <p style="font-size:0.8rem;">v5.3 — Constructeur de contexte en 5 couches: Système → Vertical → Procédural → Mémoire → Tâche. Combine toutes les sources pour composer un prompt enrichi par agent.</p>
+                        </div>
+                        <div>
+                            <h4 style="font-size:0.88rem;">📊 <strong>Agent Tracer</strong></h4>
+                            <p style="font-size:0.8rem;">v5.3 — Tracing agent-level JSONL. Chaque action agent est tracée avec timing, tokens, coût. Métriques P50/P95, taux de succès par agent/verticale. Complémentaire OTel + Prometheus.</p>
                         </div>
                     </div>
                 </div>

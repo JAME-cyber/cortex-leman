@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { MarketSection } from './components/MarketSection'
 import { AgentFlowAnimation } from './components/AgentFlowAnimation'
 import { VerticalDemoResult } from './components/VerticalDemoResult'
+import { ROICalculator } from './components/ROICalculator'
+import { ExcellenceScore } from './components/ExcellenceScore'
 
 /* ═══════════════════════════════════════════════════════════
    CORTEX LEMAN V5 — Landing Page
@@ -22,7 +24,7 @@ const VERTICALS = [
 ]
 
 const FEATURES = [
-  { icon: '🛡️', title: 'Médiateur Déterministe', desc: '22 règles JsonLogic — 0% LLM, 100% prédictible. Gel préventif automatique.', badge: 'Jamais de LLM', badgeColor: 'cyan' },
+  { icon: '🛡️', title: 'Médiateur Déterministe', desc: '18 règles JsonLogic — 0% LLM, 100% prédictible. Gel préventif automatique.', badge: 'Jamais de LLM', badgeColor: 'cyan' },
   { icon: '📝', title: 'Journal WORM', desc: 'Hash-chain SHA-256, HMAC-signé. Append-only, vérifiable, conforme RGPD Art. 30.', badge: 'Audit Trail', badgeColor: 'emerald' },
   { icon: '⚖️', title: 'Arbitrage Humain', desc: 'Dashboard de contradictions. L\'humain est arbitre, pas validateur.', badge: 'Human-in-the-loop', badgeColor: 'violet' },
   { icon: '🔒', title: 'Chiffrement Fernet', desc: 'PII chiffrée au repos. AES-128-CBC + HMAC-SHA256. Rotation de clés.', badge: 'At-rest', badgeColor: 'amber' },
@@ -31,11 +33,11 @@ const FEATURES = [
 ]
 
 const STATS = [
-  { value: '275', label: 'Tests automatisés', color: 'cyan' },
-  { value: '22',  label: 'Règles JsonLogic',  color: 'emerald' },
-  { value: '58',  label: 'Endpoints API',     color: 'violet' },
+  { value: '384', label: 'Tests automatisés', color: 'cyan' },
+  { value: '18',  label: 'Règles JsonLogic',  color: 'emerald' },
+  { value: '76',  label: 'Endpoints API',     color: 'violet' },
   { value: '6',   label: 'Verticales métier', color: 'amber' },
-  { value: '51',  label: 'Docs réglementaires', color: 'rose' },
+  { value: '16',  label: 'Docs réglementaires', color: 'rose' },
 ]
 
 // ── Navbar ─────────────────────────────────────────────────
@@ -63,6 +65,8 @@ function Navbar({ onLogin, onStartOnboarding }: { onLogin?: () => void; onStartO
           <span className="badge badge-cyan" style={{ fontSize: '0.625rem' }}>v5</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+          <a href="#roi-calculator" onClick={e => { e.preventDefault(); document.getElementById('roi-calculator')?.scrollIntoView({ behavior: 'smooth' }) }} style={{ color: 'var(--text-muted)', fontSize: '0.8125rem', fontWeight: 500, textDecoration: 'none' }}>ROI</a>
+          <a href="#excellence-score" onClick={e => { e.preventDefault(); document.getElementById('excellence-score')?.scrollIntoView({ behavior: 'smooth' }) }} style={{ color: 'var(--text-muted)', fontSize: '0.8125rem', fontWeight: 500, textDecoration: 'none' }}>Score</a>
           <a href="#features" onClick={e => { e.preventDefault(); document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' }) }} style={{ color: 'var(--text-muted)', fontSize: '0.8125rem', fontWeight: 500, textDecoration: 'none' }}>Fonctionnalités</a>
           <a href="#verticals" onClick={e => { e.preventDefault(); document.getElementById('verticals')?.scrollIntoView({ behavior: 'smooth' }) }} style={{ color: 'var(--text-muted)', fontSize: '0.8125rem', fontWeight: 500, textDecoration: 'none' }}>Verticales</a>
           <a href="#compliance" onClick={e => { e.preventDefault(); document.getElementById('compliance')?.scrollIntoView({ behavior: 'smooth' }) }} style={{ color: 'var(--text-muted)', fontSize: '0.8125rem', fontWeight: 500, textDecoration: 'none' }}>Conformité</a>
@@ -101,7 +105,7 @@ function HeroSection({ onStartOnboarding }: { onStartOnboarding?: () => void }) 
         {/* Subtitle */}
         <p style={{ fontSize: '1.125rem', color: 'var(--text-muted)', maxWidth: 620, margin: '0 auto 2rem', lineHeight: 1.7 }}>
           Conformité RGPD, AI Act, secret professionnel FR-CH.
-          6 agents spécialisés, 22 règles réglementaires, journal d'audit inviolable.
+          6 agents spécialisés, 18 règles réglementaires, journal d'audit inviolable.
         </p>
 
         {/* CTA Buttons */}
@@ -306,8 +310,8 @@ function ComplianceSection() {
 // ── Stats Section (Aura-inspired metric grid) ──────────────
 function StatsSection() {
   const allStats = [
-    { value: '275', label: 'Tests automatisés', sub: '0 échec, CI ready', color: 'cyan' },
-    { value: '22', label: 'Règles JsonLogic', sub: '6 verticales × 2-12 règles', color: 'emerald' },
+    { value: '384', label: 'Tests automatisés', sub: '0 échec, CI ready', color: 'cyan' },
+    { value: '18', label: 'Règles JsonLogic', sub: '6 verticales × 3 règles', color: 'emerald' },
     { value: '58', label: 'Endpoints API', sub: 'REST + JWT + MCP', color: 'violet' },
     { value: '51', label: 'Docs réglementaires', sub: 'Vectorisés ChromaDB RAG', color: 'amber' },
     { value: '6', label: 'Verticales métier', sub: '+ ajout en 1 commande', color: 'rose' },
@@ -347,7 +351,7 @@ function PricingSection({ onStartOnboarding }: { onStartOnboarding?: () => void 
       price: '99€',
       period: '/mois',
       desc: 'Pour votre cabinet',
-      features: ['PostgreSQL', 'Tous modèles LLM', 'Utilisateurs illimités', '6 verticals', 'RAG 51 docs ChromaDB', 'API Keys + MCP', 'Arbitrage humain', 'Journal WORM signé', 'Support email'],
+      features: ['PostgreSQL', 'Tous modèles LLM', 'Utilisateurs illimités', '6 verticals', 'RAG vectorisé ChromaDB', 'API Keys + MCP', 'Arbitrage humain', 'Journal WORM signé', 'Support email'],
       color: 'var(--cyan)',
       cta: 'Essai 14 jours →',
       ctaStyle: 'btn-primary' as const,
@@ -508,6 +512,8 @@ export function LandingPage({ onLogin, onStartOnboarding }: { onLogin?: () => vo
         <VerticalsSection />
         <ArchitectureSection />
         <VerticalDemoSection />
+        <ROICalculator onCta={onStartOnboarding} />
+        <ExcellenceScore onCta={onStartOnboarding} />
         <ComplianceSection />
         <StatsSection />
         <MarketSection />

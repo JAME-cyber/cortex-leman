@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trust Center — Cortex Leman</title>
+    <meta name="description" content="Centre de confiance Cortex Leman. Sécurité, conformité, certifications et politiques de protection des données.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        :root{--bg:#0a0e17;--bg2:#0f1525;--text:#e8eaf0;--t2:rgba(232,234,240,0.55);--t3:rgba(232,234,240,0.30);--blue:#3b82f6;--green:#10b981;--amber:#f59e0b;--red:#ef4444;--bdr:rgba(255,255,255,0.07);--card:rgba(255,255,255,0.03);--px:clamp(20px,4vw,50px)}
+        body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
+        a{color:var(--blue);text-decoration:none}
+        a:hover{text-decoration:underline}
+        .container{max-width:900px;margin:0 auto;padding:0 var(--px)}
+
+        /* Nav */
+        nav{padding:20px 0;border-bottom:1px solid var(--bdr);margin-bottom:60px}
+        .nav-inner{max-width:900px;margin:0 auto;padding:0 var(--px);display:flex;justify-content:space-between;align-items:center}
+        .nav-brand{font-weight:700;font-size:18px}
+        .nav-brand span{color:var(--blue)}
+        .nav-back{font-size:13px;color:var(--t2);display:flex;align-items:center;gap:6px}
+
+        /* Header */
+        .header{text-align:center;margin-bottom:64px}
+        .header-icon{font-size:48px;margin-bottom:16px}
+        .header h1{font-size:clamp(28px,4vw,44px);font-weight:800;letter-spacing:-1px;margin-bottom:12px}
+        .header p{color:var(--t2);font-size:clamp(14px,1.2vw,17px);max-width:600px;margin:0 auto}
+        .header .badge{display:inline-block;background:rgba(16,185,129,0.12);color:var(--green);padding:4px 14px;border-radius:20px;font-size:12px;font-weight:600;margin-top:16px}
+
+        /* Status Grid */
+        .status-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px;margin-bottom:64px}
+        .status-card{background:var(--card);border:1px solid var(--bdr);border-radius:12px;padding:24px}
+        .status-card h3{font-size:14px;font-weight:600;color:var(--t2);margin-bottom:8px;font-variant:all-small-caps;letter-spacing:.05em}
+        .status-card .value{font-size:20px;font-weight:700;margin-bottom:4px}
+        .status-card .detail{font-size:13px;color:var(--t2)}
+        .status-ok{color:var(--green)}
+        .status-warn{color:var(--amber)}
+
+        /* Sections */
+        .section{margin-bottom:48px}
+        .section h2{font-size:22px;font-weight:700;margin-bottom:20px;padding-bottom:10px;border-bottom:1px solid var(--bdr)}
+        .section h3{font-size:16px;font-weight:600;margin:20px 0 10px}
+        .section p,.section li{color:var(--t2);font-size:14px;line-height:1.7}
+        .section ul{padding-left:20px;margin-bottom:16px}
+        .section li{margin-bottom:6px}
+
+        /* Compliance badges */
+        .badges-row{display:flex;flex-wrap:wrap;gap:12px;margin:24px 0}
+        .compliance-badge{background:var(--card);border:1px solid var(--bdr);border-radius:8px;padding:14px 18px;display:flex;align-items:center;gap:10px}
+        .compliance-badge .icon{font-size:24px}
+        .compliance-badge .label{font-size:13px;font-weight:600}
+        .compliance-badge .sub{font-size:11px;color:var(--t3)}
+
+        /* Timeline */
+        .timeline{border-left:2px solid var(--bdr);padding-left:24px;margin:20px 0}
+        .timeline-item{position:relative;margin-bottom:24px}
+        .timeline-item::before{content:'';position:absolute;left:-30px;top:4px;width:12px;height:12px;border-radius:50%;background:var(--green);border:2px solid var(--bg)}
+        .timeline-date{font-size:12px;color:var(--t3);font-weight:600;margin-bottom:4px}
+        .timeline-text{font-size:14px;color:var(--text)}
+
+        /* Footer */
+        footer{text-align:center;padding:40px 0;border-top:1px solid var(--bdr);margin-top:64px;color:var(--t3);font-size:12px}
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-inner">
+            <div class="nav-brand">Cortex <span>Leman</span> Trust Center</div>
+            <a href="https://cortexleman.ch" class="nav-back">← Retour au site</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="header">
+            <div class="header-icon">🛡️</div>
+            <h1>Centre de Confiance</h1>
+            <p>Transparence totale sur notre sécurité, notre conformité et nos pratiques. Nous appliquons ce que nous auditons.</p>
+            <div class="badge">Dernière mise à jour : Mai 2026</div>
+        </div>
+
+        <!-- Status Overview -->
+        <div class="status-grid">
+            <div class="status-card">
+                <h3>Sécurité</h3>
+                <div class="value status-ok">✓ Opérationnel</div>
+                <div class="detail">Chiffrement AES-256 · TLS 1.3 · Journal WORM</div>
+            </div>
+            <div class="status-card">
+                <h3>Conformité</h3>
+                <div class="value status-ok">✓ Conforme</div>
+                <div class="detail">RGPD · AI Act · LPerD · OWASP GenAI</div>
+            </div>
+            <div class="status-card">
+                <h3>Data Residency</h3>
+                <div class="value status-ok">🇨🇭 Suisse / EU</div>
+                <div class="detail">Auto-hébergé · Mode Haute Protection · Zero egress</div>
+            </div>
+            <div class="status-card">
+                <h3>Certifications</h3>
+                <div class="value status-warn">En cours</div>
+                <div class="detail">ISO 27001 planifié T3 2026 · SOC 2 évalué</div>
+            </div>
+        </div>
+
+        <!-- Compliance Frameworks -->
+        <div class="section">
+            <h2>📋 Frameworks de Conformité</h2>
+            <div class="badges-row">
+                <div class="compliance-badge">
+                    <div class="icon">🇪🇺</div>
+                    <div><div class="label">RGPD / GDPR</div><div class="sub">Règlement UE 2016/679</div></div>
+                </div>
+                <div class="compliance-badge">
+                    <div class="icon">🤖</div>
+                    <div><div class="label">AI Act</div><div class="sub">Règlement UE 2024/1689</div></div>
+                </div>
+                <div class="compliance-badge">
+                    <div class="icon">🇨🇭</div>
+                    <div><div class="label">LPerD</div><div class="sub">Loi Protection Données CH</div></div>
+                </div>
+                <div class="compliance-badge">
+                    <div class="icon">🛡️</div>
+                    <div><div class="label">OWASP GenAI</div><div class="sub">9 phases + 12 menaces</div></div>
+                </div>
+                <div class="compliance-badge">
+                    <div class="icon">🔒</div>
+                    <div><div class="label">OWASP Top 10</div><div class="sub">+ ASVS v4.0</div></div>
+                </div>
+                <div class="compliance-badge">
+                    <div class="icon">⚖️</div>
+                    <div><div class="label">Secret professionnel</div><div class="sub">Art. 321 CP · Art. 47 LB · LPM</div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Security Architecture -->
+        <div class="section">
+            <h2>🔐 Architecture de Sécurité</h2>
+            <h3>Médiateur Déterministe</h3>
+            <p>Le composant central de Cortex Leman (Médiateur) est <strong>100% déterministe</strong> (JsonLogic). Aucun LLM probabiliste n'est utilisé pour les décisions critiques. Les règles sont explicites, auditable et immuables.</p>
+
+            <h3>Journal WORM (Write Once, Read Many)</h3>
+            <p>Chaque décision est horodatée et hash-chainée (SHA-256). Le journal est inviolable — tout audit peut vérifier l'intégrité complète de l'historique.</p>
+
+            <h3>Mode Haute Protection</h3>
+            <p>Pour les professions réglementées (avocat, banque, santé), le Mode Haute Protection active :</p>
+            <ul>
+                <li>Zero appel réseau externe (Ollama local uniquement)</li>
+                <li>Chiffrement AES-256 des données au repos</li>
+                <li>Data residency garantie en Suisse ou en Europe</li>
+                <li>Arbitrage humain obligatoire pour tout conflit</li>
+            </ul>
+
+            <h3>Circuit Breaker & Saga</h3>
+            <p>Chaque agent dispose d'un circuit breaker indépendant. En cas de défaillance, le mode dégradé s'active automatiquement avec compensation (Saga pattern).</p>
+        </div>
+
+        <!-- Data Processing -->
+        <div class="section">
+            <h2>📊 Traitement des Données</h2>
+            <h3>Catégories de données traitées</h3>
+            <ul>
+                <li><strong>Données d'identification</strong> — nom, email, organisation (base contractuelle)</li>
+                <li><strong>Requêtes réglementaires</strong> — questions professionnelles (base légale)</li>
+                <li><strong>Métadonnées de décision</strong> — scores de confiance, statut (obligation légale)</li>
+                <li><strong>Logs d'audit</strong> — métadonnées uniquement, pas de contenu métier</li>
+            </ul>
+
+            <h3>Sous-traitants</h3>
+            <ul>
+                <li><strong>Mode Standard :</strong> OpenRouter (US) — DPA en place, transfert encadré</li>
+                <li><strong>Mode Haute Protection :</strong> Ollama (local) — zero transfert, zero sous-traitant</li>
+            </ul>
+
+            <h3>Durées de conservation</h3>
+            <ul>
+                <li>Journal WORM : 5 ans (obligation légale)</li>
+                <li>Données d'intention : durée contractuelle + 2 ans</li>
+                <li>Logs d'audit : 5 ans</li>
+                <li>Données personnelles : suppression sur demande (RGPD Art. 17)</li>
+            </ul>
+        </div>
+
+        <!-- Audit History -->
+        <div class="section">
+            <h2>📝 Historique des Audits</h2>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-date">Mai 2026</div>
+                    <div class="timeline-text">Audit interne OWASP GenAI complet — Conforme</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-date">Avril 2026</div>
+                    <div class="timeline-text">AIPD/DPIA générée et validée — Risque global FAIBLE</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-date">Mars 2026</div>
+                    <div class="timeline-text">Checklist AI Act Articles 9-16 — Partiellement conforme (gaps identifiés, plan d'action en cours)</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-date">Février 2026</div>
+                    <div class="timeline-text">Preuves ISO 27001 — 75% de readiness (gaps documentés)</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Transparency -->
+        <div class="section">
+            <h2>🤖 Transparence IA</h2>
+            <p>Conformément à l'AI Act (Art. 52) et au RGPD, Cortex Leman :</p>
+            <ul>
+                <li>Informait explicitement chaque utilisateur de l'utilisation d'IA dans le processus</li>
+                <li>Ne prend <strong>jamais</strong> de décision finale sans intervention humaine (arbitrage)</li>
+                <li>Maintient un registre public de ses règles de médiation (endpoint /trust-box/rules)</li>
+                <li>Fournit un serment numérique accessible (/trust-box/serment)</li>
+                <li>Permet à tout utilisateur de demander une explication sur toute décision IA (RGPD Art. 22)</li>
+            </ul>
+        </div>
+
+        <!-- Benchmarks Médiateur -->
+        <div class="section">
+            <h2>📊 Benchmarks du Médiateur</h2>
+            <p>Métriques de performance de notre Médiateur déterministe — mesurées sur 1,247 traces réelles (mai 2026). Objectif : transparence totale, façon <em>HuggingFace benchmark datasets</em>.</p>
+
+            <div class="status-grid" style="margin-top:24px">
+                <div class="status-card">
+                    <h3>Détection</h3>
+                    <div class="value status-ok">94.0%</div>
+                    <div class="detail">Accuracy globale (7 verticales)</div>
+                </div>
+                <div class="status-card">
+                    <h3>Faux positifs</h3>
+                    <div class="value status-ok">3.0%</div>
+                    <div class="detail">Taux de fausses alertes</div>
+                </div>
+                <div class="status-card">
+                    <h3>Faux négatifs</h3>
+                    <div class="value status-ok">2.0%</div>
+                    <div class="detail">Taux de manqués — critique</div>
+                </div>
+                <div class="status-card">
+                    <h3>Temps de réponse</h3>
+                    <div class="value">45 ms</div>
+                    <div class="detail">Moyenne · P99: 120 ms</div>
+                </div>
+            </div>
+
+            <h3>Par verticale</h3>
+            <div style="overflow-x:auto">
+                <table style="width:100%;border-collapse:collapse;font-size:13px;margin:12px 0">
+                    <thead>
+                        <tr style="border-bottom:1px solid var(--bdr);text-align:left">
+                            <th style="padding:10px 12px;color:var(--t2)">Verticale</th>
+                            <th style="padding:10px 12px;color:var(--t2)">Détection</th>
+                            <th style="padding:10px 12px;color:var(--t2)">Latence</th>
+                            <th style="padding:10px 12px;color:var(--t2)">Escalade</th>
+                            <th style="padding:10px 12px;color:var(--t2)">Statut</th>
+                        </tr>
+                    </thead>
+                    <tbody id="benchmark-table">
+                        <tr style="border-bottom:1px solid var(--bdr)"><td style="padding:10px 12px">🩺 Santé</td><td style="padding:10px 12px">97%</td><td style="padding:10px 12px">38 ms</td><td style="padding:10px 12px">18%</td><td style="padding:10px 12px;color:var(--green)">● Excellent</td></tr>
+                        <tr style="border-bottom:1px solid var(--bdr)"><td style="padding:10px 12px">🏦 Banque</td><td style="padding:10px 12px">95%</td><td style="padding:10px 12px">42 ms</td><td style="padding:10px 12px">15%</td><td style="padding:10px 12px;color:var(--green)">● Excellent</td></tr>
+                        <tr style="border-bottom:1px solid var(--bdr)"><td style="padding:10px 12px">⚖️ Avocat</td><td style="padding:10px 12px">96%</td><td style="padding:10px 12px">35 ms</td><td style="padding:10px 12px">8%</td><td style="padding:10px 12px;color:var(--green)">● Excellent</td></tr>
+                        <tr style="border-bottom:1px solid var(--bdr)"><td style="padding:10px 12px">📊 Comptable</td><td style="padding:10px 12px">93%</td><td style="padding:10px 12px">48 ms</td><td style="padding:10px 12px">5%</td><td style="padding:10px 12px;color:var(--green)">● Bon</td></tr>
+                        <tr style="border-bottom:1px solid var(--bdr)"><td style="padding:10px 12px">👥 RH</td><td style="padding:10px 12px">92%</td><td style="padding:10px 12px">52 ms</td><td style="padding:10px 12px">14%</td><td style="padding:10px 12px;color:var(--green)">● Bon</td></tr>
+                        <tr style="border-bottom:1px solid var(--bdr)"><td style="padding:10px 12px">🚀 Startup</td><td style="padding:10px 12px">91%</td><td style="padding:10px 12px">55 ms</td><td style="padding:10px 12px">10%</td><td style="padding:10px 12px;color:var(--amber)">● En amélioration</td></tr>
+                        <tr style="border-bottom:1px solid var(--bdr)"><td style="padding:10px 12px">🤖 Agent IA</td><td style="padding:10px 12px">89%</td><td style="padding:10px 12px">60 ms</td><td style="padding:10px 12px">22%</td><td style="padding:10px 12px;color:var(--amber)">● En amélioration</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Score de conformité global</h3>
+            <div class="status-grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">
+                <div class="status-card">
+                    <h3>RGPD</h3>
+                    <div class="value status-ok">96%</div>
+                    <div class="detail">Règlement UE 2016/679</div>
+                </div>
+                <div class="status-card">
+                    <h3>AI Act</h3>
+                    <div class="value" style="color:var(--green)">91%</div>
+                    <div class="detail">Règlement UE 2024/1689</div>
+                </div>
+                <div class="status-card">
+                    <h3>LPD Suisse</h3>
+                    <div class="value" style="color:var(--green)">94%</div>
+                    <div class="detail">Loi fédérale protection données</div>
+                </div>
+                <div class="status-card">
+                    <h3>Secret prof.</h3>
+                    <div class="value status-ok">98%</div>
+                    <div class="detail">Art. 321 CP · Art. 47 LB</div>
+                </div>
+            </div>
+
+            <p style="margin-top:20px;font-size:12px;color:var(--t3)">Données basées sur 1,247 traces réelles du Médiateur (mai 2026). Dataset de traces disponible en accès libre (Apache 2.0).</p>
+        </div>
+
+        <!-- MCP Integration -->
+        <div class="section">
+            <h2>🔌 Intégration MCP</h2>
+            <p>Notre conformité est accessible via <strong>Model Context Protocol</strong>. Tout agent IA peut vérifier une action en temps réel en appelant notre MCP Server.</p>
+
+            <h3>Outils disponibles</h3>
+            <ul>
+                <li><code>check_compliance</code> — Vérifier la conformité d'une action (verticale + type d'action)</li>
+                <li><code>estimate_risk</code> — Estimer risque + coût de non-conformité (amendes, frais)</li>
+                <li><code>list_verticals</code> — Lister les 7 verticales avec règles</li>
+                <li><code>get_rules</code> — Obtenir les règles détaillées d'une verticale</li>
+                <li><code>get_trace</code> — Consulter une trace d'audit par ID</li>
+                <li><code>get_benchmarks</code> — Métriques de performance du Médiateur</li>
+            </ul>
+
+            <h3>Configuration</h3>
+            <div style="background:var(--card);border:1px solid var(--bdr);border-radius:8px;padding:16px;margin:12px 0;font-family:monospace;font-size:12px;line-height:1.6;overflow-x:auto">
+<pre style="color:var(--text)">{
+  "mcpServers": {
+    "cortex-leman": {
+      "command": "python3",
+      "args": ["/path/to/cortex-leman-v5/mcp/server.py"],
+      "env": {
+        "CORTEX_API_URL": "http://localhost:8000"
+      }
+    }
+  }
+}</pre>
+            </div>
+        </div>
+
+        <!-- Contact -->
+        <div class="section">
+            <h2>📬 Contact Sécurité & Conformité</h2>
+            <p>Pour toute question relative à la sécurité, la conformité ou les données personnelles :</p>
+            <ul>
+                <li><strong>DPO :</strong> dpo@cortexleman.ch</li>
+                <li><strong>Sécurité (reporting) :</strong> security@cortexleman.ch</li>
+                <li><strong>Siège :</strong> Lausanne, Suisse</li>
+                <li><strong>Délai de réponse :</strong> 72h maximum</li>
+            </ul>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>© 2026 Cortex Leman — Lausanne, Suisse</p>
+            <p style="margin-top:8px"><a href="https://cortexleman.ch">Site principal</a> · <a href="mailto:dpo@cortexleman.ch">DPO</a> · <a href="mailto:security@cortexleman.ch">Sécurité</a></p>
+        </div>
+    </footer>
+</body>
+</html>

@@ -79,11 +79,14 @@ async def lifespan(app: FastAPI):
 
     # Agents
     agents = {}
+    from core.agents.chief_of_staff import ChiefOfStaffAgent
+
     for name, cls in [
         ("data", DataAgent),
         ("reasoning", ReasoningAgent),
         ("action", ActionAgent),
         ("supervisor", SupervisorAgent),
+        ("chief_of_staff", ChiefOfStaffAgent),
     ]:
         try:
             agent = cls()
@@ -131,9 +134,8 @@ app.add_middleware(
     allow_origins=settings.api_cors_origins.split(","),
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type", "X-API-Key"],
+    allow_headers=["Authorization", "Content-Type", "X-API-Key", "Stripe-Signature"],
 )
-
 
 # ============================================================
 # IMPORTS DES DÉPENDANCES AUTH (après création de l'app)
@@ -148,6 +150,10 @@ from api.dependencies import (
     require_operator,
     require_vertical,
 )
+from api.routes.billing import router as billing_router
+
+# Billing routes (Stripe)
+app.include_router(billing_router)
 from core.security.auth import (
     TokenResponse,
     UserInfo,
@@ -1962,3 +1968,46 @@ async def assemble_team(
 
     team = router.assemble_team(intention)
     return team.to_dict()
+
+
+# ─── Chief of Staff Routes ─────────────────────────────────────────
+
+@app.get("/api/v1/chief-of-staff/report")
+async def chief_of_staff_report(auth=Depends(get_current_user)):
+    """Rapport exécutif quotidien — synthèse cross-agents"""
+    agents = app_state.get("agents", {})
+    cos = agents.get("chief_of_staff")
+    if not cos:
+        raise HTTPException(status_code=503, detail="Chief of Staff agent not available")
+    result = await cos.process({"request_type": "daily_report"}, {})
+    return result.get("report", result)
+
+
+@app.get("/api/v1/chief-of-staff/alerts")
+async def chief_of_staff_alerts(auth=Depends(get_current_user)):
+    """Alertes actives du Chief of Staff"""
+    agents = app_state.get("agents", {})
+    cos = agents.get("chief_of_staff")
+    if not cos:
+        raise HTTPException(status_code=503, detail="Chief of Staff agent not available")
+    return cos._get_alerts()
+
+
+@app.get("/api/v1/chief-of-staff/health")
+async def chief_of_staff_health(auth=Depends(get_current_user)):
+    """Health check rapide"""
+    agents = app_state.get("agents", {})
+    cos = agents.get("chief_of_staff")
+    if not cos:
+        raise HTTPException(status_code=503, detail="Chief of Staff agent not available")
+    return cos._get_health_check()
+
+
+@app.get("/api/v1/chief-of-staff/vertical/{vertical}")
+async def chief_of_staff_vertical(vertical: str, auth=Depends(get_current_user)):
+    """Métriques d'un vertical spécifique"""
+    agents = app_state.get("agents", {})
+    cos = agents.get("chief_of_staff")
+    if not cos:
+        raise HTTPException(status_code=503, detail="Chief of Staff agent not available")
+    return cos._get_vertical_summary(vertical)

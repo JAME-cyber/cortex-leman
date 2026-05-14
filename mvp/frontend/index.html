@@ -8,21 +8,32 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #020617;
-      --bg-card: rgba(15, 23, 42, 0.6);
-      --border: #1e293b;
-      --border-hover: #334155;
-      --text: #f1f5f9;
-      --text-muted: #94a3b8;
-      --text-dim: #475569;
-      --cyan: #22d3ee;
-      --emerald: #34d399;
-      --amber: #fbbf24;
-      --violet: #a78bfa;
-      --rose: #fb7185;
-      --orange: #fb923c;
+      --bg: #0a0e17;
+      --bg2: #0f1525;
+      --bg-card: rgba(255,255,255,0.03);
+      --bg-card-h: rgba(255,255,255,0.06);
+      --border: rgba(255,255,255,0.07);
+      --border-hover: rgba(255,255,255,0.12);
+      --border-dashed: rgba(255,255,255,0.10);
+      --text: #e8eaf0;
+      --text-muted: rgba(232,234,240,0.55);
+      --text-dim: rgba(232,234,240,0.30);
+      --blue: #3b82f6;
+      --blue-s: rgba(59,130,246,0.10);
+      --green: #10b981;
+      --green-s: rgba(16,185,129,0.10);
+      --amber: #f59e0b;
+      --amber-s: rgba(245,158,11,0.10);
+      --violet: #8b5cf6;
+      --violet-s: rgba(139,92,246,0.10);
+      --rose: #ef4444;
+      --rose-s: rgba(239,68,68,0.10);
+      --orange: #f97316;
+      --orange-s: rgba(249,115,22,0.10);
       --radius: 12px;
       --radius-sm: 8px;
+      --mono: 'JetBrains Mono', monospace;
+      --px: clamp(20px, 4vw, 50px);
     }
     * { margin:0; padding:0; box-sizing:border-box; }
     body {
@@ -31,88 +42,115 @@
       color: var(--text);
       line-height: 1.6;
       min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
     }
 
-    /* NAV */
+    /* NAV — Espressio style */
     nav {
       position: fixed; top:0; left:0; right:0; z-index:1000;
-      background: rgba(2,6,23,0.88);
-      backdrop-filter: blur(16px);
+      background: rgba(10,14,23,0.88);
+      backdrop-filter: blur(20px);
       border-bottom: 1px solid var(--border);
-      padding: 0 2rem;
+      padding: 0 var(--px);
     }
     .nav-inner {
-      max-width: 1400px; margin:0 auto;
+      max-width: 1200px; margin:0 auto;
       display:flex; align-items:center; justify-content:space-between;
-      height: 60px;
+      height: clamp(56px, 6vw, 68px);
     }
     .nav-brand {
       display:flex; align-items:center; gap:10px;
-      font-weight:700; font-size:1.1rem;
+      text-decoration:none;
     }
+    .nav-brand .brand-logo {
+      width:clamp(34px,2.8vw,42px); height:clamp(34px,2.8vw,42px); border-radius:9px;
+      background:linear-gradient(135deg, var(--blue), var(--green));
+      display:flex; align-items:center; justify-content:center;
+      font-weight:800; font-size:clamp(13px,1.1vw,17px); color:var(--bg);
+    }
+    .nav-brand .brand-name {
+      font-weight:700; font-size:clamp(17px,1.5vw,22px); color:var(--text);
+      letter-spacing:-0.5px;
+    }
+    .nav-brand .brand-name span { color:var(--blue); }
     .nav-brand .dot {
       width:10px; height:10px; border-radius:50%;
-      background:var(--cyan);
+      background:var(--green);
       animation: pulse 2s infinite;
     }
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
-    .nav-links { display:flex; gap:8px; }
+    .nav-sep {
+      width:1px; height:clamp(36px,3.5vw,56px);
+      background:var(--border-dashed);
+      margin-left:clamp(16px,2vw,32px);
+    }
+    .nav-links { display:flex; gap:clamp(10px,1.4vw,24px); }
     .nav-links a {
-      color: var(--text-muted); text-decoration:none; font-size:.85rem;
-      padding: 6px 14px; border-radius:6px;
-      transition: all .2s;
+      color: var(--text-muted); text-decoration:none; font-size:clamp(12px,0.85vw,15px);
+      padding: 6px 12px; border-radius:6px;
+      transition: color .2s; font-weight:500;
     }
     .nav-links a:hover, .nav-links a.active {
-      color: var(--text); background: rgba(255,255,255,.06);
+      color: var(--text);
     }
     .nav-status {
       display:flex; align-items:center; gap:6px;
-      font-size:.75rem; color:var(--emerald);
-      font-family:'JetBrains Mono',monospace;
+      font-size:.72rem; color:var(--green);
+      font-family:var(--mono);
     }
     .nav-status .live-dot {
       width:6px; height:6px; border-radius:50%;
-      background:var(--emerald);
+      background:var(--green);
     }
 
     /* LAYOUT */
-    .main { max-width:1400px; margin:0 auto; padding: 76px 2rem 3rem; }
+    .main { max-width:1200px; margin:0 auto; padding: clamp(68px,8vw,80px) var(--px) 3rem; }
 
-    /* HERO */
+    /* HERO — Espressio style stats */
     .hero {
-      text-align:center; padding: 3rem 0 2rem;
+      text-align:center; padding: clamp(2rem,4vw,4rem) 0 clamp(1.5rem,3vw,2.5rem);
     }
     .hero-badge {
       display:inline-flex; align-items:center; gap:6px;
-      background: rgba(34,211,238,.08); border:1px solid rgba(34,211,238,.2);
-      color:var(--cyan); font-size:.75rem; font-weight:600;
-      padding:4px 14px; border-radius:20px; margin-bottom:1.2rem;
+      background:var(--green); border:1px solid var(--green);
+      color:var(--bg); font-size:clamp(10px,0.7vw,13px); font-weight:600;
+      padding:5px 14px; border-radius:100px; margin-bottom:1.2rem;
+      font-family:var(--mono); letter-spacing:.03em;
     }
     .hero h1 {
-      font-size: 2.5rem; font-weight:800;
-      letter-spacing:-.03em; margin-bottom:.8rem;
+      font-size: clamp(28px,3.5vw,48px); font-weight:800;
+      letter-spacing:-1.5px; margin-bottom:.8rem; line-height:1.1;
     }
-    .hero h1 span { color:var(--cyan); }
+    .hero h1 span { color:var(--green); }
     .hero p {
-      color:var(--text-muted); font-size:1.05rem;
+      color:var(--text-muted); font-size:clamp(14px,1.1vw,18px);
       max-width:640px; margin:0 auto 2rem;
     }
 
-    /* STATS */
+    /* STATS — Espressio dashed-line style */
     .stats {
-      display:grid; grid-template-columns:repeat(4,1fr); gap:1rem;
+      display:flex; gap:clamp(24px,4vw,64px); flex-wrap:wrap;
+      justify-content:center;
       margin-bottom:2.5rem;
     }
     .stat-card {
-      background:var(--bg-card); border:1px solid var(--border);
-      border-radius:var(--radius); padding:1.2rem; text-align:center;
+      position:relative; padding-left:12px; min-height:50px;
+      background:none; border:none;
+    }
+    .stat-card::before {
+      content:''; position:absolute; left:0; top:0; width:5px; height:1px;
+      background:var(--text);
+    }
+    .stat-card::after {
+      content:''; position:absolute; left:0; top:0; bottom:0;
+      border-left:1px dashed var(--text-dim);
     }
     .stat-card .value {
-      font-size:1.8rem; font-weight:700;
-      font-family:'JetBrains Mono',monospace;
+      font-size:clamp(24px,3vw,40px); font-weight:800;
+      font-family:var(--mono); letter-spacing:-1px;
     }
     .stat-card .label {
-      font-size:.75rem; color:var(--text-muted); margin-top:2px;
+      font-size:clamp(11px,0.7vw,13px); color:var(--text-muted); margin-top:2px;
     }
 
     /* GRID */
@@ -186,11 +224,11 @@
       transition: border-color .2s;
     }
     .form-group select:focus, .form-group input:focus, .form-group textarea:focus {
-      outline:none; border-color:var(--cyan);
+      outline:none; border-color:var(--blue);
     }
     .form-group textarea { resize:vertical; min-height:80px; }
 
-    /* BUTTONS */
+    /* BUTTONS — Espressio parallelogram for primary */
     .btn {
       display:inline-flex; align-items:center; gap:6px;
       padding:10px 20px; border-radius:var(--radius-sm);
@@ -198,24 +236,24 @@
       border:none; transition:all .2s; font-family:inherit;
     }
     .btn-primary {
-      background:var(--cyan); color:var(--bg);
+      background:var(--blue); color:#fff;
     }
-    .btn-primary:hover { opacity:.9; transform:translateY(-1px); }
+    .btn-primary:hover { background:#2563eb; transform:translateY(-2px); box-shadow:0 6px 24px rgba(59,130,246,0.3); }
     .btn-secondary {
-      background:transparent; border:1px solid var(--border);
+      background:var(--bg-card); border:1px solid var(--border);
       color:var(--text);
     }
-    .btn-secondary:hover { border-color:var(--text-muted); }
+    .btn-secondary:hover { border-color:var(--border-hover); }
     .btn-danger {
-      background:rgba(251,113,133,.15); border:1px solid rgba(251,113,133,.3);
+      background:var(--rose-s); border:1px solid rgba(239,68,68,0.25);
       color:var(--rose);
     }
     .btn-success {
-      background:rgba(52,211,153,.15); border:1px solid rgba(52,211,153,.3);
-      color:var(--emerald);
+      background:var(--green-s); border:1px solid rgba(16,185,129,0.25);
+      color:var(--green);
     }
     .btn-amber {
-      background:rgba(251,191,36,.15); border:1px solid rgba(251,191,36,.3);
+      background:var(--amber-s); border:1px solid rgba(245,158,11,0.25);
       color:var(--amber);
     }
 
@@ -248,8 +286,8 @@
       border-radius:var(--radius-sm); padding:1rem;
       cursor:pointer; transition:all .2s;
     }
-    .arb-pos:hover { border-color:var(--cyan); }
-    .arb-pos.selected { border-color:var(--emerald); background:rgba(52,211,153,.05); }
+    .arb-pos:hover { border-color:var(--blue); }
+    .arb-pos.selected { border-color:var(--green); background:rgba(16,185,129,.05); }
     .arb-pos .pos-agent { font-weight:700; font-size:.85rem; margin-bottom:4px; }
     .arb-pos .pos-rec { font-size:.8rem; color:var(--text-muted); }
     .arb-pos .pos-conf {
@@ -309,11 +347,11 @@
       transition:all .3s;
     }
     .toast.show { transform:translateY(0); opacity:1; }
-    .toast.success { background:rgba(52,211,153,.15); border:1px solid var(--emerald); color:var(--emerald); }
+    .toast.success { background:rgba(16,185,129,.15); border:1px solid var(--green); color:var(--green); }
     .toast.error { background:rgba(251,113,133,.15); border:1px solid var(--rose); color:var(--rose); }
-    .toast.info { background:rgba(34,211,238,.15); border:1px solid var(--cyan); color:var(--cyan); }
+    .toast.info { background:rgba(59,130,246,.15); border:1px solid var(--blue); color:var(--blue); }
 
-    /* LOGIN */
+    /* LOGIN — Espressio clean style */
     #login-overlay {
       position:fixed; top:0; left:0; right:0; bottom:0; z-index:9999;
       background:var(--bg);
@@ -323,44 +361,44 @@
     #login-overlay.hidden { opacity:0; pointer-events:none; }
     .login-card {
       width:440px; max-width:92vw;
-      background:var(--bg-card); border:1px solid var(--border);
-      border-radius:var(--radius); padding:2.5rem;
+      background:var(--bg2); border:1px solid var(--border);
+      border-radius:16px; padding:clamp(28px,4vw,40px);
       text-align:center;
     }
     .login-card .login-logo {
-      width:52px; height:52px; border-radius:14px;
-      background:linear-gradient(135deg, var(--cyan), var(--violet));
+      width:56px; height:56px; border-radius:14px;
+      background:linear-gradient(135deg, var(--blue), var(--green));
       display:flex; align-items:center; justify-content:center;
       font-size:1.4rem; font-weight:800; color:var(--bg);
       margin:0 auto 1.2rem;
     }
-    .login-card h2 { font-size:1.3rem; font-weight:700; margin-bottom:.3rem; }
+    .login-card h2 { font-size:1.3rem; font-weight:800; margin-bottom:.3rem; letter-spacing:-0.5px; }
     .login-card .login-sub { font-size:.85rem; color:var(--text-muted); margin-bottom:2rem; }
     .login-card .lfg { text-align:left; margin-bottom:1.2rem; }
     .login-card .lfg label { font-size:.8rem; font-weight:600; color:var(--text-muted); display:block; margin-bottom:4px; }
     .login-card .lfg input {
       width:100%; padding:12px 14px;
-      background:rgba(15,23,42,.8); border:1px solid var(--border);
+      background:var(--bg); border:1px solid var(--border);
       border-radius:var(--radius-sm); color:var(--text);
       font-family:inherit; font-size:.9rem; transition: border-color .2s;
     }
-    .login-card .lfg input:focus { outline:none; border-color:var(--cyan); }
+    .login-card .lfg input:focus { outline:none; border-color:var(--blue); }
     .login-card .btn-login {
       width:100%; padding:12px; margin-top:.5rem;
-      background:var(--cyan); color:var(--bg);
+      background:var(--blue); color:#fff;
       font-size:.9rem; font-weight:700;
       border:none; border-radius:var(--radius-sm); cursor:pointer; transition:all .2s;
     }
-    .login-card .btn-login:hover { opacity:.9; }
+    .login-card .btn-login:hover { background:#2563eb; }
     .login-error { color:var(--rose); font-size:.8rem; margin-top:.8rem; display:none; }
     .login-demo {
       margin-top:1.5rem; padding-top:1.2rem;
-      border-top:1px solid var(--border);
+      border-top:1px dashed var(--border-dashed);
       font-size:.72rem; color:var(--text-dim);
       text-align:left;
     }
     .login-demo code {
-      background:rgba(15,23,42,.8); padding:1px 5px;
+      background:var(--bg); padding:1px 5px;
       border-radius:3px; color:var(--text-muted); font-size:.65rem;
     }
     .demo-account {
@@ -417,10 +455,11 @@
 <!-- NAV -->
 <nav>
   <div class="nav-inner">
-    <div class="nav-brand">
-      <div class="dot"></div>
-      Cortex Leman v5
-    </div>
+    <a href="#" class="nav-brand">
+      <div class="brand-logo">CL</div>
+      <div class="brand-name">Cortex <span>Leman</span></div>
+    </a>
+    <div class="nav-sep"></div>
     <div class="nav-links">
       <a href="#dashboard" class="active" onclick="showSection('dashboard')">Dashboard</a>
       <a href="#pipeline" onclick="showSection('pipeline')">Pipeline</a>
@@ -430,7 +469,7 @@
       <a href="#settings" onclick="showSection('settings')">Settings</a>
     </div>
     <div class="user-badge" id="user-badge" style="display:none">
-      <div class="user-avatar" id="user-avatar" style="background:var(--cyan)">A</div>
+      <div class="user-avatar" id="user-avatar" style="background:var(--blue)">A</div>
       <span id="user-name">Admin</span>
       <button class="user-logout" onclick="handleLogout()">Déconnexion</button>
     </div>
@@ -445,19 +484,19 @@
 
   <!-- HERO -->
   <div class="hero">
-    <div class="hero-badge">⬡ GRAPHE DE CONFIANCE v5.0</div>
-    <h1>Infrastructure de confiance<br>pour <span>professions régulées</span></h1>
-    <p>Orchestration multi-agents conforme RGPD-IA. L'humain reste décideur, chaque action est tracée, le secret professionnel est garanti.</p>
+    <div class="hero-badge">GRAPHE DE CONFIANCE v5</div>
+    <h1>L'IA qui se surveille <span>elle-même</span></h1>
+    <p>Infrastructure de confiance pour professions régulées FR-CH. L'humain reste décideur, chaque action est tracée, le secret professionnel est garanti.</p>
   </div>
 
-  <!-- STATS -->
+  <!-- STATS — Espressio dashed-line -->
   <div class="stats">
     <div class="stat-card">
-      <div class="value" style="color:var(--cyan)" id="stat-intentions">0</div>
+      <div class="value" style="color:var(--blue)" id="stat-intentions">0</div>
       <div class="label">Intentions traitées</div>
     </div>
     <div class="stat-card">
-      <div class="value" style="color:var(--emerald)" id="stat-agents">5</div>
+      <div class="value" style="color:var(--green)" id="stat-agents">5</div>
       <div class="label">Agents actifs</div>
     </div>
     <div class="stat-card">
@@ -475,7 +514,7 @@
 
     <!-- NOUVELLE INTENTION -->
     <div class="section-title">
-      <span style="color:var(--cyan)">▶</span> Soumettre une intention
+      <span style="color:var(--blue)">▶</span> Soumettre une intention
       <div class="line"></div>
     </div>
     <div class="card" style="margin-bottom:2rem">
@@ -513,7 +552,7 @@
     <div class="grid-2">
       <div class="card">
         <div class="card-header">
-          <div class="card-dot" style="background:var(--emerald)"></div>
+          <div class="card-dot" style="background:var(--green)"></div>
           <h3>Flux temps réel <small>Journal d'audit</small></h3>
         </div>
         <div class="feed" id="feed"></div>
@@ -542,44 +581,44 @@
   <!-- PIPELINE -->
   <div id="section-pipeline" style="display:none">
     <div class="section-title">
-      <span style="color:var(--emerald)">▶</span> Pipeline 5 étapes B2B
+      <span style="color:var(--green)">▶</span> Pipeline 5 étapes B2B
       <div class="line"></div>
     </div>
     <div class="card" style="margin-bottom:2rem">
       <div class="pipeline">
-        <div class="pipeline-step" style="border-left:2px solid var(--cyan)">
-          <div class="step-num" style="color:var(--cyan)">1</div>
-          <div class="step-name" style="color:var(--cyan)">INTENTION</div>
+        <div class="pipeline-step" style="border-left:2px solid var(--blue)">
+          <div class="step-num" style="color:var(--blue)">1</div>
+          <div class="step-name" style="color:var(--blue)">INTENTION</div>
           <div class="step-agent">Orchestrateur</div>
-          <div class="step-gain" style="background:rgba(34,211,238,.1);color:var(--cyan)">Route & comprend</div>
+          <div class="step-gain" style="background:var(--blue-s);color:var(--blue)">Route & comprend</div>
         </div>
         <div class="pipeline-arrow">→</div>
-        <div class="pipeline-step" style="border-left:2px solid var(--emerald)">
-          <div class="step-num" style="color:var(--emerald)">2</div>
-          <div class="step-name" style="color:var(--emerald)">RECHERCHE</div>
+        <div class="pipeline-step" style="border-left:2px solid var(--green)">
+          <div class="step-num" style="color:var(--green)">2</div>
+          <div class="step-name" style="color:var(--green)">RECHERCHE</div>
           <div class="step-agent">Agent Data</div>
-          <div class="step-gain" style="background:rgba(52,211,153,.1);color:var(--emerald)">-50% temps</div>
+          <div class="step-gain" style="background:var(--green-s);color:var(--green)">-50% temps</div>
         </div>
         <div class="pipeline-arrow">→</div>
         <div class="pipeline-step" style="border-left:2px solid var(--amber)">
           <div class="step-num" style="color:var(--amber)">3</div>
           <div class="step-name" style="color:var(--amber)">ANALYSE</div>
           <div class="step-agent">Agent Raisonnement</div>
-          <div class="step-gain" style="background:rgba(251,191,36,.1);color:var(--amber)">+30% précision</div>
+          <div class="step-gain" style="background:var(--amber-s);color:var(--amber)">+30% précision</div>
         </div>
         <div class="pipeline-arrow">→</div>
         <div class="pipeline-step" style="border-left:2px solid var(--violet)">
           <div class="step-num" style="color:var(--violet)">4</div>
           <div class="step-name" style="color:var(--violet)">EXÉCUTION</div>
           <div class="step-agent">Agent Action (Saga)</div>
-          <div class="step-gain" style="background:rgba(167,139,250,.1);color:var(--violet)">60% auto</div>
+          <div class="step-gain" style="background:var(--violet-s);color:var(--violet)">60% auto</div>
         </div>
         <div class="pipeline-arrow">→</div>
         <div class="pipeline-step" style="border-left:2px solid var(--rose)">
           <div class="step-num" style="color:var(--rose)">5</div>
           <div class="step-name" style="color:var(--rose)">VALIDATION</div>
           <div class="step-agent">Superviseur</div>
-          <div class="step-gain" style="background:rgba(251,113,133,.1);color:var(--rose)">-80% erreurs</div>
+          <div class="step-gain" style="background:var(--rose-s);color:var(--rose)">-80% erreurs</div>
         </div>
       </div>
       <p style="text-align:center;color:var(--text-dim);font-size:.75rem;margin-top:1rem">
@@ -589,7 +628,7 @@
 
     <div class="grid-3">
       <div class="card">
-        <div class="card-header"><div class="card-dot" style="background:var(--cyan)"></div><h3>Bus NATS</h3></div>
+        <div class="card-header"><div class="card-dot" style="background:var(--blue)"></div><h3>Bus NATS</h3></div>
         <ul style="list-style:none;color:var(--text-muted);font-size:.8rem">
           <li>✓ JetStream activé</li>
           <li>✓ Topics par client</li>
@@ -668,7 +707,7 @@
 
     <div class="card" style="margin-top:1.5rem">
       <div class="card-header">
-        <div class="card-dot" style="background:var(--emerald)"></div>
+        <div class="card-dot" style="background:var(--green)"></div>
         <h3>Précédents d'arbitrage <small>Historique des décisions</small></h3>
       </div>
       <div id="precedents-list" style="font-size:.8rem;color:var(--text-muted)">
@@ -686,7 +725,7 @@
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
         <div class="card-header" style="margin-bottom:0">
-          <div class="card-dot" style="background:var(--emerald)"></div>
+          <div class="card-dot" style="background:var(--green)"></div>
           <h3>Intégrité <small id="journal-valid">vérification...</small></h3>
         </div>
         <button class="btn btn-secondary" onclick="verifyJournal()">🔍 Vérifier intégrité</button>
@@ -703,7 +742,7 @@
     </div>
     <div class="grid-2">
       <div class="card">
-        <div class="card-header"><div class="card-dot" style="background:var(--cyan)"></div><h3>Mode de déploiement</h3></div>
+        <div class="card-header"><div class="card-dot" style="background:var(--blue)"></div><h3>Mode de déploiement</h3></div>
         <div class="form-group">
           <label>Mode</label>
           <select id="setting-mode">
@@ -727,7 +766,7 @@
         </div>
       </div>
       <div class="card">
-        <div class="card-header"><div class="card-dot" style="background:var(--emerald)"></div><h3>API Backend</h3></div>
+        <div class="card-header"><div class="card-dot" style="background:var(--green)"></div><h3>API Backend</h3></div>
         <div class="form-group">
           <label>API URL</label>
           <input type="text" id="api-url" value="http://localhost:8001">
@@ -758,11 +797,11 @@
 // ============================================================
 const ACCOUNTS = {
   'admin@cortex-leman.com':    { password:'admin',     role:'admin',      name:'Admin Cortex',      vertical:'all',      color:'var(--violet)' },
-  'expert@dupont-comptable.fr':{ password:'comptable', role:'expert',     name:'Marie Dupont',      vertical:'comptable',color:'var(--cyan)' },
+  'expert@dupont-comptable.fr':{ password:'comptable', role:'expert',     name:'Marie Dupont',      vertical:'comptable',color:'var(--blue)' },
   'avocat@martin-avocat.ch':   { password:'avocat',    role:'avocat',     name:'Me Jacques Martin', vertical:'avocat',   color:'var(--amber)' },
-  'medecin@hopital-geneve.ch': { password:'sante',     role:'medecin',    name:'Dr Sophie Favre',   vertical:'sante',    color:'var(--emerald)' },
+  'medecin@hopital-geneve.ch': { password:'sante',     role:'medecin',    name:'Dr Sophie Favre',   vertical:'sante',    color:'var(--green)' },
   'analyste@ubank.ch':         { password:'banque',    role:'analyste',   name:'Thomas Aubert',     vertical:'banque',   color:'var(--orange)' },
-  'cto@startup-paris.fr':      { password:'startup',   role:'cto',        name:'Léa Bernard',       vertical:'startup',  color:'var(--cyan)' },
+  'cto@startup-paris.fr':      { password:'startup',   role:'cto',        name:'Léa Bernard',       vertical:'startup',  color:'var(--blue)' },
   'drh@groupe-rh.fr':          { password:'rh',        role:'drh',        name:'Pierre Morel',      vertical:'rh',       color:'var(--violet)' },
 };
 
@@ -813,7 +852,7 @@ function handleLogin(e) {
         if (cId) cId.value = email.split('@')[1].split('.')[0];
       }
       try { loadRules(); } catch(ex) { log('loadRules: ' + ex.message); }
-      try { addFeedEntry('AUTH', 'var(--emerald)', account.name + ' connecte'); } catch(ex) { log('feed: ' + ex.message); }
+      try { addFeedEntry('AUTH', 'var(--green)', account.name + ' connecte'); } catch(ex) { log('feed: ' + ex.message); }
       try { showToast('Bienvenue, ' + account.name, 'success'); } catch(ex) { log('toast: ' + ex.message); }
     } else {
       log('FAIL: bad credentials for "' + email + '"');
@@ -851,12 +890,12 @@ const state = {
 };
 
 const AGENTS = [
-  { name:'orchestrator', color:'var(--cyan)', label:'Orchestrateur' },
-  { name:'data', color:'var(--emerald)', label:'Agent Data' },
-  { name:'reasoning', color:'var(--amber)', label:'Agent Raisonnement' },
-  { name:'action', color:'var(--violet)', label:'Agent Action' },
-  { name:'supervisor', color:'var(--rose)', label:'Superviseur' },
-  { name:'mediator', color:'var(--orange)', label:'Médiateur' },
+  { name:'orchestrator', color:'var(--blue)',   label:'Orchestrateur' },
+  { name:'data',         color:'var(--green)',  label:'Agent Data' },
+  { name:'reasoning',    color:'var(--amber)',  label:'Agent Raisonnement' },
+  { name:'action',       color:'var(--violet)', label:'Agent Action' },
+  { name:'supervisor',   color:'var(--rose)',   label:'Superviseur' },
+  { name:'mediator',     color:'var(--orange)', label:'Médiateur' },
 ];
 
 const RULES_DATA = {
@@ -971,7 +1010,7 @@ function renderAgents() {
   list.innerHTML = AGENTS.map(a => `
     <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:rgba(15,23,42,.4);border-radius:6px;border-left:3px solid ${a.color}">
       <span style="font-size:.8rem;font-weight:600;color:${a.color}">${a.label}</span>
-      <span style="font-size:.7rem;color:var(--emerald);font-family:'JetBrains Mono',monospace">● CLOSED</span>
+      <span style="font-size:.7rem;color:var(--green);font-family:'JetBrains Mono',monospace">● CLOSED</span>
     </div>
   `).join('');
 }
@@ -1010,7 +1049,7 @@ async function submitIntention() {
   state.intentions++;
   updateStats();
 
-  addFeedEntry('INTENTION', 'var(--cyan)', `Nouvelle intention: "${query.substring(0,50)}..." (${vertical})`);
+  addFeedEntry('INTENTION', 'var(--blue)', `Nouvelle intention: "${query.substring(0,50)}..." (${vertical})`);
 
   // Simulate agent pipeline
   await simulatePipeline(vertical, clientId, query);
@@ -1022,14 +1061,10 @@ async function submitIntention() {
 
 async function simulatePipeline(vertical, clientId, query) {
   const steps = [
-    { agent:'orchestrator', color:'var(--cyan)', tag:'ROUTE', delay:400,
-      msg:`Routing → agents: data, reasoning, supervisor, mediator` },
-    { agent:'data', color:'var(--emerald)', tag:'DATA', delay:800,
-      msg:`3 sources trouvées (confiance: 0.85)` },
-    { agent:'mediator', color:'var(--orange)', tag:'CHECK', delay:300,
-      msg:`Règles évaluées: ${RULES_DATA[vertical]?.length || 0} → 0 déclenchées` },
-    { agent:'reasoning', color:'var(--amber)', tag:'REASONING', delay:600,
-      msg:`Analyse complète — confiance: 0.78` },
+    { agent:'orchestrator', color:'var(--blue)',   tag:'ROUTE',    delay:400, msg:`Routing → agents: data, reasoning, supervisor, mediator` },
+    { agent:'data',         color:'var(--green)',  tag:'DATA',     delay:800, msg:`3 sources trouvées (confiance: 0.85)` },
+    { agent:'mediator',     color:'var(--orange)', tag:'CHECK',    delay:300, msg:`Règles évaluées: ${RULES_DATA[vertical]?.length || 0} → 0 déclenchées` },
+    { agent:'reasoning',    color:'var(--amber)',  tag:'REASONING',delay:600, msg:`Analyse complète — confiance: 0.78` },
   ];
 
   // Check if any rules would be triggered
@@ -1090,7 +1125,7 @@ function renderArbitrations() {
       <div class="arb-positions">
         ${Object.entries(arb.positions).map(([agent, pos]) => `
           <div class="arb-pos" id="arb-pos-${arb.id}-${agent}" onclick="selectPosition('${arb.id}','${agent}')">
-            <div class="pos-agent" style="color:${agent==='data'?'var(--emerald)':'var(--amber)'}">${agent.toUpperCase()}</div>
+            <div class="pos-agent" style="color:${agent==='data'?'var(--green)':'var(--amber)'}">${agent.toUpperCase()}</div>
             <div class="pos-rec">Recommandation: ${pos.recommendation}</div>
             <div class="pos-conf">Confiance: ${(pos.confidence*100).toFixed(0)}%</div>
           </div>
@@ -1178,7 +1213,7 @@ async function loadJournal() {
       <div class="feed-entry">
         <span class="feed-time">${e.timestamp?.substring(11,19) || ''}</span>
         <span class="feed-tag" style="background:rgba(167,139,250,.15);color:var(--violet)">#${e.sequence}</span>
-        <span class="feed-tag" style="background:rgba(34,211,238,.1);color:var(--cyan)">${e.event_type}</span>
+        <span class="feed-tag" style="background:rgba(59,130,246,.1);color:var(--blue)">${e.event_type}</span>
         <span class="feed-msg">${e.agent_source} → ${e.intention_id?.substring(0,8) || ''}... ${e.client_id || ''}</span>
       </div>
     `).join('');
@@ -1191,7 +1226,7 @@ async function verifyJournal() {
     const el = document.getElementById('journal-valid');
     if (r.valid) {
       el.innerHTML = '✅ Chaîne valide';
-      el.style.color = 'var(--emerald)';
+      el.style.color = 'var(--green)';
       showToast('Journal: intégrité validée ✓', 'success');
     } else {
       el.innerHTML = `❌ ${r.errors?.length || 0} erreurs`;
@@ -1214,7 +1249,7 @@ async function testConnection() {
   const el = document.getElementById('api-status');
   if (r?.status === 'healthy') {
     el.innerHTML = '✅ Connecté';
-    el.style.color = 'var(--emerald)';
+    el.style.color = 'var(--green)';
     state.connected = true;
     showToast('API connectée !', 'success');
   } else {
@@ -1234,7 +1269,7 @@ async function loadComplianceReport() {
         Événements: ${r.metrics?.total_events || 0} |
         Conflits: ${r.metrics?.conflicts_detected || 0} |
         Violations: ${r.metrics?.compliance_violations || 0}<br>
-        Statut: <span style="color:${r.compliance_status?.status==='compliant'?'var(--emerald)':'var(--amber)}'}">${r.compliance_status?.status || 'N/A'}</span>
+        Statut: <span style="color:${r.compliance_status?.status==='compliant'?'var(--green)':'var(--amber)}'}">${r.compliance_status?.status || 'N/A'}</span>
       </div>
     `;
   } else {
@@ -1260,10 +1295,10 @@ async function loadVaultStats() {
 function init() {
   renderAgents();
   loadRules();
-  addFeedEntry('SYSTEM', 'var(--emerald)', 'Cortex Leman v5 démarré — 5 agents actifs');
-  addFeedEntry('BUS', 'var(--cyan)', 'NATS JetStream connecté (stream: CLEMAN_INTENTIONS)');
-  addFeedEntry('JOURNAL', 'var(--violet)', 'Journal WORM initialisé — hash-chainage SHA-256');
-  addFeedEntry('MEDIATEUR', 'var(--orange)', '6 verticales chargées (19 règles actives)');
+  addFeedEntry('SYSTEM', 'var(--green)',  'Cortex Leman v5 démarré — 5 agents actifs');
+  addFeedEntry('BUS', 'var(--blue)',  'NATS JetStream connecté (stream: CLEMAN_INTENTIONS)');
+  addFeedEntry('JOURNAL', 'var(--violet)',  'Journal WORM initialisé — hash-chainage SHA-256');
+  addFeedEntry('MEDIATEUR', 'var(--orange)',  '6 verticales chargées (19 règles actives)');
 
   // Auto-test connection
   testConnection();

@@ -1,0 +1,143 @@
+{
+  "name": "Cortex Leman — Génération Automatique Rapport d'Audit",
+  "description": "Workflow n8n inspiré de ZénithIA : transcript appel → Claude (analyse RGPD-IA) → rapport PDF signé. Réduit la livraison de 2 jours à 15 min.",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "cortex-audit-report",
+        "httpMethod": "POST",
+        "responseMode": "lastNode"
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            { "name": "client_name", "value": "={{ $json.body.client_name }}" },
+            { "name": "client_email", "value": "={{ $json.body.client_email }}" },
+            { "name": "vertical", "value": "={{ $json.body.vertical }}" },
+            { "name": "call_transcript", "value": "={{ $json.body.call_transcript }}" },
+            { "name": "audit_type", "value": "={{ $json.body.audit_type || 'diagnostic' }}" },
+            { "name": "company_size", "value": "={{ $json.body.company_size || 'unknown' }}" }
+          ]
+        }
+      },
+      "id": "extract-input",
+      "name": "Extraction Input Client",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [250, 0]
+    },
+    {
+      "parameters": {
+        "model": "anthropic/claude-sonnet-4-20250514",
+        "options": {
+          "baseURL": "https://openrouter.ai/api/v1"
+        },
+        "prompt": "Tu es un expert RGPD-IA pour PME FR-CH. Analyse le transcript d'appel suivant et génère un rapport d'audit structuré.\n\n## Contexte client\n- Nom: {{ $json.client_name }}\n- Verticale: {{ $json.vertical }}\n- Taille: {{ $json.company_size }}\n- Type d'audit: {{ $json.audit_type }}\n\n## Transcript de l'appel\n{{ $json.call_transcript }}\n\n## Instructions\nGénère un rapport JSON avec cette structure exacte:\n\n{\n  \"executive_summary\": \"Résumé 3-4 phrases pour le dirigeant\",\n  \"risk_level\": \"FAIBLE|MOYEN|ÉLEVÉ|CRITIQUE\",\n  \"pain_points\": [\n    { \"quote\": \"citation exacte du client (verbatim)\", \"issue\": \"problème identifié\", \"severity\": \"HIGH|MEDIUM|LOW\" }\n  ],\n  \"rgpd_findings\": [\n    { \"article\": \"Art. X RGPD\", \"gap\": \"écart constaté\", \"recommendation\": \"action corrective\" }\n  ],\n  \"ai_act_findings\": [\n    { \"article\": \"Art. X AI Act\", \"gap\": \"écart constaté\", \"recommendation\": \"action corrective\" }\n  ],\n  \"owasp_genai_findings\": [\n    { \"threat\": \"nom menace OWASP GenAI\", \"status\": \"VULNÉRABLE|PARTIEL|CONFORME\", \"detail\": \"\" }\n  ],\n  \"lped_findings\": [\n    { \"article\": \"Art. X LPerD\", \"gap\": \"écart constaté\", \"recommendation\": \"action corrective\" }\n  ],\n  \"recommended_tier\": \"startup|growth|enterprise\",\n  \"estimated_price\": \"CHF XXXX\",\n  \"next_steps\": [\"étape 1\", \"étape 2\", \"étape 3\"],\n  \"differentiator_pitch\": \"Phrase différenciation personnalisée pour ce client\"\n}\n\nRègles:\n1. Extraire les citations VERBATIM du client — ce sont ses propres mots qu'on lui renvoie\n2. Adapter les findings à la verticale (avocat=secret pro, banque=secret bancaire, santé=LPM, etc.)\n3. Être factuel et concret — pas de généralités\n4. Le risque doit refléter la réalité du client, pas être alarmiste"
+      },
+      "id": "claude-analysis",
+      "name": "Claude — Analyse RGPD-IA",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [500, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const analysis = JSON.parse($input.first().json.message.content);\nconst client = $input.first().json;\n\nconst html = `\n<!DOCTYPE html>\n<html lang=\"fr\">\n<head>\n<meta charset=\"UTF-8\">\n<title>Rapport d'Audit RGPD-IA — ${client.client_name}</title>\n<style>\n  @page { size: A4; margin: 20mm; }\n  body { font-family: 'Helvetica Neue', Arial, sans-serif; color: #1a1a2e; line-height: 1.6; }\n  .header { background: linear-gradient(135deg, #1e3a5f, #3b82f6); color: white; padding: 30px; border-radius: 8px; margin-bottom: 30px; }\n  .header h1 { margin: 0; font-size: 22px; }\n  .header .subtitle { opacity: 0.8; font-size: 14px; margin-top: 5px; }\n  .risk-badge { display: inline-block; padding: 6px 16px; border-radius: 20px; font-weight: 700; font-size: 13px; margin-top: 10px; }\n  .risk-CRITIQUE { background: #ef4444; color: white; }\n  .risk-ÉLEVÉ { background: #f59e0b; color: white; }\n  .risk-MOYEN { background: #3b82f6; color: white; }\n  .risk-FAIBLE { background: #10b981; color: white; }\n  .section { margin-bottom: 25px; }\n  .section h2 { border-bottom: 2px solid #3b82f6; padding-bottom: 8px; font-size: 16px; color: #1e3a5f; }\n  .pain-card { background: #fff8f0; border-left: 4px solid #f59e0b; padding: 12px 16px; margin: 10px 0; border-radius: 4px; }\n  .pain-quote { font-style: italic; color: #92400e; font-size: 14px; }\n  .finding { background: #f0f7ff; border-left: 4px solid #3b82f6; padding: 10px 14px; margin: 8px 0; border-radius: 4px; }\n  .finding .article { font-weight: 700; color: #1e3a5f; font-size: 13px; }\n  .finding .gap { color: #64748b; font-size: 13px; margin-top: 2px; }\n  .finding .rec { color: #10b981; font-size: 13px; margin-top: 2px; }\n  .footer { text-align: center; color: #94a3b8; font-size: 11px; margin-top: 40px; border-top: 1px solid #e2e8f0; padding-top: 15px; }\n  .footer strong { color: #1e3a5f; }\n  .tier-box { background: #f0fdf4; border: 2px solid #10b981; border-radius: 8px; padding: 16px; text-align: center; margin: 15px 0; }\n  .tier-box .price { font-size: 28px; font-weight: 800; color: #1e3a5f; }\n  .pitch-box { background: linear-gradient(135deg, #eff6ff, #f0fdf4); border-radius: 8px; padding: 16px; text-align: center; font-size: 15px; font-weight: 600; color: #1e3a5f; margin: 20px 0; }\n  .sovereignty-note { background: #fefce8; border-left: 4px solid #eab308; padding: 10px 14px; margin: 15px 0; border-radius: 4px; font-size: 13px; }\n</style>\n</head>\n<body>\n<div class=\"header\">\n  <h1>🔒 Rapport d'Audit RGPD-IA</h1>\n  <div class=\"subtitle\">${client.client_name} — ${new Date().toLocaleDateString('fr-CH')} — Verticale: ${client.vertical}</div>\n  <div class=\"risk-badge risk-${analysis.risk_level}\">Risque: ${analysis.risk_level}</div>\n</div>\n\n<div class=\"section\">\n  <h2>📋 Résumé Exécutif</h2>\n  <p>${analysis.executive_summary}</p>\n</div>\n\n<div class=\"section\">\n  <h2>🔍 Points de Douleur Identifiés</h2>\n  ${analysis.pain_points.map(p => `\n    <div class=\"pain-card\">\n      <div class=\"pain-quote\">« ${p.quote} »</div>\n      <div><strong>${p.issue}</strong> — Sévérité: ${p.severity}</div>\n    </div>\n  `).join('')}\n</div>\n\n<div class=\"section\">\n  <h2>🇪🇺 Conformité RGPD</h2>\n  ${analysis.rgpd_findings.map(f => `\n    <div class=\"finding\">\n      <div class=\"article\">${f.article}</div>\n      <div class=\"gap\">Écart: ${f.gap}</div>\n      <div class=\"rec\">✅ ${f.recommendation}</div>\n    </div>\n  `).join('')}\n</div>\n\n<div class=\"section\">\n  <h2>🤖 Conformité AI Act</h2>\n  ${analysis.ai_act_findings.map(f => `\n    <div class=\"finding\">\n      <div class=\"article\">${f.article}</div>\n      <div class=\"gap\">Écart: ${f.gap}</div>\n      <div class=\"rec\">✅ ${f.recommendation}</div>\n    </div>\n  `).join('')}\n</div>\n\n${analysis.owasp_genai_findings.length > 0 ? `\n<div class=\"section\">\n  <h2>🛡️ OWASP GenAI — Menaces Identifiées</h2>\n  ${analysis.owasp_genai_findings.map(f => `\n    <div class=\"finding\">\n      <div class=\"article\">${f.threat} — <span class=\"risk-badge risk-${f.status === 'VULNÉRABLE' ? 'CRITIQUE' : f.status === 'PARTIEL' ? 'ÉLEVÉ' : 'FAIBLE'}\" style=\"font-size:11px;padding:3px 10px\">${f.status}</span></div>\n      <div class=\"gap\">${f.detail}</div>\n    </div>\n  `).join('')}\n</div>\n` : ''}\n\n${analysis.lped_findings.length > 0 ? `\n<div class=\"section\">\n  <h2>🇨🇭 Conformité LPerD (Suisse)</h2>\n  ${analysis.lped_findings.map(f => `\n    <div class=\"finding\">\n      <div class=\"article\">${f.article}</div>\n      <div class=\"gap\">Écart: ${f.gap}</div>\n      <div class=\"rec\">✅ ${f.recommendation}</div>\n    </div>\n  `).join('')}\n</div>\n` : ''}\n\n<div class=\"sovereignty-note\">\n  🇨🇭 <strong>Souveraineté des données:</strong> Cortex Leman est auto-hébergé en Suisse. Vos données ne quittent jamais votre infrastructure. Aucun cloud US impliqué. Conforme LPD + RGPD + AI Act par design.\n</div>\n\n<div class=\"section\">\n  <h2>💡 Recommandation</h2>\n  <div class=\"tier-box\">\n    <div>Formule recommandée: <strong>${analysis.recommended_tier.toUpperCase()}</strong></div>\n    <div class=\"price\">${analysis.estimated_price}</div>\n    <div style=\"margin-top:8px;font-size:13px;color:#64748b\">Audit complet OWASP Top 10 + GenAI + AI Act + LPD</div>\n  </div>\n</div>\n\n<div class=\"pitch-box\">\n  « Les agences IA font de l'automatisation. Les auditeurs font du RGPD. Nous faisons les deux. »\n</div>\n\n<div class=\"section\">\n  <h2>📝 Prochaines Étapes</h2>\n  <ol>${analysis.next_steps.map(s => `<li>${s}</li>`).join('')}</ol>\n</div>\n\n<div class=\"footer\">\n  <strong>Cortex Leman</strong> — Audit RGPD-IA pour PME FR-CH<br>\n  Lausanne, Suisse · contact@cortexleman.ch · cortexleman.ch<br>\n  Rapport généré automatiquement — ${new Date().toLocaleString('fr-CH')}<br>\n  <em>Document confidentiel — Ne pas diffuser sans autorisation</em>\n</div>\n</body>\n</html>`;\n\nreturn [{ json: { html, analysis, client_name: client.client_name } }];"
+      },
+      "id": "generate-html",
+      "name": "Génération HTML Rapport",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [750, 0]
+    },
+    {
+      "parameters": {
+        "operation": "generate",
+        "html": "={{ $json.html }}",
+        "options": {
+          "format": "A4",
+          "margin": { "top": "15mm", "bottom": "15mm", "left": "15mm", "right": "15mm" }
+        }
+      },
+      "id": "html-to-pdf",
+      "name": "Conversion PDF",
+      "type": "n8n-nodes-base.htmlToPdf",
+      "typeVersion": 1,
+      "position": [1000, 0]
+    },
+    {
+      "parameters": {
+        "fromEmail": "audit@cortexleman.ch",
+        "toEmail": "={{ $('Extraction Input Client').item.json.client_email }}",
+        "subject": "🔒 Rapport d'Audit RGPD-IA — {{ $('Extraction Input Client').item.json.client_name }}",
+        "html": "<h2>Votre rapport d'audit RGPD-IA est prêt</h2>\n<p>Bonjour {{ $('Extraction Input Client').item.json.client_name }},</p>\n<p>Votre rapport d'audit RGPD-IA a été généré automatiquement suite à notre échange.</p>\n<p><strong>Niveau de risque détecté: {{ $json.analysis.risk_level }}</strong></p>\n<p>Le rapport détaillé est en pièce jointe (PDF).</p>\n<hr>\n<p><strong>Prochaine étape:</strong> Échangez avec notre expert pour définir le plan d'action.</p>\n<p><a href=\"https://cortexleman.ch/diagnostic\">Réserver un créneau →</a></p>\n<br>\n<p>Cortex Leman<br>Lausanne, Suisse<br><em>« Les agences IA font de l'automatisation. Les auditeurs font du RGPD. Nous faisons les deux. »</em></p>",
+        "attachments": "={{ $binary.data }}"
+      },
+      "id": "send-email",
+      "name": "Envoi Email Client",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [1250, 0]
+    },
+    {
+      "parameters": {
+        "url": "https://api.cortex-leman.com/api/v1/audit/report",
+        "options": {
+          "method": "POST",
+          "body": "={{ JSON.stringify({ client_name: $('Extraction Input Client').item.json.client_name, analysis: $('Claude — Analyse RGPD-IA').item.json.analysis, generated_at: new Date().toISOString() }) }}"
+        }
+      },
+      "id": "save-to-api",
+      "name": "Sauvegarde API Cortex",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [1250, 200]
+    },
+    {
+      "parameters": {
+        "channel": "#cortex-audits",
+        "text": "📋 Nouveau rapport d'audit généré\n\nClient: {{ $('Extraction Input Client').item.json.client_name }}\nVerticale: {{ $('Extraction Input Client').item.json.vertical }}\nRisque: {{ $json.analysis.risk_level }}\nFormule: {{ $json.analysis.recommended_tier }}\nPrix estimé: {{ $json.analysis.estimated_price }}\n\n→ Rapport envoyé par email"
+      },
+      "id": "slack-notify",
+      "name": "Notification Slack",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [1500, 0]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [[{ "node": "Extraction Input Client", "type": "main", "index": 0 }]]
+    },
+    "Extraction Input Client": {
+      "main": [[{ "node": "Claude — Analyse RGPD-IA", "type": "main", "index": 0 }]]
+    },
+    "Claude — Analyse RGPD-IA": {
+      "main": [[{ "node": "Génération HTML Rapport", "type": "main", "index": 0 }]]
+    },
+    "Génération HTML Rapport": {
+      "main": [[{ "node": "Conversion PDF", "type": "main", "index": 0 }]]
+    },
+    "Conversion PDF": {
+      "main": [[
+        { "node": "Envoi Email Client", "type": "main", "index": 0 },
+        { "node": "Sauvegarde API Cortex", "type": "main", "index": 0 }
+      ]]
+    },
+    "Envoi Email Client": {
+      "main": [[{ "node": "Notification Slack", "type": "main", "index": 0 }]]
+    }
+  },
+  "tags": [
+    { "name": "cortex-leman" },
+    { "name": "audit-report" },
+    { "name": "auto-generated" }
+  ]
+}

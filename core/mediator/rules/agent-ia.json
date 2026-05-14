@@ -1,0 +1,104 @@
+{
+  "vertical": "agent-ia",
+  "display_name": "Fournisseur d'agents IA",
+  "description": "Entreprises déployant des agents IA, chatbots, superhumans, clones IA (type 1mind, Drift, Intercom AI). Audit de conformité des agents IA déployés.",
+  "risk_level": "ELEVE",
+  "base_legale": "RGPD Art. 6(1)(f) — Intérêt légitime + Art. 22 — Décision automatisée",
+  "secret_professionnel": false,
+  "haute_protection": false,
+  "rules": [
+    {
+      "id": "agent-ia-001",
+      "name": "Transparence IA obligatoire",
+      "description": "L'utilisateur doit être informé qu'il interagit avec une IA, pas un humain",
+      "condition": "agent_ia_sans_label_transparence",
+      "action": "freeze",
+      "severity": "HIGH",
+      "references": ["AI Act Art. 52", "RGPD Art. 13-14"],
+      "details": "Si l'agent IA se présente comme un humain ou ne mentionne pas clairement son caractère IA, c'est une violation de l'AI Act (pratique de transparence) et potentiellement une pratique commerciale trompeuse."
+    },
+    {
+      "id": "agent-ia-002",
+      "name": "Consentement biométrique",
+      "description": "Le clonage de visage/voix nécessite un consentement explicite (Art. 9 RGPD)",
+      "condition": "clone_biometrique_sans_consentement",
+      "action": "freeze",
+      "severity": "CRITICAL",
+      "references": ["RGPD Art. 9", "AI Act Art. 52(3)", "LPerD Art. 31"],
+      "details": "Si l'agent utilise un visage ou une voix clonée (type superhuman/clone), le consentement explicite de la personne clonée ET de l'utilisateur est requis. Données biométriques = catégorie sensible."
+    },
+    {
+      "id": "agent-ia-003",
+      "name": "Décision automatisée avec droit d'explication",
+      "description": "Si l'agent IA prend des décisions affectant l'utilisateur (prix, éligibilité, refus), celui-ci a droit à une explication et à une intervention humaine",
+      "condition": "decision_automatisee_sans_recours",
+      "action": "freeze",
+      "severity": "HIGH",
+      "references": ["RGPD Art. 22", "AI Act Art. 14"],
+      "details": "Un agent IA qui refuse un client, fixe un prix personnalisé, ou filtre des prospects sans possibilité de recours humain viole l'Art. 22 RGPD."
+    },
+    {
+      "id": "agent-ia-004",
+      "name": "DPIA obligatoire pour agents IA",
+      "description": "Un agent IA qui collecte des données personnelles via conversation nécessite une AIPD/DPIA",
+      "condition": "agent_collectant_donnees_personnelles",
+      "action": "warn",
+      "severity": "HIGH",
+      "references": ["RGPD Art. 35", "AI Act Art. 9"],
+      "details": "Les agents IA conversant avec des prospects/clients collectent des données personnelles (nom, email, besoins, entreprise). Un traitement à grande échelle nécessite une AIPD."
+    },
+    {
+      "id": "agent-ia-005",
+      "name": "Data residency des conversations IA",
+      "description": "Les conversations avec l'agent IA doivent être hébergées conformément à la réglementation locale",
+      "condition": "conversations_hebergees_hors_ue_ch",
+      "action": "freeze",
+      "severity": "MEDIUM",
+      "references": ["RGPD Chap. V", "LPerD Art. 6", "Schrems II"],
+      "details": "Si les conversations transitent par des serveurs US (OpenAI, etc.), le transfert doit être encadré (SCC, consentement, ou derogation). En Suisse, la LPerD impose des exigences similaires."
+    },
+    {
+      "id": "agent-ia-006",
+      "name": "Manipulation comportementale",
+      "description": "L'agent IA ne doit pas utiliser de techniques de manipulation exploitées pour influencer le comportement de l'utilisateur",
+      "condition": "techniques_manipulation_detectees",
+      "action": "freeze",
+      "severity": "CRITICAL",
+      "references": ["AI Act Art. 5", "AI Act Art. 52"],
+      "details": "Les pratiques comme l'urgence artificielle, la personnalisation excessive pour forcer la vente, ou la dissimulation du caractère IA sont interdites ou restreintes par l'AI Act."
+    },
+    {
+      "id": "agent-ia-007",
+      "name": "Conservation des logs de conversation",
+      "description": "Les conversations avec l'agent IA sont des données personnelles et doivent respecter les règles de conservation",
+      "condition": "logs_conversation_sans_duree_conservation",
+      "action": "warn",
+      "severity": "MEDIUM",
+      "references": ["RGPD Art. 5(1)(e)", "RGPD Art. 17"],
+      "details": "Les conversations IA doivent avoir une durée de conservation définie, un droit d'accès (Art. 15) et un droit d'effacement (Art. 17)."
+    },
+    {
+      "id": "agent-ia-008",
+      "name": "Registro de sistemas de IA",
+      "description": "Les systèmes d'IA déployés doivent pouvoir être identifiés et tracés",
+      "condition": "systeme_ia_non_inventorie",
+      "action": "warn",
+      "severity": "MEDIUM",
+      "references": ["AI Act Art. 71", "AI Act Art. 52"],
+      "details": "Chaque agent IA déployé doit être documenté : modèle utilisé, données d'entraînement, finalité, mesures de sécurité."
+    },
+    {
+      "id": "agent-ia-009",
+      "name": "Auto-extension doit \u00eatre m\u00e9diationn\u00e9e",
+      "description": "Un agent IA ne peut pas se modifier lui-m\u00eame sans approbation humaine via le M\u00e9diateur",
+      "condition": {"==": [{"var": "event_type"}, "extension.proposed"]},
+      "action": "freeze",
+      "severity": "HIGH",
+      "references": ["AI Act Art. 14", "RGPD Art. 22", "AI Act Art. 9"],
+      "details": "Inspir\u00e9 de Jonas Templestein (dynamic worker configured) mais adapt\u00e9 pour la conformit\u00e9: un agent peut PROPOSER une auto-modification (nouveau code, nouvelle r\u00e8gle, nouveau comportement), mais le M\u00e9diateur g\u00e8le l'extension en attente d'arbitrage humain. Aucune auto-modification non-audit\u00e9e n'est permise. Pattern: EXTENSION_PROPOSED → MEDIATOR_FREEZE → ARBITRATION_REQUESTED → EXTENSION_APPROVED/REJECTED → EXTENSION_APPLIED."
+    }
+  ],
+  "pricing_note": "Même tarification que la verticale startup. Les fournisseurs d'agents IA sont un marché en expansion rapide.",
+  "competitors_referenced": ["1mind", "Drift", "Intercom AI", "Decagon", "Sierra"],
+  "source": "Analyse 1mind (Amanda Caholo interview, May 2026)"
+}

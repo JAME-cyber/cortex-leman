@@ -34,6 +34,15 @@ class BaseAgent(ABC):
         self._subscribe_subjects = subscribe_subjects or []
         self._running = False
 
+        # v5.3: Tracer agent-level
+        from monitoring.agent_tracer import agent_tracer
+        self._tracer = agent_tracer
+
+        # v5.3: Failure Memory
+        from core.agents.memory import failure_memory, procedural_memory
+        self._failure_memory = failure_memory
+        self._procedural_memory = procedural_memory
+
     async def start(self) -> None:
         """Démarrer l'agent"""
         for subject in self._subscribe_subjects:
@@ -64,6 +73,15 @@ class BaseAgent(ABC):
         client_id = data.get("client_id", "unknown")
         vertical = data.get("vertical", "unknown")
 
+        # v5.3: Démarrer le trace
+        trace = self._tracer.start_trace(
+            agent_name=self.name,
+            action="process",
+            intention_id=intention_id,
+            client_id=client_id,
+            vertical=vertical,
+        )
+
         try:
             result = await self.process(data, meta)
             cb.record_success()
@@ -76,9 +94,36 @@ class BaseAgent(ABC):
                     result=result,
                 )
 
+            # v5.3: Terminer le trace (succès)
+            tokens = result.get("tokens", {}) if result else {}
+            self._tracer.finish_trace(
+                trace, status="success",
+                tokens_in=tokens.get("in", 0),
+                tokens_out=tokens.get("out", 0),
+            )
+
         except Exception as e:
             cb.record_failure()
             logger.error(f"Agent [{self.name}] erreur: {e}")
+
+            # v5.3: Terminer le trace (erreur)
+            self._tracer.finish_trace(
+                trace, status="error",
+                error_type=type(e).__name__,
+                error_message=str(e),
+            )
+
+            # v5.3: Enregistrer l'échec
+            from core.agents.memory import FailureRecord
+            record = FailureRecord(
+                agent_name=self.name,
+                error_type=type(e).__name__,
+                error_message=str(e),
+                vertical=vertical,
+                client_id=client_id,
+                intention_id=intention_id,
+            )
+            self._failure_memory.record_failure(record)
 
             journal.append(
                 event_type=JournalEventType.AGENT_ERROR,
