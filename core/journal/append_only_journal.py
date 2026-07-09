@@ -21,6 +21,7 @@ from pathlib import Path
 from typing import Optional
 
 from core.journal.models import JournalEntry, JournalEventType
+from core.journal.worm_v2 import WormEncryption, PayloadMinimizer, JournalPurger, TenantIsolation, TreatmentRegistry
 from core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -45,6 +46,11 @@ class AppendOnlyJournal:
         self._last_hash = "GENESIS"
         self._current_file = None
 
+        # v2 — Conformité RGPD (audit o3)
+        self._encryption = WormEncryption()
+        self._minimize = settings.journal_minimize_payload
+        self._purger = JournalPurger(self._path, settings.journal_retention_months)
+
         # Créer le répertoire
         self._path.mkdir(parents=True, exist_ok=True)
 
@@ -63,8 +69,18 @@ class AppendOnlyJournal:
         with open(last_file, "r") as f:
             for line in f:
                 line = line.strip()
-                if line:
-                    last_entry = json.loads(line)
+                if not line:
+                    continue
+
+                # v2 — Déchiffrer si nécessaire
+                raw_line = line
+                if self._encryption.enabled:
+                    try:
+                        raw_line = self._encryption.decrypt(line)
+                    except ValueError:
+                        raw_line = line  # Fallback entrées non chiffrées
+
+                last_entry = json.loads(raw_line)
 
         if last_entry:
             self._sequence = last_entry.get("sequence", 0)
@@ -150,13 +166,27 @@ class AppendOnlyJournal:
             "signature": signature,
         })
 
+        # v2 — Minimisation du payload (RGPD art. 5-1c)
+        # Le hash est déjà calculé sur les données COMPLÈTES.
+        # La minimisation ne s'applique qu'au stockage au repos.
+        stored_entry = entry
+        if self._minimize and entry.payload:
+            minimized_payload = PayloadMinimizer.minimize(entry.payload)
+            stored_entry = entry.model_copy(update={"payload": minimized_payload})
+
+        # v2 — Sérialisation
+        line_data = stored_entry.model_dump_json() + "\n"
+
+        # v2 — Chiffrement au repos (AES-256)
+        if self._encryption.enabled:
+            line_data = self._encryption.encrypt(line_data.strip()) + "\n"
+
         # Écriture append-only
         file_path = self._get_current_file_path()
-        line = entry.model_dump_json() + "\n"
 
         try:
             with open(file_path, "a") as f:
-                f.write(line)
+                f.write(line_data)
         except IOError as e:
             self._sequence -= 1  # Rollback in-memory state
             logger.critical(f"Écriture journal ÉCHOUÉE: {e}")
@@ -191,7 +221,16 @@ class AppendOnlyJournal:
                         continue
 
                     try:
-                        entry = json.loads(line)
+                        # v2 — Déchiffrer si nécessaire
+                        raw_line = line
+                        if self._encryption.enabled:
+                            try:
+                                raw_line = self._encryption.decrypt(line)
+                            except ValueError:
+                                # Fallback: ligne non chiffrée (anciennes entrées)
+                                raw_line = line
+
+                        entry = json.loads(raw_line)
                         total_entries += 1
 
                         # Vérifier le chaînage
@@ -202,7 +241,6 @@ class AppendOnlyJournal:
                             )
 
                         # Recalculer le hash
-                        # Retirer entry_hash et signature pour le recalcul (même logique que append)
                         verify_data = {k: v for k, v in entry.items() if k not in ("entry_hash", "signature")}
                         expected_hash = hashlib.new(
                             self._hash_algo,
@@ -242,7 +280,16 @@ class AppendOnlyJournal:
                     line = line.strip()
                     if not line:
                         continue
-                    entry = json.loads(line)
+
+                    # v2 — Déchiffrer si nécessaire
+                    raw_line = line
+                    if self._encryption.enabled:
+                        try:
+                            raw_line = self._encryption.decrypt(line)
+                        except ValueError:
+                            raw_line = line  # Fallback anciennes entrées
+
+                    entry = json.loads(raw_line)
 
                     # Filtres
                     if intention_id and entry.get("intention_id") != intention_id:
@@ -255,6 +302,47 @@ class AppendOnlyJournal:
                     results.append(entry)
 
         return results[-limit:]
+
+    # ============================================================
+    # v2 — Méthodes RGPD complémentaires
+    # ============================================================
+
+    def purge_expired(self, dry_run: bool = True) -> dict:
+        """Purger les fichiers de journal expirés (RGPD art. 5-1e)"""
+        return self._purger.purge_expired(dry_run=dry_run)
+
+    def get_treatment_registry(self) -> dict:
+        """Registre des traitements RGPD art. 30"""
+        return TreatmentRegistry.get_registry()
+
+    def get_legal_basis_matrix(self) -> list[dict]:
+        """Matrice base légale par traitement (RGPD art. 6)"""
+        return TreatmentRegistry.get_legal_basis_matrix()
+
+    def query_tenant(
+        self,
+        client_id: str,
+        intention_id: Optional[str] = None,
+        event_type: Optional[JournalEventType] = None,
+        limit: int = 100,
+    ) -> list[dict]:
+        """Requêter le journal pour un tenant spécifique (isolation RGPD)"""
+        entries = self.query(
+            intention_id=intention_id,
+            event_type=event_type,
+            client_id=client_id,
+            limit=limit,
+        )
+        return TenantIsolation.filter_entries(entries, client_id=client_id)
+
+    @property
+    def encryption_status(self) -> dict:
+        """Statut du chiffrement v2"""
+        return {
+            "enabled": self._encryption.enabled,
+            "algorithm": "AES-256 (Fernet)" if self._encryption.enabled else "none",
+            "key_derivation": "PBKDF2-SHA256 (480k iterations)" if self._encryption.enabled else "n/a",
+        }
 
     @property
     def last_hash(self) -> str:

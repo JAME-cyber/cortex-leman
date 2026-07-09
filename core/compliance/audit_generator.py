@@ -563,6 +563,106 @@ class AuditDocumentGenerator:
         return evidence
 
     # ============================================================
+    # Web Compliance Scan (RGPD — site public du client)
+    # ============================================================
+
+    def generate_web_compliance_report(self, url: str, client_id: str = None) -> dict:
+        """
+        Scanner la conformité RGPD du site web public d'un client.
+
+        Détecte: trackers, CMP, formulaires PII, headers de sécurité,
+        politique de confidentialité, mentions IA/chatbot.
+
+        Ce scan couvre la partie 'surface publique' de l'audit RGPD.
+        Il complète les documents internes (AIPD, DPO) en vérifiant
+        ce que les utilisateurs voient réellement.
+        """
+        import sys
+        scanner_path = Path(__file__).parent / "web_compliance_scanner.py"
+        # Import dynamique pour éviter la dépendance circulaire
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "web_compliance_scanner", scanner_path
+        )
+        scanner_mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(scanner_mod)
+
+        scanner = scanner_mod.ComplianceScanner(url)
+        scan_results = scanner.run()
+
+        # Construire le document d'audit au même format que les autres
+        verdict = scan_results.get("verdict", {})
+
+        report = {
+            "document_type": "Web Compliance Scan",
+            "document_id": f"web-{uuid.uuid4().hex[:12]}",
+            "version": "1.0",
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "client_id": client_id or "À COMPLÉTER",
+            "scan_url": url,
+            "scan_date": scan_results.get("scan_date"),
+            "final_url": scan_results.get("final_url"),
+            "http_status": scan_results.get("status_code"),
+            "verdict": verdict.get("label", "N/A"),
+            "checks": {},
+            "recommendations": [],
+        }
+
+        # Convertir les checks du scanner en format audit
+        checks = scan_results.get("checks", {})
+        check_meta = {
+            "tls": ("TLS / HTTPS", "Sécurité transport"),
+            "trackers": ("Trackers & Analytics", "RGPD Art. 6/7 — consentement"),
+            "cookie_consent": ("Bandeau cookies / CMP", "RGPD Art. 7 — consentement"),
+            "forms": ("Formulaires & PII", "RGPD Art. 5/13/14 — information"),
+            "security_headers": ("Headers de sécurité HTTP", "ISO 27001 — A.8.9"),
+            "privacy_policy": ("Politique de confidentialité", "RGPD Art. 13/14"),
+            "ai_mentions": ("Mentions IA / Chatbot", "RGPD Art. 22 + AI Act"),
+        }
+
+        for key, (title, regulation) in check_meta.items():
+            check = checks.get(key, {})
+            status = check.get("status", "unknown")
+
+            report["checks"][key] = {
+                "title": title,
+                "regulation_ref": regulation,
+                "status": status.upper(),
+                "severity": check.get("severity"),
+                "findings": check.get("findings", []),
+            }
+
+            # Construire les recommandations à partir des fails
+            if status == "fail":
+                report["recommendations"].append({
+                    "area": title,
+                    "priority": "HAUTE",
+                    "regulation": regulation,
+                    "action": check.get("findings", ["Action requise"])[0],
+                })
+            elif status == "warn":
+                report["recommendations"].append({
+                    "area": title,
+                    "priority": "MOYENNE",
+                    "regulation": regulation,
+                    "action": check.get("findings", ["À vérifier"])[0],
+                })
+
+        # Données détaillées pour l'auditeur
+        report["details"] = {
+            "tracker_count": checks.get("trackers", {}).get("tracker_count", 0),
+            "tracker_categories": checks.get("trackers", {}).get("categories", {}),
+            "cmp_detected": checks.get("cookie_consent", {}).get("details", {}).get("cmp_detected", False),
+            "cmp_name": checks.get("cookie_consent", {}).get("details", {}).get("cmp_name"),
+            "forms_with_pii": checks.get("forms", {}).get("forms_with_pii", 0),
+            "privacy_policy_links": checks.get("privacy_policy", {}).get("details", {}).get("links", []),
+            "ai_mentions_count": checks.get("ai_mentions", {}).get("ai_mentions_count", 0),
+        }
+
+        self._save_document(report)
+        return report
+
+    # ============================================================
     # Helpers
     # ============================================================
 

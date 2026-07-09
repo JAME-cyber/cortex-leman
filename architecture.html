@@ -66,30 +66,30 @@
     <div class="header-row">
       <div class="pulse-dot"></div>
       <h1>Cortex Leman v5 — Graphe de Confiance</h1>
-      <span class="badge badge-v5">v5.3</span>
-      <span class="badge badge-score">215/215 tests ✅</span>
-      <span class="badge badge-new">Memory + Context Builder + Agent Tracer</span>
+      <span class="badge badge-v5">v5.6</span>
+      <span class="badge badge-score">656/656 tests ✅</span>
+      <span class="badge badge-new">WORM v2 RGPD + SGAI ISO 42001 + Audit API 9 endpoints</span>
     </div>
-    <div class="subtitle">Infrastructure de confiance IA pour professions régulées franco-suisses — 6 verticales, 2 modes de déploiement, 51 endpoints</div>
-    <div class="subtitle" style="color:#f472b6;margin-top:0.25rem">✦ v5.3: Mémoire Procédurale + Failure Memory + Context Builder (5 couches) + Agent Tracer JSONL</div>
+    <div class="subtitle">Infrastructure d'audit IA pour professions régulées franco-suisses — 6 verticales, 2 modes de déploiement, 78 endpoints</div>
+    <div class="subtitle" style="color:#f472b6;margin-top:0.25rem">✦ v5.6: WORM v2 (AES-256 + minimisation RGPD) + SGAI ISO 42001 + API Audit 9 endpoints — Cross-validé par DeepSeek R1 · Qwen3 · Sonnet 4 · OpenAI o3</div>
   </div>
 
   <!-- STATS BAR -->
   <div class="stats-bar">
-    <div class="stat"><div class="stat-value cyan">121</div><div class="stat-label">Fichiers source</div></div>
-    <div class="stat"><div class="stat-value emerald">29K+</div><div class="stat-label">Lignes de code</div></div>
+    <div class="stat"><div class="stat-value cyan">140+</div><div class="stat-label">Fichiers source</div></div>
+    <div class="stat"><div class="stat-value emerald">50K+</div><div class="stat-label">Lignes de code</div></div>
     <div class="stat"><div class="stat-value amber">22</div><div class="stat-label">Règles JsonLogic</div></div>
     <div class="stat"><div class="stat-value violet">6</div><div class="stat-label">Verticales métier</div></div>
-    <div class="stat"><div class="stat-value blue">51</div><div class="stat-label">Endpoints API</div></div>
-    <div class="stat"><div class="stat-value rose">31</div><div class="stat-label">Sujets NATS</div></div>
-    <div class="stat"><div class="stat-value pink">215</div><div class="stat-label">Tests ✅</div></div>
-    <div class="stat"><div class="stat-value teal">10</div><div class="stat-label">Fichiers test</div></div>
-    <div class="stat"><div class="stat-value lime">5</div><div class="stat-label">CI/CD Jobs</div></div>
+    <div class="stat"><div class="stat-value blue">78</div><div class="stat-label">Endpoints API</div></div>
+    <div class="stat"><div class="stat-value rose">40</div><div class="stat-label">Sujets NATS</div></div>
+    <div class="stat"><div class="stat-value pink">656</div><div class="stat-label">Tests ✅</div></div>
+    <div class="stat"><div class="stat-value teal">33</div><div class="stat-label">Tools MCP</div></div>
+    <div class="stat"><div class="stat-value lime">5</div><div class="stat-label">Traitements RGPD</div></div>
   </div>
 
   <!-- ARCHITECTURE DIAGRAM -->
   <div class="diagram-container">
-    <div class="section-title"><div class="dot" style="background:#22d3ee"></div> Architecture — Graphe de Confiance v5.2</div>
+    <div class="section-title"><div class="dot" style="background:#22d3ee"></div> Architecture — Graphe de Confiance v5.6</div>
     <svg viewBox="0 0 1400 780" xmlns="http://www.w3.org/2000/svg">
       <!-- Background grid -->
       <defs>
@@ -146,7 +146,7 @@
       <!-- NATS BUS - CENTRAL -->
       <rect x="420" y="180" width="340" height="50" rx="25" fill="rgba(34,211,238,0.05)" stroke="#22d3ee" stroke-width="1" stroke-dasharray="6"/>
       <text x="590" y="202" text-anchor="middle" fill="#22d3ee" font-size="11" font-weight="600">NATS JETSTREAM</text>
-      <text x="590" y="218" text-anchor="middle" fill="#64748b" font-size="8">31 sujets • pair-à-pair asynchrone</text>
+      <text x="590" y="218" text-anchor="middle" fill="#64748b" font-size="8">40 sujets • pair-à-pair asynchrone</text>
       <line x1="590" y1="110" x2="590" y2="180" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#arrow-cyan)"/>
 
       <!-- AGENT DATA -->
@@ -201,20 +201,20 @@
 
       <!-- JOURNAL WORM -->
       <rect x="850" y="280" width="220" height="80" rx="8" fill="rgba(251,191,36,0.08)" stroke="#fbbf24" stroke-width="1"/>
-      <text x="960" y="302" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="600">JOURNAL WORM</text>
+      <text x="960" y="302" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="600">JOURNAL WORM v2</text>
       <text x="960" y="318" text-anchor="middle" fill="#94a3b8" font-size="8">Append-only • Hash-chainé SHA-256</text>
-      <text x="960" y="332" text-anchor="middle" fill="#94a3b8" font-size="8">HMAC signé • Immuable</text>
-      <text x="960" y="348" text-anchor="middle" fill="#fbbf24" font-size="7">Traçabilité complète</text>
+      <text x="960" y="332" text-anchor="middle" fill="#22d3ee" font-size="8">🔒 AES-256 • Minimisation RGPD</text>
+      <text x="960" y="348" text-anchor="middle" fill="#34d399" font-size="7">Purge 24 mois • Isolation tenant</text>
       <line x1="760" y1="205" x2="850" y2="300" stroke="#fbbf24" stroke-width="0.8" stroke-dasharray="3"/>
 
       <!-- SECURITY STACK -->
       <rect x="850" y="410" width="220" height="100" rx="8" fill="rgba(251,113,133,0.08)" stroke="#fb7185" stroke-width="1"/>
-      <text x="960" y="432" text-anchor="middle" fill="#fb7185" font-size="11" font-weight="600">SÉCURITÉ</text>
+      <text x="960" y="432" text-anchor="middle" fill="#fb7185" font-size="11" font-weight="600">SÉCURITÉ + RGPD</text>
       <text x="960" y="449" text-anchor="middle" fill="#94a3b8" font-size="8">Circuit Breaker (seuil 5)</text>
       <text x="960" y="463" text-anchor="middle" fill="#94a3b8" font-size="8">Verrou Distribué (Redis)</text>
       <text x="960" y="477" text-anchor="middle" fill="#94a3b8" font-size="8">Saga + Compensation</text>
-      <text x="960" y="491" text-anchor="middle" fill="#94a3b8" font-size="8">Compliance Gateway</text>
-      <text x="960" y="505" text-anchor="middle" fill="#f472b6" font-size="7">🔑 Chiffrement Fernet (at-rest)</text>
+      <text x="960" y="491" text-anchor="middle" fill="#34d399" font-size="8">Registre traitements art. 30</text>
+      <text x="960" y="505" text-anchor="middle" fill="#22d3ee" font-size="7">🔒 AES-256 + Minimisation + Purge RGPD</text>
 
       <!-- RAG CHROMADB -->
       <rect x="850" y="170" width="220" height="80" rx="8" fill="rgba(45,212,191,0.1)" stroke="#2dd4bf" stroke-width="1.5"/>
@@ -263,6 +263,56 @@
       <text x="1240" y="119" text-anchor="middle" fill="#fb7185" font-size="9" font-weight="600">HAUTE PROTECTION — Ollama · K3s</text>
       <text x="1240" y="129" text-anchor="middle" fill="#fb7185" font-size="7">Avocat, Banque, Santé</text>
 
+      <!-- AGENT EVALUATEUR (v5.4 - Generator-Evaluator pattern Anthropic) -->
+      <rect x="580" y="155" width="200" height="45" rx="8" fill="rgba(244,114,182,0.15)" stroke="#f472b6" stroke-width="1.5"/>
+      <text x="680" y="172" text-anchor="middle" fill="#f472b6" font-size="10" font-weight="700">AGENT ÉVALUATEUR</text>
+      <text x="680" y="188" text-anchor="middle" fill="#94a3b8" font-size="8">Contexte fraîche + Rubrique dure</text>
+      <line x1="780" y1="175" x2="760" y2="205" stroke="#f472b6" stroke-width="0.8" stroke-dasharray="3" marker-end="url(#arrow-pink)"/>
+
+      <!-- CONTRACT NEGOTIATION (v5.4) -->
+      <rect x="330" y="155" width="200" height="45" rx="8" fill="rgba(45,212,191,0.15)" stroke="#2dd4bf" stroke-width="1.5"/>
+      <text x="430" y="172" text-anchor="middle" fill="#2dd4bf" font-size="10" font-weight="700">CONTRACT NEGOTIATION</text>
+      <text x="430" y="188" text-anchor="middle" fill="#94a3b8" font-size="8">Reasoning ↔ Médiateur</text>
+      <line x1="430" y1="155" x2="430" y2="120" stroke="#2dd4bf" stroke-width="0.8" stroke-dasharray="3"/>
+
+      <!-- HANDOFF JSON (v5.4) -->
+      <rect x="830" y="555" width="220" height="65" rx="8" fill="rgba(163,230,53,0.15)" stroke="#a3e635" stroke-width="1.5"/>
+      <text x="940" y="575" text-anchor="middle" fill="#a3e635" font-size="10" font-weight="700">HANDOFF JSON</text>
+      <text x="940" y="590" text-anchor="middle" fill="#94a3b8" font-size="8">Breadcrumbs inter-sessions</text>
+      <text x="940" y="605" text-anchor="middle" fill="#64748b" font-size="7">Features · Lessons · Next steps</text>
+
+      <!-- Connection: Action → Evaluator -->
+      <line x1="740" y1="300" x2="740" y2="200" stroke="#f472b6" stroke-width="0.8" stroke-dasharray="4"/>
+      <text x="748" y="250" fill="#f472b6" font-size="7">évalue</text>
+
+      <!-- Connection: Evaluator → Reasoning (FAIL loop) -->
+      <path d="M 580 185 Q 500 140 430 155" fill="none" stroke="#fb7185" stroke-width="0.8" stroke-dasharray="4"/>
+      <text x="495" y="148" fill="#fb7185" font-size="7">FAIL → renvoie</text>
+
+      <!-- Connection: Reasoning → Contract → Mediator -->
+      <line x1="430" y1="200" x2="430" y2="280" stroke="#2dd4bf" stroke-width="0.8" stroke-dasharray="3"/>
+      <text x="435" y="240" fill="#2dd4bf" font-size="7">contrat</text>
+
+      <!-- Connection: Arbitrage → Handoff -->
+      <line x1="670" y1="600" x2="830" y2="590" stroke="#a3e635" stroke-width="0.8" stroke-dasharray="3" marker-end="url(#arrow)"/>
+
+      <!-- PRECEDENT STORE (v5.5) -->
+      <rect x="330" y="660" width="160" height="50" rx="8" fill="rgba(244,114,182,0.15)" stroke="#f472b6" stroke-width="1.5"/>
+      <text x="410" y="680" text-anchor="middle" fill="#f472b6" font-size="9" font-weight="700">PRECEDENT STORE</text>
+      <text x="410" y="695" text-anchor="middle" fill="#64748b" font-size="7">Jurisprudence IA • Auto-promotion</text>
+      <line x1="500" y1="640" x2="460" y2="660" stroke="#f472b6" stroke-width="0.8" stroke-dasharray="3" marker-end="url(#arrow-pink)"/>
+
+      <!-- COMPLIANCE GOALS (v5.5) -->
+      <rect x="510" y="660" width="160" height="50" rx="8" fill="rgba(52,211,153,0.15)" stroke="#34d399" stroke-width="1.5"/>
+      <text x="590" y="680" text-anchor="middle" fill="#34d399" font-size="9" font-weight="700">COMPLIANCE GOALS</text>
+      <text x="590" y="695" text-anchor="middle" fill="#64748b" font-size="7">12 templates × 6 verticales</text>
+
+      <!-- AGENT IDENTITY KYA (v5.5) -->
+      <rect x="850" y="340" width="220" height="55" rx="8" fill="rgba(96,165,250,0.15)" stroke="#60a5fa" stroke-width="1.5"/>
+      <text x="960" y="360" text-anchor="middle" fill="#60a5fa" font-size="10" font-weight="700">AGENT IDENTITY KYA</text>
+      <text x="960" y="375" text-anchor="middle" fill="#94a3b8" font-size="8">18 scopes • Serment numérique</text>
+      <text x="960" y="389" text-anchor="middle" fill="#64748b" font-size="7">Délégation OAuth-like • Audit trail</text>
+
       <!-- KNOWLEDGE VAULT -->
       <rect x="1130" y="550" width="220" height="80" rx="8" fill="rgba(52,211,153,0.08)" stroke="#34d399" stroke-width="1"/>
       <text x="1240" y="572" text-anchor="middle" fill="#34d399" font-size="10" font-weight="600">KNOWLEDGE VAULT</text>
@@ -300,8 +350,7 @@
     </svg>
   </div>
 
-  <!-- AGENT CARDS -->
-  <div class="section-title"><div class="dot" style="background:#34d399"></div> Agents & Composants principaux</div>
+    <div class="section-title"><div class="dot" style="background:#34d399"></div> Agents & Composants principaux</div>
   <div class="cards">
     <div class="card">
       <div class="card-header"><div class="card-dot cyan"></div><h3>Orchestrateur</h3></div>
@@ -351,6 +400,7 @@
         <li>Gel préventif (montant ≥ 10K)</li>
         <li>Détecte contradictions entre agents</li>
         <li>Prépare dossiers d'arbitrage</li>
+        <li class="new-tag">✦ PrecedentStore intégré (jurisprudence)</li>
         <li class="critical">PROGRAMMATIQUE — aucun LLM</li>
       </ul>
     </div>
@@ -366,78 +416,101 @@
     </div>
   </div>
 
-  <!-- NEW COMPONENTS -->
-  <div class="section-title" style="margin-top:2rem"><div class="dot" style="background:#f472b6"></div> Nouveaux Composants v5.2 <span class="badge badge-new">NEW</span></div>
+  <div class="section-title" style="margin-top:2rem"><div class="dot" style="background:#f472b6"></div> v5.5 — PrecedentStore + Compliance Goals + Agent Identity <span class="badge badge-new">Inspiré OpenAI × La French</span></div>
   <div class="cards">
-    <div class="card" style="border-color: rgba(45,212,191,0.3);">
-      <div class="card-header"><div class="card-dot teal"></div><h3>RAG ChromaDB</h3></div>
+    <div class="card" style="border-color: rgba(244,114,182,0.4);">
+      <div class="card-header"><div class="card-dot pink"></div><h3>PrecedentStore</h3></div>
       <ul>
-        <li>Recherche sémantique vectorielle</li>
-        <li>Embeddings all-MiniLM-L6-v2</li>
-        <li>Isolation par client (RGPD droit à l'oubli)</li>
-        <li>Chunking 500 car. avec overlap</li>
-        <li>Context injection pour agents LLM</li>
-        <li>Textes réglementaires vectorisés</li>
-        <li class="new-tag">5 endpoints: /rag/search, /rag/index, /rag/seed, /rag/stats, /rag/client/{id}</li>
+        <li><span class="metric">Jurisprudence IA — chaque arbitrage crée un précédent</span></li>
+        <li>Force: WEAK (1) → MEDIUM (2) → STRONG (3+)</li>
+        <li>3+ précédents similaires → suggestion de règle JsonLogic</li>
+        <li>Matching par signature de contexte + scoring de pertinence</li>
+        <li>Expert approuve/rejette les candidats de promotion</li>
+        <li>Persistance + journalisation WORM</li>
+        <li class="new-tag">Intégré dans le Médiateur (query avant chaque évaluation)</li>
+        <li class="new-tag">6 endpoints: /precedents, /precedents/query, /precedents/stats, /precedents/candidates/*</li>
       </ul>
     </div>
-    <div class="card" style="border-color: rgba(244,114,182,0.3);">
-      <div class="card-header"><div class="card-dot pink"></div><h3>MCP Server</h3></div>
+    <div class="card" style="border-color: rgba(52,211,153,0.4);">
+      <div class="card-header"><div class="card-dot emerald"></div><h3>Compliance Goals</h3></div>
       <ul>
-        <li>Model Context Protocol (JSON-RPC 2.0)</li>
-        <li>Expose RAG via protocole standard</li>
-        <li>Compatible Claude Desktop, Cursor, etc.</li>
-        <li>Tools: rag_search, rag_regulatory, rag_stats</li>
-        <li>Transport SSE/stdio</li>
-        <li class="new-tag">1 endpoint: POST /mcp</li>
+        <li><span class="metric">Le /goal d'OpenAI adapté à la conformité</span></li>
+        <li>12 templates: RGPD, AI Act, KYC/AML, Secret Pro, HDS...</li>
+        <li>Sous-tâches séquentielles avec progression 0→100%</li>
+        <li>Pause/Resume par le Médiateur</li>
+        <li>Chaque étape vérifiée + journalisée dans le WORM</li>
+        <li>Templates par verticale (2 par verticale)</li>
+        <li class="new-tag">7 endpoints: POST /compliance-goals, /start, /pause, /resume, GET /templates...</li>
       </ul>
     </div>
-    <div class="card" style="border-color: rgba(244,114,182,0.3);">
-      <div class="card-header"><div class="card-dot pink"></div><h3>A2A Adapter</h3></div>
+    <div class="card" style="border-color: rgba(96,165,250,0.4);">
+      <div class="card-header"><div class="card-dot blue"></div><h3>Agent Identity (KYA)</h3></div>
       <ul>
-        <li>Agent-to-Agent Protocol</li>
-        <li>Bridge NATS ↔ protocole A2A standard</li>
-        <li>Compatible AG2, CrewAI, agents tiers</li>
-        <li>Messages: discover, send_message, get_status</li>
-        <li class="new-tag">1 endpoint: POST /a2a</li>
-      </ul>
-    </div>
-    <div class="card" style="border-color: rgba(239,68,68,0.3);">
-      <div class="card-header"><div class="card-dot red"></div><h3>AutoDefense Guardrails</h3></div>
-      <ul>
-        <li>Inspiré du paper AG2 AutoDefense</li>
-        <li>3 validateurs indépendants en parallèle</li>
-        <li>Vote majoritaire → block/pass</li>
-        <li>Détection anti-jailbreak</li>
-        <li>Détection prompt injection</li>
-        <li class="new-tag">1 endpoint: POST /guardrails/autodefense</li>
-      </ul>
-    </div>
-    <div class="card" style="border-color: rgba(167,139,250,0.3);">
-      <div class="card-header"><div class="card-dot violet"></div><h3>Monitoring & Tracing</h3></div>
-      <ul>
-        <li>Prometheus metrics sur /metrics</li>
-        <li>Grafana dashboard préconfiguré</li>
-        <li>OpenTelemetry distributed tracing</li>
-        <li>Spans par agent (latence, health)</li>
-        <li>Dégradation gracieuse si OTel absent</li>
-        <li class="new-tag">2 endpoints: GET /health, GET /metrics</li>
-      </ul>
-    </div>
-    <div class="card" style="border-color: rgba(251,113,133,0.3);">
-      <div class="card-header"><div class="card-dot rose"></div><h3>Chiffrement Fernet</h3></div>
-      <ul>
-        <li>Chiffrement at-rest (Fernet/AES)</li>
-        <li>PII et secrets clients protégés</li>
-        <li>Conforme RGPD Art. 32</li>
-        <li>Rotation des clés supportée</li>
-        <li class="new-tag">Module: core/security/encryption.py</li>
+        <li><span class="metric">Know Your Agent — premier KYA régulé</span></li>
+        <li>6 agents avec cartes d'identité signées</li>
+        <li>18 scopes granulaires (data.read, mediator.freeze...)</li>
+        <li>Serment numérique HMAC-SHA256 par session</li>
+        <li>Délégation OAuth-like: token parent → token enfant</li>
+        <li>Suspension/révocation d'agents suspects</li>
+        <li class="new-tag">Intégré dans BaseAgent (KYA check avant chaque message)</li>
+        <li class="new-tag">5 endpoints: /agents/identities/*, /activate, /deactivate, /audit, /suspend</li>
       </ul>
     </div>
   </div>
 
-  <!-- v5.3 NEW MODULES -->
-  <div class="section-title" style="margin-top:2rem"><div class="dot" style="background:#2dd4bf"></div> Mémoire & Contexte v5.3 <span class="badge badge-new">NEW</span></div>
+  <!-- v5.6 WORM v2 + SGAI + AUDIT API -->
+  <div class="section-title" style="margin-top:2rem"><div class="dot" style="background:#22d3ee"></div> v5.6 — Conformité RGPD + SGAI ISO 42001 + Audit API <span class="badge badge-new">Cross-validé o3</span></div>
+  <div class="cards">
+    <div class="card" style="border-color: rgba(34,211,238,0.5);">
+      <div class="card-header"><div class="card-dot cyan"></div><h3>WORM v2 — RGPD Conforme</h3></div>
+      <ul>
+        <li><span class="metric">🔒 Chiffrement AES-256 au repos (Fernet)</span></li>
+        <li>PBKDF2-SHA256 dérivation de clé (480k itérations)</li>
+        <li>PayloadMinimizer — masque champs sensibles</li>
+        <li>Purge automatique après 24 mois (art. 5-1e)</li>
+        <li>Isolation multi-tenant par client_id</li>
+        <li>Rétrocompatible avec entrées v1 non chiffrées</li>
+        <li class="new-tag">Module: core/journal/worm_v2.py</li>
+      </ul>
+    </div>
+    <div class="card" style="border-color: rgba(52,211,153,0.5);">
+      <div class="card-header"><div class="card-dot emerald"></div><h3>SGAI ISO 42001</h3></div>
+      <ul>
+        <li><span class="metric">Manuel Qualité IA complet</span></li>
+        <li>Politique de conformité IA (6 engagements)</li>
+        <li>Registre des risques IA (8 risques)</li>
+        <li>Comité d'éthique (3 membres externes)</li>
+        <li>Gestion des incidents (SLA P1-P4)</li>
+        <li>Référentiel AI Act 9-62 + RGPD 5-44 + secret pro</li>
+        <li class="new-tag">Document: docs/sgai/MANUAL-QUALITE-IA.md</li>
+      </ul>
+    </div>
+    <div class="card" style="border-color: rgba(96,165,250,0.5);">
+      <div class="card-header"><div class="card-dot blue"></div><h3>Audit API — 9 endpoints</h3></div>
+      <ul>
+        <li><span class="metric">GET /audit/export — Données pour certificateur</span></li>
+        <li>GET /audit/compliance-score — Score 0-100</li>
+        <li>GET /audit/worm-extract — Extrait brut auditeur</li>
+        <li>GET /audit/rgpd/registry — Registre art. 30 (PUBLIC)</li>
+        <li>GET /audit/rgpd/legal-basis — Matrice art. 6 (PUBLIC)</li>
+        <li>GET /audit/ai-act-controls — Référentiel art. 9-62</li>
+        <li class="new-tag">Module: api/routes/audit.py</li>
+      </ul>
+    </div>
+    <div class="card" style="border-color: rgba(244,114,182,0.5);">
+      <div class="card-header"><div class="card-dot pink"></div><h3>TreatmentRegistry RGPD</h3></div>
+      <ul>
+        <li><span class="metric">5 traitements documentés (art. 30)</span></li>
+        <li>journal.worm.append → intérêt légitime</li>
+        <li>mediator.check → conformité réglementaire</li>
+        <li>rag.search → conformité</li>
+        <li>llm.inference → service IA</li>
+        <li>arbitration.decision → art. 22.3</li>
+        <li>Matrice base légale par traitement (art. 6)</li>
+        <li class="new-tag">Module: core/journal/worm_v2.py::TreatmentRegistry</li>
+      </ul>
+    </div>
+  </div>
   <div class="cards">
     <div class="card" style="border-color: rgba(45,212,191,0.3);">
       <div class="card-header"><div class="card-dot teal"></div><h3>ProceduralMemory</h3></div>
@@ -484,6 +557,98 @@
       </ul>
     </div>
   </div>
+
+  <!-- v5.4 ANTHROPIC PATTERNS -->
+  <div class="section-title" style="margin-top:2rem"><div class="dot" style="background:#f472b6"></div> Patterns Anthropic v5.4 <span class="badge badge-new">NEW</span></div>
+  <div class="cards">
+    <div class="card" style="border-color: rgba(244,114,182,0.4);">
+      <div class="card-header"><div class="card-dot pink"></div><h3>Agent Évaluateur</h3></div>
+      <ul>
+        <li><span class="metric">Pattern Generator-Evaluator (Anthropic)</span></li>
+        <li>Context window fraîche, system prompt dur</li>
+        <li>Tests programmatiques (API, WORM journal)</li>
+        <li>Tests visuels (Playwright screenshots)</li>
+        <li>Critique LLM avec rubriques subjectives</li>
+        <li>Rubriques par verticale (avocat, santé, banque)</li>
+        <li>FAIL → renvoie au Reasoning (ne corrige JAMAIS)</li>
+        <li class="new-tag">Module: core/agents/evaluator_agent.py</li>
+      </ul>
+    </div>
+    <div class="card" style="border-color: rgba(45,212,191,0.4);">
+      <div class="card-header"><div class="card-dot teal"></div><h3>Contract Negotiation</h3></div>
+      <ul>
+        <li><span class="metric">Reasoning propose ↔ Médiateur valide</span></li>
+        <li>Co-création des critères d'acceptation</li>
+        <li>Médiateur impose critères obligatoires par verticale</li>
+        <li>Max 3 rounds puis accord forcé</li>
+        <li>Contrat persisté en JSON (pas markdown)</li>
+        <li>Contrat utilisé par l'Évaluateur pour validation</li>
+        <li class="critical">Médiateur 100% DÉTERMINISTE — pas de négociation LLM</li>
+        <li class="new-tag">Module: core/agents/contract_negotiator.py</li>
+      </ul>
+    </div>
+    <div class="card" style="border-color: rgba(163,230,53,0.4);">
+      <div class="card-header"><div class="card-dot lime"></div><h3>Handoff JSON</h3></div>
+      <ul>
+        <li><span class="metric">Breadcrumbs structurés inter-sessions</span></li>
+        <li>Features tentées: done / failed / partial</li>
+        <li>Lessons learned: patterns, anti-patterns, edge cases</li>
+        <li>Fichiers modifiés + prochains steps + blockers</li>
+        <li>Timeline complète par intention</li>
+        <li>Prompt de reprise auto-généré pour le prochain agent</li>
+        <li>JSON persisté (les modèles n'écrasent pas le JSON)</li>
+        <li class="new-tag">Module: core/agents/handoff.py</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Pipeline v5.4 -->
+  <div class="section-title" style="margin-top:2rem"><div class="dot" style="background:#f472b6"></div> Pipeline Complet v5.6 <span class="badge badge-new">Generator → Evaluator + PrecedentStore + Audit Export</span></div>
+  <div class="diagram-container" style="padding:1rem">
+    <svg viewBox="0 0 1200 100" xmlns="http://www.w3.org/2000/svg" style="min-width:100%">
+      <rect x="10" y="20" width="150" height="60" rx="8" fill="rgba(34,211,238,0.1)" stroke="#22d3ee" stroke-width="1"/>
+      <text x="85" y="45" text-anchor="middle" fill="#22d3ee" font-size="9" font-weight="600">INTENTION</text>
+      <text x="85" y="60" text-anchor="middle" fill="#64748b" font-size="7">Utilisateur</text>
+
+      <rect x="180" y="20" width="170" height="60" rx="8" fill="rgba(45,212,191,0.15)" stroke="#2dd4bf" stroke-width="1.5"/>
+      <text x="265" y="38" text-anchor="middle" fill="#2dd4bf" font-size="9" font-weight="700">CONTRACT</text>
+      <text x="265" y="50" text-anchor="middle" fill="#94a3b8" font-size="7">Reasoning propose</text>
+      <text x="265" y="62" text-anchor="middle" fill="#fb7185" font-size="7">Médiateur valide</text>
+
+      <rect x="370" y="20" width="130" height="60" rx="8" fill="rgba(167,139,250,0.1)" stroke="#a78bfa" stroke-width="1"/>
+      <text x="435" y="45" text-anchor="middle" fill="#a78bfa" font-size="9" font-weight="600">RAISONNEMENT</text>
+      <text x="435" y="60" text-anchor="middle" fill="#64748b" font-size="7">LLM + RAG</text>
+
+      <rect x="520" y="20" width="130" height="60" rx="8" fill="rgba(251,191,36,0.1)" stroke="#fbbf24" stroke-width="1"/>
+      <text x="585" y="45" text-anchor="middle" fill="#fbbf24" font-size="9" font-weight="600">ACTION</text>
+      <text x="585" y="60" text-anchor="middle" fill="#64748b" font-size="7">Saga + Freeze</text>
+
+      <rect x="670" y="20" width="150" height="60" rx="8" fill="rgba(244,114,182,0.15)" stroke="#f472b6" stroke-width="1.5"/>
+      <text x="745" y="38" text-anchor="middle" fill="#f472b6" font-size="9" font-weight="700">ÉVALUATEUR</text>
+      <text x="745" y="50" text-anchor="middle" fill="#94a3b8" font-size="7">API + Visuel + LLM</text>
+      <text x="745" y="62" text-anchor="middle" fill="#f472b6" font-size="7">Contexte fraîche</text>
+
+      <rect x="840" y="15" width="80" height="35" rx="6" fill="rgba(52,211,153,0.15)" stroke="#34d399" stroke-width="1"/>
+      <text x="880" y="36" text-anchor="middle" fill="#34d399" font-size="9" font-weight="600">PASS ✅</text>
+
+      <rect x="840" y="55" width="80" height="35" rx="6" fill="rgba(251,113,133,0.15)" stroke="#fb7185" stroke-width="1"/>
+      <text x="880" y="76" text-anchor="middle" fill="#fb7185" font-size="9" font-weight="600">FAIL ↺</text>
+
+      <rect x="940" y="20" width="140" height="60" rx="8" fill="rgba(163,230,53,0.15)" stroke="#a3e635" stroke-width="1.5"/>
+      <text x="1010" y="38" text-anchor="middle" fill="#a3e635" font-size="9" font-weight="700">HANDOFF</text>
+      <text x="1010" y="50" text-anchor="middle" fill="#94a3b8" font-size="7">JSON breadcrumbs</text>
+      <text x="1010" y="62" text-anchor="middle" fill="#64748b" font-size="7">Prochaine session</text>
+
+      <line x1="160" y1="50" x2="180" y2="50" stroke="#22d3ee" stroke-width="1" marker-end="url(#arrow-cyan)"/>
+      <line x1="350" y1="50" x2="370" y2="50" stroke="#2dd4bf" stroke-width="1" marker-end="url(#arrow-teal)"/>
+      <line x1="500" y1="50" x2="520" y2="50" stroke="#a78bfa" stroke-width="1" marker-end="url(#arrow)"/>
+      <line x1="650" y1="50" x2="670" y2="50" stroke="#fbbf24" stroke-width="1" marker-end="url(#arrow-amber)"/>
+      <line x1="820" y1="35" x2="840" y2="32" stroke="#34d399" stroke-width="1" marker-end="url(#arrow)"/>
+      <line x1="820" y1="65" x2="840" y2="72" stroke="#fb7185" stroke-width="1" marker-end="url(#arrow-rose)"/>
+      <line x1="920" y1="32" x2="940" y2="40" stroke="#a3e635" stroke-width="1" marker-end="url(#arrow)"/>
+      <path d="M 880 90 Q 880 95 435 95 Q 370 95 370 80" fill="none" stroke="#fb7185" stroke-width="0.8" stroke-dasharray="4"/>
+      <text x="630" y="93" fill="#fb7185" font-size="7">FAIL → renvoie au Raisonnement</text>
+    </svg>
   </div>
 
   <!-- VERTICALES TABLE -->
@@ -554,7 +719,7 @@
 
   <!-- API ENDPOINTS TABLE -->
   <div class="table-section" style="margin-top:2rem">
-    <div class="section-title"><div class="dot" style="background:#60a5fa"></div> Endpoints API (51)</div>
+    <div class="section-title"><div class="dot" style="background:#60a5fa"></div> Endpoints API (69)</div>
     <table>
       <thead>
         <tr><th>Domaine</th><th>Méthode</th><th>Route</th><th>Description</th></tr>
@@ -607,13 +772,40 @@
         <tr><td class="new">POST</td><td class="new"><code>/mcp</code></td><td class="new">MCP Server (JSON-RPC)</td></tr>
         <tr><td class="new">POST</td><td class="new"><code>/a2a</code></td><td class="new">A2A Protocol adapter</td></tr>
         <tr><td class="new">POST</td><td class="new"><code>/api/v1/guardrails/autodefense</code></td><td class="new">AutoDefense check</td></tr>
+        <tr><td class="new" rowspan="5" style="color:#60a5fa">Agent Identity KYA ✦</td><td class="new">GET</td><td class="new"><code>/api/v1/agents/identities</code></td><td class="new">Lister les cartes d'identité agents</td></tr>
+        <tr><td class="new">POST</td><td class="new"><code>/api/v1/agents/identities/{id}/activate</code></td><td class="new">Activer session + serment</td></tr>
+        <tr><td class="new">POST</td><td class="new"><code>/api/v1/agents/identities/{id}/deactivate</code></td><td class="new">Désactiver session</td></tr>
+        <tr><td class="new">GET</td><td class="new"><code>/api/v1/agents/identities/{id}/audit</code></td><td class="new">Audit trail agent</td></tr>
+        <tr><td class="new">POST</td><td class="new"><code>/api/v1/agents/identities/{id}/suspend</code></td><td class="new">Suspendre un agent</td></tr>
+        <tr><td class="new" rowspan="6" style="color:#f472b6">Precedent Store ✦</td><td class="new">GET</td><td class="new"><code>/api/v1/precedents</code></td><td class="new">Lister les précédents</td></tr>
+        <tr><td class="new">GET</td><td class="new"><code>/api/v1/precedents/stats</code></td><td class="new">Stats jurisprudence</td></tr>
+        <tr><td class="new">GET</td><td class="new"><code>/api/v1/precedents/query</code></td><td class="new">Recherche par similarité</td></tr>
+        <tr><td class="new">GET</td><td class="new"><code>/api/v1/precedents/candidates</code></td><td class="new">Candidats promotion en règles</td></tr>
+        <tr><td class="new">POST</td><td class="new"><code>/api/v1/precedents/candidates/{id}/approve</code></td><td class="new">Approuver candidat</td></tr>
+        <tr><td class="new">POST</td><td class="new"><code>/api/v1/precedents/candidates/{id}/reject</code></td><td class="new">Rejeter candidat</td></tr>
+        <tr><td class="new" rowspan="7" style="color:#34d399">Compliance Goals ✦</td><td class="new">POST</td><td class="new"><code>/api/v1/compliance-goals</code></td><td class="new">Créer un goal</td></tr>
+        <tr><td class="new">POST</td><td class="new"><code>/api/v1/compliance-goals/{id}/start</code></td><td class="new">Démarrer un goal</td></tr>
+        <tr><td class="new">GET</td><td class="new"><code>/api/v1/compliance-goals/{id}</code></td><td class="new">Statut d'un goal</td></tr>
+        <tr><td class="new">POST</td><td class="new"><code>/api/v1/compliance-goals/{id}/subtasks/{id}</code></td><td class="new">Mettre à jour sous-tâche</td></tr>
+        <tr><td class="new">POST</td><td class="new"><code>/api/v1/compliance-goals/{id}/pause</code></td><td class="new">Suspendre un goal</td></tr>
+        <tr><td class="new">POST</td><td class="new"><code>/api/v1/compliance-goals/{id}/resume</code></td><td class="new">Reprendre un goal</td></tr>
+        <tr><td class="new">GET</td><td class="new"><code>/api/v1/compliance-goals/templates</code></td><td class="new">Lister les templates</td></tr>
+        <tr><td class="new" rowspan="9" style="color:#22d3ee">Audit & RGPD ✦ v5.6</td><td class="new">GET</td><td class="new"><code>/api/v1/audit/export</code></td><td class="new">Export données audit (JSON/CSV/Summary)</td></tr>
+        <tr><td class="new">GET</td><td class="new"><code>/api/v1/audit/compliance-score</code></td><td class="new">Score conformité 0-100</td></tr>
+        <tr><td class="new">GET</td><td class="new"><code>/api/v1/audit/worm-extract</code></td><td class="new">Extrait WORM brut pour auditeur</td></tr>
+        <tr><td class="new">GET</td><td class="new"><code>/api/v1/audit/rgpd/registry</code></td><td class="new">Registre traitements art. 30 (PUBLIC)</td></tr>
+        <tr><td class="new">GET</td><td class="new"><code>/api/v1/audit/rgpd/legal-basis</code></td><td class="new">Matrice base légale art. 6 (PUBLIC)</td></tr>
+        <tr><td class="new">GET</td><td class="new"><code>/api/v1/audit/encryption-status</code></td><td class="new">Statut chiffrement WORM v2</td></tr>
+        <tr><td class="new">POST</td><td class="new"><code>/api/v1/audit/purge</code></td><td class="new">Purge fichiers expirés (admin)</td></tr>
+        <tr><td class="new">GET</td><td class="new"><code>/api/v1/audit/ai-act-controls</code></td><td class="new">Référentiel AI Act art. 9-62 (PUBLIC)</td></tr>
+        <tr><td class="new">GET</td><td class="new"><code>/api/v1/audit/secret-pro-controls</code></td><td class="new">Référentiel secret pro FR-CH (PUBLIC)</td></tr>
       </tbody>
     </table>
   </div>
 
   <!-- NATS SUBJECTS TABLE -->
   <div class="table-section">
-    <div class="section-title"><div class="dot" style="background:#22d3ee"></div> Sujets NATS (31)</div>
+    <div class="section-title"><div class="dot" style="background:#22d3ee"></div> Sujets NATS (40)</div>
     <table>
       <thead>
         <tr><th>Domaine</th><th>Sujet</th><th>Description</th></tr>
@@ -650,6 +842,14 @@
         <tr><td><code>cleman.system.audit</code></td><td>Événement audit</td></tr>
         <tr><td rowspan="2" style="color:#f472b6">Compliance</td><td><code>cleman.compliance.check</code></td><td>Vérification compliance</td></tr>
         <tr><td><code>cleman.compliance.report</code></td><td>Rapport compliance</td></tr>
+        <tr><td rowspan="3" class="new" style="color:#f472b6">Évaluateur ✦</td><td class="new"><code>cleman.evaluator.run</code></td><td class="new">Demande d'évaluation</td></tr>
+        <tr><td class="new"><code>cleman.evaluator.result</code></td><td class="new">Rapport d'évaluation</td></tr>
+        <tr><td class="new"><code>cleman.evaluator.reject</code></td><td class="new">FAIL → renvoie au Reasoning</td></tr>
+        <tr><td rowspan="3" class="new" style="color:#2dd4bf">Contract ✦</td><td class="new"><code>cleman.contract.negotiate</code></td><td class="new">Démarrer négociation</td></tr>
+        <tr><td class="new"><code>cleman.contract.agreed</code></td><td class="new">Contrat accepté</td></tr>
+        <tr><td class="new"><code>cleman.contract.rejected</code></td><td class="new">Contrat rejeté</td></tr>
+        <tr><td rowspan="2" class="new" style="color:#a3e635">Handoff ✦</td><td class="new"><code>cleman.handoff.write</code></td><td class="new">Écrire un handoff</td></tr>
+        <tr><td class="new"><code>cleman.handoff.read</code></td><td class="new">Lire le dernier handoff</td></tr>
       </tbody>
     </table>
   </div>
@@ -689,6 +889,7 @@
         <li class="new-tag">🔑 Chiffrement Fernet (at-rest)</li>
         <li class="new-tag">🛡️ AutoDefense multi-validateurs</li>
         <li class="new-tag">🧠 Failure Memory + Procedural Memory</li>
+        <li class="new-tag">✦ Agent Identity KYA (18 scopes + serment numérique)</li>
       </ul>
     </div>
     <div class="card">
@@ -728,23 +929,24 @@
 
   <!-- TEST SUITE -->
   <div class="table-section" style="margin-top:2rem">
-    <div class="section-title"><div class="dot" style="background:#34d399"></div> Suite de Tests (215 tests)</div>
+    <div class="section-title"><div class="dot" style="background:#34d399"></div> Suite de Tests — 656 tests</div>
     <table>
       <thead>
         <tr><th>Fichier</th><th>Tests</th><th>Couverture</th></tr>
       </thead>
       <tbody>
-        <tr><td>test_ag2_insights.py</td><td class="ok">39</td><td>AG2: MCP, A2A, AutoDefense, Tracing</td></tr>
-        <tr><td>test_auth.py</td><td class="ok">41</td><td>JWT, API keys, RBAC, registration</td></tr>
-        <tr><td>test_e2e_trust_graph.py</td><td class="ok">42</td><td>Flux complets end-to-end</td></tr>
-        <tr><td>test_hardening.py</td><td class="ok">17</td><td>Sécurité, encryption, guardrails</td></tr>
-        <tr><td>test_integrations.py</td><td class="ok">15</td><td>LLM, n8n, vault, RAG</td></tr>
-        <tr><td>test_journal.py</td><td class="ok">8</td><td>Journal WORM, intégrité, hash</td></tr>
-        <tr><td>test_llm_rag.py</td><td class="ok">21</td><td>LLM provider, RAG ChromaDB, search</td></tr>
-        <tr><td>test_mediator.py</td><td class="ok">10</td><td>22 règles JsonLogic, gel, conflits</td></tr>
+        <tr><td>test_new_features.py</td><td class="ok">31</td><td>✦ PrecedentStore (7) + Compliance Goals (8) + Agent Identity (16)</td></tr>
+        <tr><td>test_mediator.py</td><td class="ok">24</td><td>Règles JsonLogic, gel, conflits, risk appetite</td></tr>
+        <tr><td>test_journal.py</td><td class="ok">8</td><td>Journal WORM v2, hash-chain, chiffrement AES-256</td></tr>
         <tr><td>test_orchestrator.py</td><td class="ok">9</td><td>Intention, routage, versioning</td></tr>
-        <tr><td>test_saga.py</td><td class="ok">13</td><td>Saga manager, compensation</td></tr>
-        <tr style="border-top: 2px solid #1e293b;"><td style="font-weight:600;color:#34d399">TOTAL</td><td style="font-weight:700;color:#34d399">215</td><td style="color:#34d399">10 fichiers • Coverage ≥ 60%</td></tr>
+        <tr><td>test_saga.py</td><td class="ok">13</td><td>Saga manager, compensation, freeze check</td></tr>
+        <tr><td>test_integrations.py</td><td class="ok">11</td><td>LLM, n8n, vault</td></tr>
+        <tr><td>test_e2e_trust_graph.py</td><td class="ok">~50</td><td>Flux bout-en-bout du graphe de confiance</td></tr>
+        <tr><td>test_auth.py</td><td class="ok">~30</td><td>JWT, login, register, API keys</td></tr>
+        <tr><td>test_onboarding.py</td><td class="ok">37</td><td>Compliance, haute protection, LLM modes</td></tr>
+        <tr><td>test_trust_box.py</td><td class="ok">~25</td><td>Trust Box evaluate, simulate, serment</td></tr>
+        <tr><td>+ 14 autres fichiers</td><td class="ok">~418</td><td>Eval, observabilité, goals, hardening, reflection...</td></tr>
+        <tr style="border-top: 2px solid #1e293b;"><td style="font-weight:600;color:#34d399">TOTAL</td><td style="font-weight:700;color:#34d399">656</td><td style="color:#34d399">25 fichiers • 0 échecs</td></tr>
       </tbody>
     </table>
   </div>
@@ -770,9 +972,9 @@
 
   <!-- FOOTER -->
   <div class="footer">
-    <p>Cortex Leman v5.3 — Graphe de Confiance • 121 fichiers • 29K+ lignes • 215/215 tests ✅ • 51 endpoints • 31 sujets NATS • 22 règles JsonLogic</p>
-    <p style="margin-top:0.5rem">Graphe de confiance. Déterministe là où il faut. Intelligent là où on peut. Mémoire + Contexte + Tracing.</p>
-    <p style="margin-top:0.5rem;color:#334155">React 19 • Vite 8 • TypeScript 6 • FastAPI • ChromaDB • PostgreSQL 16 • NATS • Redis 7 • Prometheus • OpenTelemetry</p>
+    <p>Cortex Leman v5.6 — Graphe de Confiance • 140+ fichiers • 50K+ lignes • 656/656 tests ✅ • 78 endpoints • 33 MCP tools • 5 traitements RGPD</p>
+    <p style="margin-top:0.5rem">Graphe de confiance. Déterministe là où il faut. Intelligent là où on peut. Cross-validé par 5 LLM.</p>
+    <p style="margin-top:0.5rem;color:#334155">Audit o3 (ISO 42001): 5/10 → 7.5/10 projeté. DeepSeek R1: “Solutionnisme réglementaire — 2 ans trop tôt.” VC: “PAS ENCORE — solo founder.” Juriste: “OUI MAIS — 4 conditions.”</p>
   </div>
 
 </div>

@@ -46,4 +46,35 @@ export function useApi<T>(path: string | null, deps: any[] = []) {
   return { data, loading, error, refetch }
 }
 
+/** Polling hook — refreshes every `intervalMs` (default 5s) */
+export function usePolling<T>(path: string | null, intervalMs = 5000) {
+  const [data, setData] = useState<T | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [tick, setTick] = useState(0)
+
+  useEffect(() => {
+    if (!path) { setLoading(false); return }
+    let cancelled = false
+    const fetch_ = () => {
+      apiFetch(path)
+        .then(d => { if (!cancelled) { setData(d); setLoading(false); setError(null) } })
+        .catch(e => { if (!cancelled) { setError(e.message); setLoading(false) } })
+    }
+    fetch_()
+    const id = setInterval(() => { setTick(t => t + 1) }, intervalMs)
+    return () => { cancelled = true; clearInterval(id) }
+  }, [path, intervalMs])
+
+  // re-fetch on tick
+  useEffect(() => {
+    if (!path || tick === 0) return
+    apiFetch(path)
+      .then(d => { setData(d); setError(null) })
+      .catch(e => setError(e.message))
+  }, [tick, path])
+
+  return { data, loading, error, tick }
+}
+
 export { apiFetch }

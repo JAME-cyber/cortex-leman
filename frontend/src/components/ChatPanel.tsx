@@ -99,7 +99,7 @@ export function ChatPanel() {
               Posez votre question — les agents analysent, le Trust Box vérifie, et je vous recommande avec transparence.
             </div>
           </div>
-        )}}
+        )}
         {messages.map((m, i) => (
           <div key={i} style={{
             marginBottom: '0.75rem', display: 'flex', justifyContent: m.role === 'user' ? 'flex-end' : 'flex-start',

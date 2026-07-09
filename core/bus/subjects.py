@@ -66,6 +66,20 @@ class Subjects:
     COMPLIANCE_CHECK: str = "cleman.compliance.check"
     COMPLIANCE_REPORT: str = "cleman.compliance.report"
 
+    # Agent Évaluateur (pattern Generator-Evaluator Anthropic)
+    EVALUATOR_RUN: str = "cleman.evaluator.run"          # Demande d'évaluation
+    EVALUATOR_RESULT: str = "cleman.evaluator.result"    # Rapport d'évaluation
+    EVALUATOR_REJECT: str = "cleman.evaluator.reject"    # FAIL → renvoie au Reasoning
+
+    # Contract Negotiation (co-création Reasoning ↔ Médiateur)
+    CONTRACT_NEGOTIATE: str = "cleman.contract.negotiate"  # Démarrer négociation
+    CONTRACT_AGREED: str = "cleman.contract.agreed"        # Contrat accepté
+    CONTRACT_REJECTED: str = "cleman.contract.rejected"    # Contrat rejeté (max rounds)
+
+    # Handoff (breadcrumbs entre sessions)
+    HANDOFF_WRITE: str = "cleman.handoff.write"            # Écrire un handoff
+    HANDOFF_READ: str = "cleman.handoff.read"              # Lire le dernier handoff
+
     # Sub-agents (hiérarchie parent/enfant, inspiration Jonas Templestein)
     # Pattern: agent parent spawn un enfant sur un path NATS hiérarchique
     # L'enfant publie ses résultats, le parent est automatiquement notifié

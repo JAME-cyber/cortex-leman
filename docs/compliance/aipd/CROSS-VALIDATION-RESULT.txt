@@ -1,0 +1,77 @@
+CROSS-VALIDATION AIPD — Nemotron-3-Super-120B via OpenRouter
+Date: 2026-05-21
+============================================================
+
+{
+  "score_global": 4,
+  "verdict": "Template largement incomplet, de nombreux champs essentiels restent à remplir et les garanties juridiques ne sont pas démontrées.",
+  "points_forts": [
+    "Journal WORM infalsifiable avec hash-chain SHA-256 (RGPD Art. 5(1)(f) & AI Act Art. 12)",
+    "Chiffrement AES-256 au repos & TLS 1.3 en transit (RGPD Art. 32)",
+    "Mécanisme de gel préventif & arbitrage humain systématique (AI Act Art. 14)",
+    "Isolation tenant + chiffrement renforcé pour secret professionnel/bancaire/santé",
+    "Exigence de LLM local pour les verticales avocat, santé et banque (Art. 321 CP, Art. 47 LB, LPM/HDS)"
+  ],
+  "lacunes_critiques": [
+    "Données métier, base légale et durée de conservation non renseignées (RGPD Art. 6 & Art. 9) – sections 2.3 & 7.1 vides pour toutes verticales",
+    "Règles JsonLogic incomplètes : plusieurs règles marquées « Validation à compléter » (avocat-003/004, sante-003, banque-003) – absence de logique de contrôle effective",
+    "Fournisseur LLM, version, mode et data residency non spécifiés (AI Act Art. 11-12) – sections 6.1 restent des placeholders",
+    "Absence de preuve de conformité HDS/nEPR ou équivalent pour la verticale santé (LPM Art. L.1111-8 CSP)",
+    "Aucun détail sur la mise en œuvre effective des droits RGPD (API d’accès, rectification, suppression) – seulement mention d’endpoints sans validation fonctionnelle",
+    "Pas de preuve de formation obligatoire ni de registre des formations (RGPD Art. 39(1)(b) & AI Act Art. 14)",
+    "Manque de procédure de notification de violation de données détaillée (délais, autorités compétentes, modèle de notification) – seulement mentionné en checklist",
+    "Absence d’évaluation d’impact relatif aux droits fondamentaux (AI Act Art. 27) et de registre des systèmes IA à haut risque",
+    "Non‑vérification de la résidence des données pour les sous‑traitants LLM éventuels (transit cloud interdit pour avocat/sante/banque mais non démontré)",
+    "Checklist DPO non signée / non datée – aucune preuve de validation effective"
+  ],
+  "lacunes_mineures": [
+    "Seuils de gel montant définis mais sans justification proportionnée au risque (AI Act Art. 9)",
+    "Matrice de gravité décrite mais sans lien explicite avec les seuils de confiance LLM",
+    "Rétention des logs d’audit fixée à 3 ans sans justification au regard du secret professionnel (10 ans) ou bancaire (10 ans)",
+    "Absence de procédure de test de restauration régulière (fréquence, scénarios)",
+    "Manque de référence aux normes techniques applicables (ISO 27001, ISO 27701, SOC 2) pour démontrer la sécurité",
+    "Pas de mention du registre des traitements mis à jour auprès de l’autorité de contrôle (CNIL/PPDT)",
+    "Absence de référence au code de déontologie spécifique (avocats, médecins, banquiers) dans la formation"
+  ],
+  "scores_par_vertical": {
+    "avocat": {
+      "score": 3,
+      "art321_cp": "NON",
+      "art47_lb": "NON"
+    },
+    "sante": {
+      "score": 3,
+      "hds": "NON",
+      "ai_act_annexe3": "NON"
+    },
+    "banque": {
+      "score": 3,
+      "secret_bancaire": "NON",
+      "lba": "NON"
+    }
+  },
+  "corrections_urgent": [
+    "Remplir immédiatement les catégories de données métier, base légale et durée de conservation pour chaque verticale (RGPD Art. 6 & Art. 9) – sections 2.3 & 7.1",
+    "Compléter et valider toutes les règles JsonLogic marquées « Validation à compléter » avec des expressions logiques explicites et des seuils de gravité (AI Act Art. 9)",
+    "Spécifier le fournisseur LLM exact, la version snapshot, le mode (local/cloud/hybride) et la data residency effective, puis joindre le contrat ou l’avenant DPA (AI Act Art. 11-12)",
+    "Obtenir et joindre le certificat HDS (FR) ou nEPR (CH) pour la verticale santé, ainsi que l’attestation d’hébergement suisse certifié pour avocat et banque (LPM Art. L.1111-8 CSP, Art. 47 LB)",
+    "Fournir la preuve fonctionnelle des endpoints d’exercice des droits RGPD (accès, rectification, suppression) incluant journaux d’audit et tests de conformité",
+    "Produire le registre de formation signé, les supports de formation et la liste des participants ayant suivi la formation obligatoire sur le secret professionnel numérique",
+    "Rédiger et faire valider une procédure de notification de violation de données détaillant les rôles, les délais (≤72h), les modèles de notification aux autorités (CNIL/PPDT, FINMA, ARS) et aux personnes concernées",
+    "Réaliser une évaluation d’impact relatif aux droits fondamentaux (AI Act Art. 27) et enregistrer le système IA dans le registre UE des systèmes à haut risque",
+    "Effectuer un test d’intrusion et un audit de conformité ISO 27001/27701, puis joindre le rapport au dossier AIPD",
+    "Faire signer et dater la checklist DPO, joindre le procès‑verbal de validation conjoint DPO/Bâtonnier (avocat) ou DPO/Compliance Officer (banque/santé)"
+  ],
+  "elements_manquants_pour_audit": [
+    "Preuve signée de la DPA incluant les clauses spécifiques au secret professionnel/bancaire et aux données de santé",
+    "Registre des traitements mis à jour (CNIL/PPDT) comportant les finalités, bases légales, catégories de données, durées de conservation",
+    "Certificats d’hébergement HDS/nEPR et d’infrastructure suisse certifiée",
+    "Versions exactes et hash des modèles LLM utilisés, avec preuve de localisation (local uniquement)",
+    "Rapports de tests fonctionnels des points d’exercice des droits RGPD et des mécanismes de gel/arbitrage",
+    "Registre de formation et feuilles d’émargement",
+    "Procédure de notification de violation de données signée et testée",
+    "Évaluation d’impact relatif aux droits fondamentaux (AI Act Art. 27) et registre UE des systèmes IA à haut risque",
+    "Rapport d’audit de sécurité (ISO 27001/27701, SOC 2 ou équivalent)",
+    "Procédure de sauvegarde et de restauration avec fréquence et preuves de réalisation"
+  ]
+}

@@ -75,6 +75,18 @@ except ImportError:
             return all(jsonLogic(a, data) for a in args)
         elif op == "or":
             return any(jsonLogic(a, data) for a in args)
+        elif op == "in":
+            needle = jsonLogic(args[0], data)
+            haystack = jsonLogic(args[1], data) if len(args) > 1 else data
+            if haystack is None or needle is None:
+                return False
+            if isinstance(haystack, (list, tuple, set)):
+                return needle in haystack
+            if isinstance(haystack, str):
+                return str(needle) in haystack
+            if isinstance(haystack, dict):
+                return needle in haystack
+            return False
         return False
 
 
@@ -88,6 +100,7 @@ class RuleResult:
     message: str
     triggered: bool = False
     data_used: dict = field(default_factory=dict)
+    risk_level: int = 0  # 0=non calculé, 1-5 (matrice probabilité × impact)
 
 
 class RulesEngine:
@@ -196,6 +209,80 @@ class RulesEngine:
         if not self._loaded:
             self.load_rules()
         return list(self._rules_cache.keys())
+
+    def get_risk_appetite(self, vertical: str) -> dict:
+        """Récupérer l'appétit aux risques d'une verticale.
+
+        Retourne un dict avec :
+          - accept_max: niveau de risque max acceptable sans action (1-5)
+          - arbitrate_threshold: seuil déclenchant un arbitrage (1-5)
+          - block_threshold: seuil déclenchant un blocage (1-5)
+        Si non défini, retourne les valeurs par défaut.
+        """
+        if not self._loaded:
+            self.load_rules()
+        rule_set = self._rules_cache.get(vertical, {})
+        return rule_set.get("risk_appetite", {
+            "accept_max": 2,
+            "arbitrate_threshold": 3,
+            "block_threshold": 5,
+        })
+
+    def evaluate_risk_level(
+        self,
+        vertical: str,
+        context: dict,
+    ) -> tuple[int, str]:
+        """Évaluer le niveau de risque global d'un contexte.
+
+        Calcule un niveau 1-5 basé sur :
+          1. Les règles déclenchées (severity → niveau)
+          2. L'appétit aux risques de la verticale
+
+        Returns:
+            (risk_level, action_recommended) où action_recommended
+            est 'accept'|'arbitrate'|'block'
+        """
+        appetite = self.get_risk_appetite(vertical)
+        results = self.evaluate(vertical, context)
+        triggered = [r for r in results if r.triggered]
+
+        if not triggered:
+            # Aucune règle déclenchée → risque faible
+            return 1, "accept"
+
+        # Mapper severity → niveau de risque
+        severity_to_level = {
+            "critical": 5,
+            "high": 4,
+            "medium": 3,
+            "low": 2,
+        }
+
+        # Prendre le niveau le plus élevé parmi les règles déclenchées
+        max_level = max(
+            severity_to_level.get(r.severity, 2) for r in triggered
+        )
+
+        # Déterminer l'action recommandée selon l'appétit
+        block_threshold = appetite.get("block_threshold", 5)
+        arbitrate_threshold = appetite.get("arbitrate_threshold", 3)
+        accept_max = appetite.get("accept_max", 2)
+
+        if max_level >= block_threshold:
+            action = "block"
+        elif max_level >= arbitrate_threshold:
+            action = "arbitrate"
+        elif max_level > accept_max:
+            action = "warn"
+        else:
+            action = "accept"
+
+        # Enrichir les RuleResult avec le risk_level
+        for r in triggered:
+            r.risk_level = max_level
+
+        return max_level, action
 
 
 # Singleton

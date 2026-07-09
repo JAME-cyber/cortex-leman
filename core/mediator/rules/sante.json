@@ -1,6 +1,12 @@
 {
   "vertical": "sante",
   "description": "Règles de conformité pour établissements de santé FR-CH (LPM, HDS)",
+  "risk_appetite": {
+    "accept_max": 1,
+    "arbitrate_threshold": 2,
+    "block_threshold": 4,
+    "comment": "Prudent: données de santé = catégorie sensible RGPD Art. 9"
+  },
   "rules": [
     {
       "id": "sante-001",

@@ -1,0 +1,65 @@
+Tu es un ingénieur Python senior. Tu codes un MODULE DE MODÈLE ÉCONOMIQUE UNITAIRE pour le projet DropAtom (dropship-atom).
+
+## CONTEXTE DU PROJET
+- DropAtom = SaaS B2B "Usine à Dossiers de Lancement" (pivot "Pioche", juin 2026). 48 agents IA wrappés en API + Telegram.
+- Cible : solopreneurs e-commerce. Modèle : abonnement Pro.
+- Le PROJECT.yaml annonce naïvement "Break-even: 1 abonné Pro" — ce qui est absurde.
+- Une contre-analyse a montré qu'il ne faut JAMAIS deviner un chiffre de break-even. La SEULE réponse honnête = un modèle unitaire par dossier qui calcule les vrais coûts.
+
+## OBJECTIF
+Créer `/home/tars/dropship-atom/pioche/lib/unit_economics.py` — un module qui :
+1. Calcule le COÛT VARIABLE RÉEL d'un dossier de lancement (pas une estimation au doigt mouillé).
+2. Détermine 3 seuils de break-even : technique (couvre les coûts LLM/API du dossier lui-même), cash court-terme (couvre infra+outils mensuels), business réel (couvre salaire fondateur + CAC + support + taxes).
+3. Sort un rapport clair (print + dict + JSON) avec 3 scénarios : pessimiste / médian / optimiste.
+4. Soit PILOTABLE PAR CONFIG (un YAML ou dict de paramètres, jamais de magic numbers en dur) pour qu'on puisse ajuster prix, usage, CAC, churn sans recoder.
+
+## COÛTS À MODÉLISER (par dossier)
+Le pipeline d'un dossier de lancement mobilise typiquement :
+- Appels LLM (sourcing produit, analyse marché, copywriting, stratégie) — varies selon modèle
+- Génération d'images (logos, visuels produit) — par image
+- Génération vidéo (Shorts) — par vidéo
+- Scraping / data providers (1688, Shein trend monitoring, SearXNG) — par requête
+- Stockage du dossier (JSON + assets)
+
+## COÛTS MENSUELS FIXES (infra + outils)
+- Serveur / hosting API
+- Telegram bot hosting
+- Outils SaaS (analytics, etc.)
+- Data providers subscriptions
+
+## COÛTS BUSINESS (mensuels)
+- Salaire fondateur (ou coût d'opportunité)
+- CAC (coût d'acquisition client — marketing/ads pour attirer 1 abonné)
+- Support client (temps moyen × taux horaire)
+- Taxes / charges
+
+## CONTRAINTES DE STYLE (obligatoires)
+- Python 3.12, type hints complets, dataclasses Pydantic v2 (déjà utilisé dans le projet, voir pattern contracts.py).
+- Docstrings en français (le projet est franco-suisse).
+- Zéro magic number : tout dans un `CostConfig` (Pydantic) configurable.
+- Une fonction `compute_dossier_cost()` qui prend un `DossierProfile` (combien d'appels LLM, images, vidéos, etc.) et retourne un `DossierCost` détaillé.
+- Une fonction `compute_breakeven()` qui prend `CostConfig` + `PricingConfig` + hypothèses d'usage et retourne les 3 seuils en nombre d'abonnés.
+- Un `if __name__ == "__main__"` qui lance un scénario réaliste (basé sur les chiffres réels ci-dessous) et affiche un rapport lisible.
+
+## CHIFFRES RÉELS À UTILISER POUR LE SCÉNARIO PAR DÉFAUT (scénario médian)
+- LLM : OpenRouter, modèle principal ~$0.000005/in $0.00003/out (gpt-5.5) ; dossier moyen = 60 appels LLM, ~3000 tokens in / 1500 tokens out par appel. Scénario pessimiste : 120 appels × 2x tokens, modèle premium. Optimiste : 30 appels × moitié tokens.
+- Images : Kie.ai ~$0.002/image ; dossier = 8 images (pessimiste 15, optimiste 4).
+- Vidéo : Kie.ai Kling ~$0.15/vidéo ; dossier = 3 Shorts (pessimiste 6, optimiste 1).
+- Scraping : ~$0.01/requête ; dossier = 40 requêtes (pessimiste 80, optimiste 15).
+- Stockage : ~$0.001/dossier.
+- Abonné moyen génère : 8 dossiers/mois (pessimiste 15, optimiste 4).
+- Prix abonnement Pro : €49/mois (test plusieurs valeurs : €29, €49, €99).
+- Fixes mensuels : serveur €40, Telegram €5, outils €30.
+- Salaire fondateur minimal viable : €2500/mois.
+- CAC : €35/abonné (pessimiste €70, optimiste €15).
+- Support : 0.5h/abonné/mois × €35/h.
+- Churn mensuel : 8% (pessimiste 15%, optimiste 4%).
+
+## FORMAT DE SORTIE ATTENDU (dans le __main__)
+Afficher pour chaque scénario :
+- Coût variable par dossier (détaillé : LLM X€, images Y€, vidéo Z€, scraping W€)
+- Marge par abonné/mois
+- Les 3 break-even (technique / cash / business) en nombre d'abonnés
+- Mise en garde si le "break-even business" est > 200 abonnés (signal : pricing ou coûts à revoir)
+
+Code complet, production-ready, commenté. Pas de placeholder. Pas de "TODO". Sois précis sur les calculs.

@@ -1,6 +1,12 @@
 {
   "vertical": "avocat",
   "description": "Règles de conformité pour cabinets d'avocats FR-CH (Art. 321 CP, secret professionnel)",
+  "risk_appetite": {
+    "accept_max": 1,
+    "arbitrate_threshold": 2,
+    "block_threshold": 4,
+    "comment": "Ultra-prudent: secret professionnel absolu, moindre doute = arbitrage"
+  },
   "rules": [
     {
       "id": "avocat-001",

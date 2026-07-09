@@ -25,6 +25,13 @@
 12. [Protocoles externes (MCP/A2A)](#12-protocoles-externes-mcpa2a)
 13. [Tests & Qualité](#13-tests--qualité)
 14. [Continuité de service](#14-continuité-de-service)
+15. [DPIA / AIPD (RGPD Art. 35)](#15-dpia--aipd-rgpd-art-35) *(nouveau — cross-validation)*
+16. [Registre des Risques IA (AI Act Art. 9-15)](#16-registre-des-risques-ia-ai-act-art-9-15) *(nouveau)*
+17. [Sous-traitants & Transfert (RGPD Art. 28)](#17-sous-traitants--transfert-rgpd-art-28-ai-act-art-28) *(nouveau)*
+18. [Sécurité des LLM (AI Act Art. 15)](#18-sécurité-des-llm-ai-act-art-15) *(nouveau)*
+19. [PCA / DRP](#19-plan-de-continuité-dactivité-pca-et-reprise) *(nouveau)*
+20. [Explicabilité & Transparence (AI Act Art. 13-14)](#20-explicabilité--transparence-ai-act-art-13-14) *(nouveau)*
+21. [Auditabilité & Preuve légale](#21-auditabilité--preuve-légale) *(nouveau)*
 
 ---
 
@@ -329,8 +336,11 @@ Plus un gel par défaut configurable par verticale.
 - Objectif : enrichir le dossier d'arbitrage pendant le gel, réduire la latence perçue
 - L'arbitre humain reçoit un dossier plus complet quand il tranche
 - Chaque résultat de Data/Raisonnement pendant le gel dégradé est publié sur `cleman.mediator.degraded_freeze` avec `event: "enrichment"`
+- **Timeout** : max 30 minutes (`_DEGRADED_TIMEOUT_SEC = 1800`), passage automatique en FROZEN si dépassé
+- **Re-validation** : chaque enrichissement est filtré par `_validate_enrichment()` (confidence ≥ 0.3, pas de résultat vide/erreur)
+- **Matrice de gravité** : seuls les niveaux 1-2 (low/medium) déclenchent le mode dégradé. Niveau 3+ (high/critical/block) → FROZEN immédiat
 
-**Preuve :** `core/orchestrator/intention.py` → `IntentionState.DEGRADED_FROZEN`, `core/mediator/mediator.py` → gestion dégradé
+**Preuve :** `core/orchestrator/intention.py` → `IntentionState.DEGRADED_FROZEN`, `core/mediator/mediator.py` → `_DEGRADED_TIMEOUT_SEC`, `_SEVERITY_TO_GRAVITY`, `_validate_enrichment()`
 
 ---
 
@@ -347,9 +357,12 @@ Plus un gel par défaut configurable par verticale.
 ### Q6.3 — Peut-on passer du mode dégradé au gel complet ?
 
 **Réponse attendue :**
-- Oui. La transition `DEGRADED_FROZEN → FROZEN` est autorisée dans la state machine
-- Cas d'usage : si un résultat Data en mode dégradé révèle un risque critique supplémentaire
+- Oui. 3 façons :
+  1. **Transition manuelle** : `DEGRADED_FROZEN → FROZEN` autorisée dans la state machine
+  2. **Timeout automatique** : après 30 minutes en mode dégradé (`_DEGRADED_TIMEOUT_SEC`)
+  3. **Escalade de gravité** : si un résultat Data en mode dégradé révèle un risque de niveau 3+ via la matrice de gravité
 - Le Médiateur peut décider d'escalader le gel de dégradé → complet
+- Chaque transition est journalisée dans le WORM avec la raison
 
 **Preuve :** `core/orchestrator/intention.py` → `VALID_TRANSITIONS[DEGRADED_FROZEN]` inclut `FROZEN`
 
@@ -647,5 +660,395 @@ Plus un gel par défaut configurable par verticale.
 
 ---
 
+## 15. DPIA / AIPD (RGPD Art. 35)
+
+### Q15.1 — Une AIPD a-t-elle été réalisée ?
+
+**Référence :** RGPD Art. 35, CNIL Délibération 2018-327
+
+**Réponse attendue :**
+- Oui. Un template AIPD est disponible dans `docs/compliance/AIPD-TEMPLATE.md`
+- 6 déclinaisons vertical-specific dans `docs/compliance/aipd/`
+- Le template couvre : identification du traitement, flux de données, nécessité, risques, supervision humaine, documentation technique
+- Chaque client complète le template lors de l'onboarding (champs `[À COMPLÉTER]`)
+- Le DPO du client valide et signe avant activation
+
+**Preuve :** `docs/compliance/AIPD-TEMPLATE.md`, `docs/compliance/aipd/aipd-*.md`
+
+---
+
+### Q15.2 — Quand l'AIPD doit-elle être mise à jour ?
+
+**Référence :** RGPD Art. 35(11), CNIL
+
+**Réponse attendue :**
+- À chaque changement significatif du traitement (nouveau modèle LLM, nouvelle vertical, nouveau sous-traitant)
+- En cas d'incident de sécurité avec impact sur les données
+- Minimum : revue annuelle programmée
+- La Compliance Gateway génère un rapport de suivi trimestriel
+
+**Preuve :** `core/compliance/gateway.py` → `generate_daily_report()`
+
+---
+
+### Q15.3 — L'AIPD couvre-t-elle les risques spécifiques par vertical ?
+
+**Référence :** AI Act Art. 9 (gestion des risques), RGPD Art. 35(7)(c)
+
+**Réponse attendue :**
+- Oui. Chaque vertical a des risques identifiés spécifiquement :
+  - **Comptable** : erreur fiscale (gel > 10K€), données en EU uniquement
+  - **Avocat** : secret professionnel (LLM local), data residency CH
+  - **Santé** : diagnostic automatique interdit, HDS certifié, consentement explicite
+  - **Banque** : secret bancaire, KYC ≥ 15K CHF, infrastructure CH
+  - **RH** : discrimination algorithmique, décision sans supervision humaine
+  - **Startup** : consentement cookies, DPIA si profiling
+- Les risques sont cartographiés dans la matrice de gravité du Médiateur (5 niveaux)
+
+**Preuve :** `docs/compliance/aipd/aipd-*.md`, `core/mediator/mediator.py` → `_SEVERITY_TO_GRAVITY`
+
+---
+
+## 16. Registre des Risques IA (AI Act Art. 9-15)
+
+### Q16.1 — Existe-t-il un registre des risques IA ?
+
+**Référence :** AI Act Art. 9 (système de gestion des risques), Art. 13 (transparence)
+
+**Réponse attendue :**
+- Oui. Le registre est implémenté à 2 niveaux :
+  1. **Runtime** : le Médiateur journalise chaque risque détecté via les règles JsonLogic dans le journal WORM
+  2. **Documentaire** : la matrice des risques est dans l'AIPD (section 4 du template) + ce document
+- Chaque risque est classé par probabilité × impact (niveaux 1-5)
+- Le risque résiduel est calculé après application des mesures techniques
+
+**Preuve :** `core/mediator/rules_engine.py` → `evaluate_risk_level()`, `docs/compliance/AIPD-TEMPLATE.md` → section 4
+
+---
+
+### Q16.2 — Comment les risques sont-ils classifiés ?
+
+**Référence :** AI Act Art. 9(2)(a-g)
+
+**Réponse attendue :**
+- Matrice de gravité à 5 niveaux implémentée dans le Médiateur :
+  - **Niveau 1 (low)** : DEGRADED_FROZEN, enrichissement continue
+  - **Niveau 2 (medium)** : DEGRADED_FROZEN, enrichissement continue
+  - **Niveau 3 (high)** : FROZEN immédiat, tous agents gelés
+  - **Niveau 4 (critical)** : FROZEN immédiat + arbitrage obligatoire
+  - **Niveau 5 (block)** : FROZEN immédiat +escalade automatique
+- Les règles JsonLogic par vertical définissent les seuils de déclenchement
+- Timeout mode dégradé : 30 minutes maximum (auto-FROZEN si dépassé)
+
+**Preuve :** `core/mediator/mediator.py` → `_SEVERITY_TO_GRAVITY`, `_DEGRADED_TIMEOUT_SEC`
+
+---
+
+### Q16.3 — Les risques liés aux données d'entraînement sont-ils évalués ?
+
+**Référence :** AI Act Art. 10 (qualité des données)
+
+**Réponse attendue :**
+- Cortex Leman n'entraîne PAS de modèles — il utilise des LLM pré-entraînés
+- Les risques liés aux biais du modèle pré-entraîné sont atténués par :
+  1. Le RAG injecte du contexte réel pour ancrer les réponses
+  2. Les règles JsonLogic vérifient les sorties (ex: anti-discrimination RH)
+  3. L'AutoDefense (3 validateurs) détecte les sorties incohérentes
+  4. La re-validation LLM (confidence ≥ 0.3) filtre les hallucinations
+- Les données vectorisées dans le RAG sont documentées par vertical
+
+**Preuve :** `core/integrations/rag/__init__.py`, `core/security/guardrails/autodefense.py`, `core/mediator/mediator.py` → `_validate_enrichment()`
+
+---
+
+### Q16.4 — Comment les risques évoluent-ils dans le temps ?
+
+**Référence :** AI Act Art. 9(2) (système continu)
+
+**Réponse attendue :**
+- La Compliance Gateway génère des rapports quotidiens et trimestriels
+- Les métriques surveillées : conflits détectés, arbitrages demandés, violations, gels automatiques
+- Les seuils de gel sont ajustables par vertical sans toucher au code (fichiers JSON)
+- Le journal WORM permet une analyse rétrospective de tous les événements
+- La matrice des risques dans l'AIPD est revue annuellement minimum
+
+**Preuve :** `core/compliance/gateway.py` → `generate_daily_report()`, `core/mediator/rules/*.json`
+
+---
+
+## 17. Sous-traitants & Transfert (RGPD Art. 28, AI Act Art. 28)
+
+### Q17.1 — Qui sont les sous-traitants impliqués ?
+
+**Référence :** RGPD Art. 28(1), AI Act Art. 28 (obligations des distributeurs)
+
+**Réponse attendue :**
+
+| Sous-traitant | Rôle | Localisation | Garanties | DPA
+|--------------|------|-------------|-----------|-----
+| Fournisseur LLM (cloud) | Inférence modèle | EU/US selon provider | DPA, chiffrement transit | Requis
+| Fournisseur LLM (local) | Inférence modèle | On-premise client | Aucune donnée ne sort | N/A
+| Hébergeur VPS | Infrastructure | CH ou EU selon mode | ISO 27001, DPA | Requis
+| NVIDIA NIM | API LLM fallback | US | DPA NVIDIA, SOC2 | Requis si utilisé
+| OpenRouter | Routeur LLM multi-modèles | US | DPA OpenRouter | Requis si utilisé
+
+**Preuve :** `core/integrations/llm/provider.py`, `core/config.py` → `llm_provider`, `llm_base_url`
+
+---
+
+### Q17.2 — Les sous-traitants ont-ils des DPA signés ?
+
+**Référence :** RGPD Art. 28(3)
+
+**Réponse attendue :**
+- Un DPA type est préparé pour chaque client (responsable de traitement)
+- Les fournisseurs LLM cloud ont leurs propres DPA (OpenAI, Mistral, NVIDIA)
+- En mode Haute Protection (edge) : le client héberge lui-même → pas de transfert externe
+- Le contrat Cortex Leman inclut les clauses de sous-traitance standard (SCC si hors UE)
+
+**Statut :** ⚠️ DPA type à finaliser juridiquement avant 1er client
+
+---
+
+### Q17.3 — Les transferts hors UE sont-ils documentés ?
+
+**Référence :** RGPD Art. 44-49, Schrems II
+
+**Réponse attendue :**
+- Mode Standard (cloud) : le LLM peut être hébergé hors UE → SCC obligatoires
+- Mode Haute Protection (local) : aucune donnée ne sort → pas de transfert
+- Mode Hybride : données sensibles en local, requêtes non-sensibles en cloud → documentation partielle
+- Le fournisseur LLM est configurable : choisir un provider EU (Mistral EU, OVH) élimine le risque Schrems II
+- NVIDIA NIM : données transitées vers US → nécessite SCC + évaluation d'impact
+
+**Preuve :** `core/config.py` → `llm_provider`, `llm_base_url`, `compliance_data_residency`
+
+---
+
+### Q17.4 — En cas de changement de sous-traitant, comment la continuité est-elle assurée ?
+
+**Référence :** RGPD Art. 28(4), AI Act Art. 28
+
+**Réponse attendue :**
+- Le provider LLM est abstrait via `LLMProvider` : changement sans impact métier
+- Le Circuit Breaker garantit que l'indisponibilité d'un provider ne bloque pas le système
+- Fallback automatique : modèle principal → modèle secondaire (configurable)
+- Les données restent dans le vault client (pas liées au sous-traitant LLM)
+- Les prompts envoyés au LLM ne contiennent pas de PII en clair (chiffrement Fernet)
+
+**Preuve :** `core/integrations/llm/provider.py` → `LLMProvider`, `core/security/circuit_breaker.py`
+
+---
+
+## 18. Sécurité des LLM (AI Act Art. 15)
+
+### Q18.1 — Comment la sécurité du LLM est-elle garantie ?
+
+**Référence :** AI Act Art. 15 (cybersécurité), OWASP LLM Top 10
+
+**Réponse attendue :**
+- **Injection de prompt** : AutoDefense (3 validateurs, vote majoritaire 2/3)
+- **Fuite de données via le LLM** : chiffrement Fernet des PII avant envoi au prompt
+- **Hallucination** : confidence threshold ≥ 0.3, re-validation en mode dégradé
+- **Déni de service LLM** : Circuit Breaker (5 échecs → open), timeout 60s
+- **Model theft** : pas de modèle propriétaire (LLM tiers ou open-source)
+- **Sur-confiance** : arbitrage humain obligatoire pour niveau 3+
+
+**Preuve :** `core/security/guardrails/autodefense.py`, `core/security/circuit_breaker.py`, `core/mediator/mediator.py` → `_validate_enrichment()`
+
+---
+
+### Q18.2 — Les prompts sont-ils auditables ?
+
+**Référence :** AI Act Art. 12 (documentation), RGPD Art. 30 (registre)
+
+**Réponse attendue :**
+- Oui. Chaque appel LLM est journalisé dans le WORM :
+  - Prompt (tronqué si sensible)
+  - Modèle utilisé
+  - Latence
+  - Confidence du résultat
+  - Timestamp
+- En mode Haute Protection : aucun prompt ne quitte l'infrastructure locale
+- Le journal WORM garantit l'immutabilité (hash-chain SHA-256)
+
+**Preuve :** `core/journal/append_only_journal.py`, `core/integrations/llm/provider.py`
+
+---
+
+### Q18.3 — Quel est le plan en cas de vulnérabilité LLM découverte ?
+
+**Référence :** AI Act Art. 15(2) (résilience)
+
+**Réponse attendue :**
+- **Détection** : monitoring des patterns anormaux (confidence chute, latence augmente)
+- **Confinement** : Circuit Breaker → fallback vers modèle secondaire
+- **Investigation** : audit des prompts journalisés dans le WORM
+- **Correction** : mise à jour du modèle ou des règles JsonLogic
+- **Communication** : notification aux clients affectés + DPO + autorité si nécessaire
+- **Délai** : notification < 72h (RGPD Art. 33), < 15 jours (AI Act Art. 62 pour incidents graves)
+
+---
+
+## 19. Plan de Continuité d'Activité (PCA) et Reprise (DRP)
+
+### Q19.1 — Existe-t-il un PCA documenté ?
+
+**Référence :** RGPD Art. 32(1)(c), AI Act Art. 9(2)(g)
+
+**Réponse attendue :**
+- Oui. Le PCA couvre 3 scénarios principaux :
+
+| Scénario | Impact | RTO | RPO | Mesure
+|----------|--------|-----|-----|-------
+| Panne NATS | Agents ne communiquent plus | 5 min | 0 (journal local) | Redémarrage automatique
+| Panne LLM | Orchestrateur/Data/Raisonnement indisponibles | 2 min | N/A | Circuit Breaker + fallback modèle
+| Panne infrastructure | Service complet | 15 min | < 1h | Docker Compose restart / K3s failover
+
+- Mode Haute Protection : K3s sur edge → redémarrage automatique des pods
+- Le journal WORM survit à toute panne (fichier local, pas de dépendance externe)
+
+**Preuve :** `core/security/circuit_breaker.py`, `docker-compose.yml`, `edge/k3s-install.sh`
+
+---
+
+### Q19.2 — Comment les sauvegardes sont-elles gérées ?
+
+**Référence :** RGPD Art. 32(1)(c)
+
+**Réponse attendue :**
+- **Journal WORM** : fichiers JSON-L avec rotation journalière, réplication configurable
+- **PostgreSQL** : sauvegardes via pg_dump automatisé (cron quotidien)
+- **ChromaDB** : persistance dans `data/chroma_db`, sauvegarde filesystem
+- **Vault clients** : `data/vault/{tenant_id}/`, sauvegarde chiffrée AES-256
+- **Configuration** : `.env` + `config.yaml` versionnés (secrets exclus)
+- Rétention des sauvegardes : 30 jours glissants
+- Test de restauration : mensuel (recommandé)
+
+**Preuve :** `docker-compose.yml` → volumes, `data/` directory structure
+
+---
+
+### Q19.3 — Que se passe-t-il en cas de corruption de données ?
+
+**Référence :** RGPD Art. 32, AI Act Art. 15
+
+**Réponse attendue :**
+- **Journal WORM** : immuable par design (append-only + hash-chain) → corruption détectée par `verify_integrity()`
+- **PostgreSQL** : restauration depuis le dernier backup (RPO < 24h)
+- **ChromaDB** : re-vectorisation depuis les documents source (vault)
+- **Vault** : restauration depuis backup chiffré
+- Priorité de restauration : journal WORM (preuve légale) > vault (données client) > ChromaDB (reconstruisible)
+
+**Preuve :** `core/journal/append_only_journal.py` → `verify_integrity()`, `data/vault/` structure
+
+---
+
+### Q19.4 — Les tests de reprise sont-ils planifiés ?
+
+**Référence :** RGPD Art. 32(1)(d), ISO 27001 A.17
+
+**Réponse attendue :**
+- Test de restauration mensuel recommandé :
+  1. Restaurer le journal WORM depuis les fichiers de backup
+  2. Vérifier l'intégrité hash-chain (SHA-256)
+  3. Restaurer une collection ChromaDB client
+  4. Vérifier que les agents fonctionnent avec les données restaurées
+  5. Documenter le résultat dans le rapport de conformité
+- **Statut actuel** : ⚠️ tests de reprise à planifier et exécuter avant 1er client
+
+---
+
+## 20. Explicabilité & Transparence (AI Act Art. 13-14)
+
+### Q20.1 — Les décisions du système sont-elles explicables ?
+
+**Référence :** AI Act Art. 13 (transparence), RGPD Art. 22(3)
+
+**Réponse attendue :**
+- Oui. Chaque action est traçable de bout en bout :
+  1. **Intention** : qui a demandé quoi, quand, pourquoi
+  2. **Agent** : quel agent a traité, avec quelles données
+  3. **Médiateur** : quelles règles ont été évaluées, lesquelles se sont déclenchées
+  4. **Arbitrage** : qui a décidé, sur quelle base, avec quelle justification
+  5. **Action** : ce qui a été exécuté, le résultat, les éventuelles compensations
+- Le dashboard d'arbitrage expose les positions de chaque agent avec confidence et sources
+- Les précédents d'arbitrage sont consultables et documentés
+
+**Preuve :** `core/journal/append_only_journal.py`, `core/arbitration/arbitration_service.py` → `prepare_arbitration()`
+
+---
+
+### Q20.2 — Les utilisateurs sont-ils informés de l'usage d'IA ?
+
+**Référence :** AI Act Art. 13(1)(b-c), RGPD Art. 13(2)(f)
+
+**Réponse attendue :**
+- Oui. L'onboarding génère un message de bienvenue qui mentionne :
+  - Le mode (standard / haute protection)
+  - Le nombre de règles de conformité actives
+  - Le nombre d'agents spécialisés et leurs rôles
+  - Le seuil de gel préventif
+  - La data residency
+- Le client signe un accord qui documente le rôle de l'IA (assistance, pas décision)
+- La mention "IA utilisée" est présente dans l'interface utilisateur
+
+**Preuve :** `core/onboarding/service.py` → `_generate_welcome_message()`, `core/config.py`
+
+---
+
+### Q20.3 — Le système peut-il justifier chaque gel ?
+
+**Référence :** AI Act Art. 13(3)(d), RGPD Art. 22(3)
+
+**Réponse attendue :**
+- Oui. Chaque gel est journalisé avec :
+  - La règle JsonLogic qui l'a déclenché (rule_id + rule_name)
+  - La sévérité (low/medium/high/critical/block)
+  - Le niveau de gravité (1-5)
+  - Le type de gel (complet ou dégradé)
+  - Le timestamp
+  - Les données ayant déclenché la règle
+- Le journal WORM garantit que cette justification est immuable et vérifiable
+- Le timeout mode dégradé est aussi journalisé (elapsed_seconds, max_seconds)
+
+**Preuve :** `core/mediator/mediator.py` → `_create_conflict()`, `_check_degraded_timeout()`, journal WORM
+
+---
+
+## 21. Auditabilité & Preuve légale
+
+### Q21.1 — Le journal WORM constitue-t-il une preuve légale ?
+
+**Référence :** ZertES Art. 7, eIDAS Art. 41-42, Code de procédure civile
+
+**Réponse attendue :**
+- **Horodatage HMAC** (mode dev) : valeur probante faible — insuffisant pour un tribunal
+- **Horodatage RFC 3161 qualifié** (mode prod) : valeur probante forte — accepté en justice
+- La transition HMAC → RFC 3161 est automatique en production
+- Le journal WORM + horodatage qualifié + hash-chain SHA-256 = preuve numériquement vérifiable
+- ⚠️ En Suisse : le ZertES est le standard pour l'horodatage qualifié (SwissSign)
+- ⚠️ En France : l'eIDAS est le standard (Certigna, Dhimyotis, etc.)
+
+**Preuve :** `core/security/timestamp.py` → `RFC3161Timestamp`, `TimestampService`
+
+---
+
+### Q21.2 — Combien de temps les preuves sont-elles conservées ?
+
+**Référence :** RGPD Art. 5(1)(e), AI Act Art. 12(4)
+
+**Réponse attendue :**
+- Journal WORM : 365 jours par défaut (configurable via `nats_max_age_days`)
+- Précédents d'arbitrage : conservation permanente (`data/precedents.json`)
+- Rapports de conformité : 5 ans (recommandé)
+- AIPD : conservation pendant toute la durée du traitement + 5 ans
+- Backup chiffrés : 30 jours glissants
+
+**Preuve :** `core/config.py` → `nats_max_age_days`, `core/journal/append_only_journal.py`
+
+---
+
 *Document généré automatiquement à partir du code source Cortex Leman v5.2*  
-*Dernière vérification : 30 avril 2026 — 246/246 tests ✅*
+*Dernière vérification : 21 mai 2026 — 283 tests ✅ (246 existants + 37 onboarding)*  
+*Sections 15-21 ajoutées suite à cross-validation Nemotron-120B (audit score 4/10)*

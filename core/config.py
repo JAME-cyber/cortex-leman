@@ -32,6 +32,16 @@ class Settings(BaseSettings):
     journal_hash_algo: str = "sha256"
     journal_signing_key: str = "change_this_in_production"  # noqa: S105 — override via .env
     journal_worm: bool = True
+    # Journal v2 — Conformité RGPD (audit o3, 2026-05-27)
+    journal_encryption_enabled: bool = True  # Chiffrement AES-256 au repos
+    journal_encryption_key: Optional[str] = None  # Clé AES (32 bytes base64). Auto-générée si absent
+    journal_retention_months: int = 24  # Durée de conservation max (RGPD art. 5-1e)
+    journal_purge_enabled: bool = False  # Activer la purge automatique (prod seulement)
+    journal_minimize_payload: bool = True  # Minimisation des données (RGPD art. 5-1c)
+    journal_sensitive_fields: list = [  # Champs à masquer/chiffrer systématiquement
+        "password", "secret", "token", "api_key", "credit_card",
+        "ssn", "health_data", "bank_account",
+    ]
 
     # Redis
     redis_host: str = "localhost"
@@ -70,6 +80,10 @@ class Settings(BaseSettings):
         "google/gemini-2.0-flash-001",
         "mistralai/mistral-small-3.1-24b-instruct",
     ]
+    # NVIDIA NIM — Mistral Nemotron (premium, via NVIDIA API)
+    nvidia_api_key: Optional[str] = None
+    nvidia_base_url: str = "https://integrate.api.nvidia.com/v1"
+    nvidia_model: str = "mistralai/mistral-nemotron"
     # Override pour Mode Haute Protection (local uniquement)
     llm_high_protection_model: str = "llama3.1:8b"  # Modèle Ollama par défaut
 

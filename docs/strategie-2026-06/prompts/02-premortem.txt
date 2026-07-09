@@ -1,0 +1,24 @@
+Tu es un analyste stratégique et opérationnel qui conduit un PREMORTEM. Sois direct, sans flatterie, spécifique. Pas de jargon creux.
+
+## RAPPEL DE LA MÉTHODE PREMORTEM
+On part du postulat que le projet a ÉCHOUÉ dans 12 mois (juin 2027). On remonte aux causes racines. Pour chaque projet : (1) scénario d'échec le plus probable ; (2) top 5 causes racines classées par probabilité, avec raison ; (3) signaux d'alerte précoces observables dès maintenant (early warning signals, datés par trimestre) ; (4) actions préventives concrètes à lancer cette semaine.
+
+## L'ENTREPRENEUR (contexte critique)
+Un opérateur solo franco-suisse qui mène 3 projets IA en PARALLÈLE (plus un 4e, SocialPulse, explicitement "separate" dans ses docs). Auto-finance, zéro employé, stack IA gratuite/hebergement low-cost. Profil "fast builder, beaucoup de prototypes, moins de preuves de revenu". A déjà copié le "playbook chinois" (agents agentic horizontaux, freemium, distribution directe) et cherche maintenant à greffer du "japonais" (vertical régulé, souveraineté, déterminisme). Cette dispersion elle-même est un risque à analyser.
+
+## PROJET 1 — CORTEX LEMAN v5
+Infrastructure IA de confiance pour professions régulées franco-suisses (comptable, avocat, santé, banque, startup, RH = 6 verticales). Architecture "graphe de confiance": 5 agents pair-à-pair sur bus NATS + Médiateur 100% déterministe JsonLogic (20 règles × 6 verticales) + journal WORM hash-chainé + arbitrage humain. Deux modes: Standard (LLM cloud OpenRouter) et Haute Protection (K3s + Ollama local, zero appel externe, obligatoire pour avocat/banque/santé). 81 tests verts, MVP frontend, Phase 1B/1C (dashboards) non démarrées. Vient d'ajouter un module "revue de contrats" (wedge) + une couche "adoption" (onboarding/templates/demo/freemium). Clientèle cible: cabinets régulés FR-CH. Marché: Japon = Microsoft Copilot a 85% du Nikkei 225. Aucune preuve de revenu. Vente à des régulés = cycles longs.
+
+## PROJET 2 — DROPATOM (dropship-atom)
+Pivoté en juin 2026 vers "Pioche": SaaS B2B "Usine à Dossiers de Lancement" (48 agents wrappés API + Telegram), cible solopreneurs e-commerce. Avant: dropshipping→brandshipping (private label). Inspiré Eprolo (Shenzhen), 1688. Hérite du Journal WORM + JsonLogic de Cortex. PROJECT.yaml annonçait "Break-even: 1 abonné Pro" — un modèle unitaire codé depuis montre que c'est vrai seulement en break-even technique, et que le break-even BUSINESS réel est 34-60 abonnés à 99€/mois (impossible en médian à 49€, désastreux en pessimiste). 48 agents = risque de dispersion produit. Cible (solopreneurs) n'achète pas via SI ni conformité.
+
+## PROJET 3 — IMPORTEXPORT PRO
+5 agents IA (sourcing, logistique, legal-fiscal, market-analyzer, brand-builder) pour import-export Chine→Europe/Afrique. Base de connaissances = 24h de vidéos YouTube expertes (782KB). Vient d'ajouter un module "compliance" (chaîne de classification HS assistée + traçable, contrôles CE/RoHS/REACH/sanctions, journal WORM, sources officielles en interfaces abstraites: TARIC/EUR-Lex/WCO/Access2Markets). Hybride consulting+produit. Aucune preuve de revenu, aucun canal de distribution identifié.
+
+## TA MISSION
+1. Pour CHACUN des 3 projets: scenario d'échec le plus probable (1 phrase), top 5 causes racines (probabilité % + raison), 3 signaux d'alerte précoces datés (Q3 2026, Q4 2026, Q1 2027), 3 actions préventives pour cette semaine.
+2. Puis une ANALYSE TRANSVERSALE: les 3 risques liés au FAIT d'avoir 3 projets en parallèle (dispersion, dilution, interdépendance). Sois dur.
+3. Lequel des 3 projets a le plus de chances de survivre, et pourquoi? Lequel doit être tué le plus vite?
+4. Ton VERDICT final en une phrase.
+
+Sois spécifique, chiffres si possible, pas de généralités. Si tu manques de données, dis-le et fais une hypothèse explicite. Ne sois pas gentil.

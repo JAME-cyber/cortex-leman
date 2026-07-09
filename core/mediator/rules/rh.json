@@ -1,6 +1,12 @@
 {
   "vertical": "rh",
   "description": "Règles de conformité pour RH FR-CH (RGPD, AI Act, droit du travail)",
+  "risk_appetite": {
+    "accept_max": 2,
+    "arbitrate_threshold": 3,
+    "block_threshold": 4,
+    "comment": "Prudent: RGPD Art. 22 + risque discrimination"
+  },
   "rules": [
     {
       "id": "rh-001",

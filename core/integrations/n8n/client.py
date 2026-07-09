@@ -222,6 +222,62 @@ class N8NClient:
         except Exception:
             return {"status": "unreachable", "url": self._base_url}
 
+    async def humanize_text(
+        self,
+        text: str,
+        source: str = "unknown",
+        context: str = "audit_rgpd_ia",
+        target_score: int = 3,
+    ) -> dict:
+        """
+        Pipeline anti-IA : humanise un texte généré par LLM avant livraison client.
+        
+        Appelle le workflow n8n anti-ia-humanizer (étapes 4+6+7 du skill).
+        
+        Args:
+            text: Texte à humaniser
+            source: Source du texte (ex: "claude_audit", "brief_hebdo")
+            context: Contexte de destination (ex: "audit_rgpd_ia", "newsletter", "email_client")
+            target_score: Score anti-IA cible (1-10, plus bas = plus humain)
+        
+        Returns:
+            {"text": str, "anti_ia_score": int, "passed": bool, "flags": list}
+        """
+        webhook_url = f"{self._webhook_base}/cortex-anti-ia"
+        payload = {
+            "text": text,
+            "source": source,
+            "context": context,
+            "target_score": target_score,
+        }
+
+        journal.append(
+            event_type=JournalEventType.ACTION_EXECUTED,
+            client_id="system",
+            vertical="all",
+            agent_source="anti_ia_humanizer",
+            intention_id="post_processing",
+            payload={"action": "humanize", "source": source, "context": context},
+        )
+
+        try:
+            async with httpx.AsyncClient(timeout=120) as client:
+                response = await client.post(webhook_url, json=payload)
+                if response.status_code == 200:
+                    result = response.json()
+                    logger.info(
+                        f"Anti-IA humanizer: score={result.get('anti_ia_score', '?')}, "
+                        f"passed={result.get('passed', False)}, source={source}"
+                    )
+                    return result
+                else:
+                    logger.warning(f"Anti-IA humanizer error: {response.status_code}")
+                    return {"text": text, "anti_ia_score": None, "passed": False, "error": "humanizer_unavailable"}
+        except (httpx.ConnectError, httpx.TimeoutException) as e:
+            logger.warning(f"Anti-IA humanizer unavailable: {e}")
+            # Fail-open : retourner le texte original si le humanizer est down
+            return {"text": text, "anti_ia_score": None, "passed": False, "error": "humanizer_down"}
+
 
 # Singleton
 n8n_client = N8NClient()

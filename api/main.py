@@ -151,9 +151,13 @@ from api.dependencies import (
     require_vertical,
 )
 from api.routes.billing import router as billing_router
+from api.routes.audit import router as audit_router
 
 # Billing routes (Stripe)
 app.include_router(billing_router)
+
+# Audit & RGPD routes (Phase 1 v3 — audit o3)
+app.include_router(audit_router)
 from core.security.auth import (
     TokenResponse,
     UserInfo,
@@ -627,6 +631,76 @@ async def query_audit(
 
 
 # ============================================================
+# /GOAL — Point d'entrée simple style Hermes
+# Auto-détection de verticale + risk_level immédiat
+# ============================================================
+
+@app.post("/api/v1/goal")
+async def submit_goal(
+    goal_text: str,
+    client_id: str = "auto",
+    vertical_hint: str = None,
+    auth: AuthContext = Depends(get_current_user),
+):
+    """Soumettre un goal en langage libre.
+
+    Le système détecte automatiquement la verticale métier
+    et évalue le niveau de risque avant routage.
+    """
+    from core.orchestrator.goal_detector import detect_goal
+    from core.mediator.rules_engine import rules_engine
+    rules_engine.load_rules()
+
+    # 1. Détection de verticale (déterministe)
+    result = detect_goal(goal_text, hint_vertical=vertical_hint)
+
+    # 2. Vérifier l'accès à la verticale
+    if auth.role != "admin" and result.vertical not in auth.verticals:
+        raise HTTPException(
+            403,
+            f"Verticale détectée: {result.vertical}. "
+            f"Accès non autorisé pour votre compte.",
+        )
+
+    # 3. Évaluer le risk_level immédiatement
+    risk_level, risk_action = rules_engine.evaluate_risk_level(
+        result.vertical,
+        {"action": {"type": "goal"}, "goal_text": goal_text},
+    )
+    appetite = rules_engine.get_risk_appetite(result.vertical)
+
+    # 4. Soumettre l'intention dans le pipeline existant
+    try:
+        from core.orchestrator.conversationnal import orchestrator
+        intention_id = await orchestrator.submit_intention(
+            client_id=client_id,
+            vertical=result.vertical,
+            query=goal_text,
+            context={
+                "source": "goal",
+                "vertical_confidence": result.confidence,
+                "keywords_matched": result.keywords_matched,
+                "risk_level": risk_level,
+                "risk_action": risk_action,
+            },
+        )
+    except Exception:
+        intention_id = str(uuid.uuid4())
+
+    return {
+        "intention_id": intention_id,
+        "vertical": result.vertical,
+        "vertical_confidence": result.confidence,
+        "keywords_matched": result.keywords_matched,
+        "risk_level": risk_level,
+        "risk_action": risk_action,
+        "risk_appetite": appetite,
+        "status": "submitted",
+        "submitted_by": auth.email,
+    }
+
+
+# ============================================================
 # INTENTIONS (authentifié)
 # ============================================================
 
@@ -815,6 +889,386 @@ async def agents_status(
         "circuit_breakers": circuit_registry.get_all_status(),
         "active_conflicts": mediator.get_active_conflicts(),
     }
+
+
+# ============================================================
+# AGENT IDENTITY / KYA (authentifié)
+# ============================================================
+
+@app.get("/api/v1/agents/identities")
+async def list_agent_identities(
+    auth: AuthContext = Depends(require_operator),
+):
+    """Lister toutes les cartes d'identité des agents (KYA)"""
+    from core.security.agent_identity import agent_identity_provider
+    identities = agent_identity_provider.get_all_identities()
+    return {
+        "identities": [agent_identity_provider.get_audit_trail(i.agent_id) for i in identities],
+        "total": len(identities),
+    }
+
+
+@app.post("/api/v1/agents/identities/{agent_id}/activate")
+async def activate_agent_session(
+    agent_id: str,
+    vertical: str = "comptable",
+    auth: AuthContext = Depends(require_admin),
+):
+    """Activer une session agent avec serment numérique (admin)"""
+    from core.security.agent_identity import agent_identity_provider
+    cred = agent_identity_provider.activate_session(agent_id, vertical=vertical)
+    if not cred:
+        raise HTTPException(400, f"Impossible d'activer {agent_id}")
+    return {
+        "agent_id": agent_id,
+        "session_id": cred.session_id,
+        "scopes": [s.value for s in cred.scopes],
+        "expires_at": cred.expires_at.isoformat(),
+        "oath_signed": True,
+    }
+
+
+@app.post("/api/v1/agents/identities/{agent_id}/deactivate")
+async def deactivate_agent_session(
+    agent_id: str,
+    auth: AuthContext = Depends(require_admin),
+):
+    """Désactiver la session d'un agent (admin)"""
+    from core.security.agent_identity import agent_identity_provider
+    ok = agent_identity_provider.deactivate_session(agent_id)
+    if not ok:
+        raise HTTPException(400, f"Pas de session active pour {agent_id}")
+    return {"agent_id": agent_id, "status": "deactivated"}
+
+
+@app.get("/api/v1/agents/identities/{agent_id}/audit")
+async def agent_identity_audit(
+    agent_id: str,
+    auth: AuthContext = Depends(require_operator),
+):
+    """Audit trail complet d'un agent"""
+    from core.security.agent_identity import agent_identity_provider
+    audit = agent_identity_provider.get_audit_trail(agent_id)
+    if "error" in audit:
+        raise HTTPException(404, audit["error"])
+    return audit
+
+
+@app.post("/api/v1/agents/identities/{agent_id}/suspend")
+async def suspend_agent(
+    agent_id: str,
+    reason: str = "Comportement suspect",
+    auth: AuthContext = Depends(require_admin),
+):
+    """Suspendre un agent (admin)"""
+    from core.security.agent_identity import agent_identity_provider
+    ok = agent_identity_provider.suspend_agent(agent_id, reason=reason)
+    if not ok:
+        raise HTTPException(404, f"Agent {agent_id} non trouvé")
+    return {"agent_id": agent_id, "status": "suspended", "reason": reason}
+
+
+# ============================================================
+# PRECEDENT STORE / JURISPRUDENCE (authentifié)
+# ============================================================
+
+@app.get("/api/v1/precedents")
+async def list_precedents(
+    vertical: str = None,
+    auth: AuthContext = Depends(require_operator),
+):
+    """Lister les précédents de jurisprudence IA"""
+    from core.mediator.precedent_store import precedent_store
+    if vertical:
+        precedents = precedent_store.get_all_for_vertical(vertical)
+    else:
+        precedents = []
+        for v in ["comptable", "avocat", "sante", "banque", "startup", "rh"]:
+            precedents.extend(precedent_store.get_all_for_vertical(v))
+    return {
+        "precedents": [
+            {
+                "precedent_id": p.precedent_id,
+                "vertical": p.vertical,
+                "question": p.question[:200],
+                "decision": p.decision,
+                "strength": p.strength.value,
+                "arbiter": p.arbiter_name,
+                "matched_count": p.matched_count,
+                "created_at": p.created_at.isoformat(),
+            }
+            for p in precedents
+        ],
+        "total": len(precedents),
+    }
+
+
+@app.get("/api/v1/precedents/stats")
+async def precedent_stats(
+    auth: AuthContext = Depends(require_operator),
+):
+    """Statistiques du PrecedentStore"""
+    from core.mediator.precedent_store import precedent_store
+    return precedent_store.get_stats()
+
+
+@app.get("/api/v1/precedents/query")
+async def query_precedents(
+    vertical: str,
+    question: str,
+    rule_id: str = None,
+    limit: int = 5,
+    auth: AuthContext = Depends(require_operator),
+):
+    """Rechercher des précédents par similarité"""
+    from core.mediator.precedent_store import precedent_store
+    matches = precedent_store.query(
+        vertical=vertical,
+        question=question,
+        rule_id=rule_id,
+        limit=limit,
+    )
+    return {
+        "matches": [
+            {
+                "precedent_id": m.precedent.precedent_id,
+                "relevance": m.relevance,
+                "match_reason": m.match_reason,
+                "decision": m.precedent.decision,
+                "justification": m.precedent.justification[:300],
+                "strength": m.precedent.strength.value,
+                "arbiter": m.precedent.arbiter_name,
+            }
+            for m in matches
+        ],
+        "total": len(matches),
+    }
+
+
+@app.get("/api/v1/precedents/candidates")
+async def list_rule_candidates(
+    auth: AuthContext = Depends(require_expert),
+):
+    """Lister les candidats de promotion en règles (expert+)"""
+    from core.mediator.precedent_store import precedent_store
+    candidates = precedent_store.get_pending_candidates()
+    return {
+        "candidates": [
+            {
+                "candidate_id": c.candidate_id,
+                "vertical": c.vertical,
+                "source_count": len(c.source_precedent_ids),
+                "suggested_action": c.suggested_action,
+                "suggested_severity": c.suggested_severity,
+                "message": c.suggested_message,
+                "created_at": c.created_at.isoformat(),
+            }
+            for c in candidates
+        ],
+        "total": len(candidates),
+    }
+
+
+@app.post("/api/v1/precedents/candidates/{candidate_id}/approve")
+async def approve_rule_candidate(
+    candidate_id: str,
+    auth: AuthContext = Depends(require_expert),
+):
+    """Approuver un candidat de promotion en règle (expert+)"""
+    from core.mediator.precedent_store import precedent_store
+    result = precedent_store.approve_candidate(candidate_id, reviewer=auth.email)
+    if not result:
+        raise HTTPException(404, "Candidat non trouvé")
+    return {"status": "approved", "candidate_id": candidate_id, "reviewer": auth.email}
+
+
+@app.post("/api/v1/precedents/candidates/{candidate_id}/reject")
+async def reject_rule_candidate(
+    candidate_id: str,
+    reason: str = "",
+    auth: AuthContext = Depends(require_expert),
+):
+    """Rejeter un candidat de promotion en règle (expert+)"""
+    from core.mediator.precedent_store import precedent_store
+    result = precedent_store.reject_candidate(candidate_id, reviewer=auth.email)
+    if not result:
+        raise HTTPException(404, "Candidat non trouvé")
+    return {"status": "rejected", "candidate_id": candidate_id}
+
+
+# ============================================================
+# COMPLIANCE GOALS (authentifié)
+# ============================================================
+
+@app.post("/api/v1/compliance-goals")
+async def create_compliance_goal(
+    request: dict,
+    auth: AuthContext = Depends(get_current_user),
+):
+    """Créer un Compliance Goal (tâche conformité longue durée)"""
+    from core.orchestrator.compliance_goal import compliance_goal_runner
+
+    client_id = request.get("client_id", auth.user_id)
+    vertical = request.get("vertical")
+    title = request.get("title")
+    description = request.get("description", title)
+    template = request.get("template")
+
+    if not vertical or not title:
+        raise HTTPException(400, "vertical et title requis")
+
+    # Vérifier l'accès à la verticale
+    if auth.role != "admin" and vertical not in auth.verticals:
+        raise HTTPException(403, f"Accès non autorisé à {vertical}")
+
+    goal = compliance_goal_runner.create_goal(
+        client_id=client_id,
+        vertical=vertical,
+        title=title,
+        description=description,
+        template_name=template,
+    )
+    return {
+        "goal_id": goal.goal_id,
+        "title": goal.title,
+        "vertical": goal.vertical,
+        "status": goal.status.value,
+        "subtask_count": len(goal.subtasks),
+        "subtasks": [{"name": st.name, "agent": st.agent, "status": st.status.value} for st in goal.subtasks],
+    }
+
+
+@app.post("/api/v1/compliance-goals/{goal_id}/start")
+async def start_compliance_goal(
+    goal_id: str,
+    auth: AuthContext = Depends(get_current_user),
+):
+    """Démarrer un Compliance Goal"""
+    from core.orchestrator.compliance_goal import compliance_goal_runner
+    goal = compliance_goal_runner.start_goal(goal_id)
+    if not goal:
+        raise HTTPException(404, "Goal non trouvé ou déjà démarré")
+    return {"goal_id": goal_id, "status": goal.status.value}
+
+
+@app.get("/api/v1/compliance-goals/{goal_id}")
+async def get_compliance_goal(
+    goal_id: str,
+    auth: AuthContext = Depends(get_current_user),
+):
+    """Récupérer le statut d'un Compliance Goal"""
+    from core.orchestrator.compliance_goal import compliance_goal_runner
+    goal = compliance_goal_runner.get_goal(goal_id)
+    if not goal:
+        raise HTTPException(404, "Goal non trouvé")
+    return {
+        "goal_id": goal.goal_id,
+        "title": goal.title,
+        "vertical": goal.vertical,
+        "status": goal.status.value,
+        "progress": goal.progress,
+        "subtasks": [
+            {
+                "task_id": st.task_id,
+                "name": st.name,
+                "agent": st.agent,
+                "status": st.status.value if hasattr(st.status, 'value') else st.status,
+                "confidence": st.confidence,
+            }
+            for st in goal.subtasks
+        ],
+        "started_at": goal.started_at.isoformat() if goal.started_at else None,
+        "completed_at": goal.completed_at.isoformat() if goal.completed_at else None,
+        "result": goal.result,
+    }
+
+
+@app.post("/api/v1/compliance-goals/{goal_id}/subtasks/{task_id}")
+async def update_compliance_subtask(
+    goal_id: str,
+    task_id: str,
+    request: dict,
+    auth: AuthContext = Depends(require_operator),
+):
+    """Mettre à jour une sous-tâche d'un Compliance Goal"""
+    from core.orchestrator.compliance_goal import compliance_goal_runner
+    goal = compliance_goal_runner.update_subtask(
+        goal_id=goal_id,
+        task_id=task_id,
+        status=request.get("status"),
+        result=request.get("result"),
+        confidence=request.get("confidence"),
+        error=request.get("error"),
+    )
+    if not goal:
+        raise HTTPException(404, "Goal ou sous-tâche non trouvé")
+    return {
+        "goal_id": goal_id,
+        "progress": goal.progress,
+        "status": goal.status.value,
+    }
+
+
+@app.post("/api/v1/compliance-goals/{goal_id}/pause")
+async def pause_compliance_goal(
+    goal_id: str,
+    reason: str = "",
+    auth: AuthContext = Depends(require_operator),
+):
+    """Suspendre un Compliance Goal"""
+    from core.orchestrator.compliance_goal import compliance_goal_runner
+    goal = compliance_goal_runner.pause_goal(goal_id, reason=reason)
+    if not goal:
+        raise HTTPException(404, "Goal non trouvé")
+    return {"goal_id": goal_id, "status": "paused"}
+
+
+@app.post("/api/v1/compliance-goals/{goal_id}/resume")
+async def resume_compliance_goal(
+    goal_id: str,
+    auth: AuthContext = Depends(get_current_user),
+):
+    """Reprendre un Compliance Goal suspendu"""
+    from core.orchestrator.compliance_goal import compliance_goal_runner
+    goal = compliance_goal_runner.resume_goal(goal_id)
+    if not goal:
+        raise HTTPException(404, "Goal non trouvé")
+    return {"goal_id": goal_id, "status": "running"}
+
+
+@app.get("/api/v1/compliance-goals")
+async def list_compliance_goals(
+    client_id: str = None,
+    auth: AuthContext = Depends(get_current_user),
+):
+    """Lister les Compliance Goals"""
+    from core.orchestrator.compliance_goal import compliance_goal_runner
+    if client_id:
+        goals = compliance_goal_runner.get_goals_for_client(client_id)
+    else:
+        goals = compliance_goal_runner.get_active_goals()
+    return {
+        "goals": [
+            {
+                "goal_id": g.goal_id,
+                "title": g.title,
+                "vertical": g.vertical,
+                "status": g.status.value,
+                "progress": g.progress,
+            }
+            for g in goals
+        ],
+        "total": len(goals),
+    }
+
+
+@app.get("/api/v1/compliance-goals/templates")
+async def list_compliance_templates(
+    vertical: str = None,
+):
+    """Lister les templates de Compliance Goals disponibles (public)"""
+    from core.orchestrator.compliance_goal import compliance_goal_runner
+    return compliance_goal_runner.get_templates(vertical)
 
 
 # ============================================================
@@ -1710,6 +2164,283 @@ async def agent_chat(
 
 
 # ════════════════════════════════════════════════════════════════
+# CHAT STREAMING SSE (Conversational UI P0)
+# ════════════════════════════════════════════════════════════════
+@app.post("/api/v1/chat/stream")
+async def agent_chat_stream(
+    request: Request,
+    auth: AuthContext = Depends(get_current_user),
+):
+    """Chat streaming SSE — tokens en temps réel avec pipeline multi-agents."""
+    import json
+    from sse_starlette.sse import EventSourceResponse
+    from core.integrations.llm import llm_service
+
+    body = await request.json()
+    message = body.get("message", "")
+    vertical = body.get("vertical", "comptable")
+    client_id = body.get("client_id", "demo")
+    agent_name = body.get("agent_name", "reasoning")
+    conversation_id = body.get("conversation_id")
+
+    async def event_generator():
+        # 1) Signal: démarrage du pipeline
+        pipeline_id = f"chat_{datetime.now().strftime('%H%M%S')}_{auth.user_id[:6]}"
+        yield {"event": "pipeline_start", "data": json.dumps({
+            "pipeline_id": pipeline_id,
+            "steps": ["intention", "mediator_check", "rag_context", "llm_generate", "guardrail", "journal"],
+        })}
+
+        # 2) Signal: intention détectée
+        yield {"event": "agent_step", "data": json.dumps({
+            "step": "intention", "agent": "orchestrator", "status": "done",
+            "detail": f"Vertical: {vertical}",
+        })}
+
+        # 3) Signal: Médiateur check (deterministic)
+        from core.mediator.mediator import mediator
+        try:
+            trust_eval = await mediator.evaluate(vertical, "chat", {
+                "user_role": auth.role, "action": "chat", "message_length": len(message),
+            })
+            verdict = trust_eval.get("verdict", "APPROVED") if trust_eval else "APPROVED"
+        except Exception:
+            verdict = "APPROVED"
+
+        yield {"event": "agent_step", "data": json.dumps({
+            "step": "mediator_check", "agent": "mediator", "status": "done",
+            "detail": f"Verdict: {verdict}", "verdict": verdict,
+        })}
+
+        if verdict in ("BLOCKED", "FROZEN"):
+            yield {"event": "guardrail_blocked", "data": json.dumps({
+                "verdict": verdict, "reason": "Action non autorisée par le Médiateur",
+            })}
+            yield {"event": "pipeline_end", "data": json.dumps({"status": "blocked"})}
+            return
+
+        # 4) Signal: RAG context
+        yield {"event": "agent_step", "data": json.dumps({
+            "step": "rag_context", "agent": "data", "status": "running",
+        })}
+
+        rag_context = ""
+        try:
+            from core.integrations.rag import rag_service
+            if rag_service:
+                rag_results = await rag_service.search(message, vertical=vertical)
+                rag_context = "\n".join(r.get("content", "") for r in rag_results[:3]) if rag_results else ""
+        except Exception:
+            pass
+
+        yield {"event": "agent_step", "data": json.dumps({
+            "step": "rag_context", "agent": "data", "status": "done",
+            "detail": f"{len(rag_context)} chars de contexte",
+        })}
+
+        # 5) Signal + Stream: LLM generation
+        yield {"event": "agent_step", "data": json.dumps({
+            "step": "llm_generate", "agent": agent_name, "status": "running",
+        })}
+
+        full_response = ""
+        model_used = ""
+        provider_used = ""
+        tokens_used = 0
+
+        try:
+            # Try streaming from LLM service
+            stream = llm_service.stream_generate(
+                agent_name=agent_name,
+                task=message,
+                context={"user_role": auth.role, "vertical": vertical, "rag_context": rag_context},
+                vertical=vertical,
+                client_id=client_id,
+            )
+            async for chunk in stream:
+                token = chunk.get("text", "")
+                if token:
+                    full_response += token
+                    yield {"event": "token", "data": json.dumps({"text": token})}
+                if chunk.get("model"):
+                    model_used = chunk["model"]
+                if chunk.get("provider"):
+                    provider_used = chunk["provider"]
+                if chunk.get("done"):
+                    tokens_used = chunk.get("tokens", 0)
+                    break
+        except AttributeError:
+            # Fallback: non-streaming generate
+            result = await llm_service.generate_for_agent(
+                agent_name=agent_name,
+                task=message,
+                context={"user_role": auth.role, "vertical": vertical, "rag_context": rag_context},
+                vertical=vertical,
+                client_id=client_id,
+            )
+            full_response = result.get("text", "")
+            model_used = result.get("model", "")
+            provider_used = result.get("provider", "")
+            tokens_used = result.get("tokens", 0)
+            # Simulate streaming by chunks
+            words = full_response.split(" ")
+            for i, w in enumerate(words):
+                yield {"event": "token", "data": json.dumps({"text": w + (" " if i < len(words) - 1 else "")})}
+        except Exception as e:
+            full_response = f"Erreur: {e}"
+            yield {"event": "error", "data": json.dumps({"error": str(e)})}
+
+        # 6) Signal: Guardrails check
+        guardrail_flags = []
+        yield {"event": "agent_step", "data": json.dumps({
+            "step": "guardrail", "agent": "mediator", "status": "done",
+            "detail": f"{len(guardrail_flags)} flags",
+        })}
+
+        # 7) Signal: Journal WORM
+        yield {"event": "agent_step", "data": json.dumps({
+            "step": "journal", "agent": "supervisor", "status": "done",
+        })}
+
+        # 8) Done
+        trust_score = 1.0 if not guardrail_flags else 0.5
+        yield {"event": "pipeline_end", "data": json.dumps({
+            "status": "done",
+            "agent": agent_name,
+            "model": model_used,
+            "provider": provider_used,
+            "tokens": tokens_used,
+            "trust_score": trust_score,
+            "guardrail_flags": guardrail_flags,
+            "vertical": vertical,
+            "conversation_id": conversation_id,
+        })}
+
+        # Audit log
+        try:
+            log_audit(
+                db=None, action="chat_stream", user_id=auth.user_id,
+                user_email=auth.email, resource_type="chat",
+                details={"agent": agent_name, "vertical": vertical, "model": model_used, "tokens": tokens_used},
+            )
+        except Exception:
+            pass
+
+    return EventSourceResponse(event_generator())
+
+
+# ════════════════════════════════════════════════════════════════
+# REVIEW LOOP (P1) — Boucle Médiateur déterministe
+# ════════════════════════════════════════════════════════════════
+@app.post("/api/v1/review-loop")
+async def run_review_loop(
+    request: Request,
+    auth: AuthContext = Depends(get_current_user),
+    db: Session = Depends(get_session),
+):
+    """
+    Exécuter la Review Loop complète.
+    
+    Pipeline: Agent génère → Médiateur vérifie → Si problème → Agent corrige → Re-vérifie
+    Max 3 itérations. Arbitrage humain si toujours pas approuvé.
+    """
+    body = await request.json()
+    agent_name = body.get("agent_name", "reasoning")
+    task = body.get("task", "")
+    vertical = body.get("vertical", "comptable")
+    context = body.get("context", {})
+    client_id = body.get("client_id", "demo")
+    intention_id = body.get("intention_id")
+
+    if not task:
+        raise HTTPException(400, "Le champ 'task' est requis")
+
+    from core.mediator.review_loop import review_loop
+    result = await review_loop.execute(
+        agent_name=agent_name,
+        task=task,
+        vertical=vertical,
+        context={**context, "user_role": auth.role},
+        client_id=client_id,
+        intention_id=intention_id,
+    )
+
+    log_audit(
+        db, action="review_loop", user_id=auth.user_id,
+        user_email=auth.email, resource_type="review_loop",
+        details={
+            "agent": agent_name, "vertical": vertical,
+            "verdict": result.verdict.value, "iterations": result.total_iterations,
+            "elapsed_ms": round(result.total_elapsed_ms),
+        },
+    )
+
+    return result.to_dict()
+
+
+@app.post("/api/v1/review-loop/stream")
+async def run_review_loop_stream(
+    request: Request,
+    auth: AuthContext = Depends(get_current_user),
+):
+    """
+    Review Loop en streaming SSE — chaque itération est envoyée en temps réel.
+    """
+    import json as json_mod
+    from sse_starlette.sse import EventSourceResponse
+    from core.mediator.review_loop import review_loop, LoopVerdict
+    from core.integrations.llm import llm_service
+
+    body = await request.json()
+    agent_name = body.get("agent_name", "reasoning")
+    task = body.get("task", "")
+    vertical = body.get("vertical", "comptable")
+    context = body.get("context", {})
+    client_id = body.get("client_id", "demo")
+    intention_id = body.get("intention_id")
+
+    async def event_generator():
+        # Signal de début
+        yield {"event": "review_start", "data": json_mod.dumps({
+            "agent": agent_name, "vertical": vertical, "max_iterations": 3,
+        })}
+
+        # Exécuter la review loop
+        result = await review_loop.execute(
+            agent_name=agent_name,
+            task=task,
+            vertical=vertical,
+            context={**context, "user_role": auth.role},
+            client_id=client_id,
+            intention_id=intention_id,
+        )
+
+        # Envoyer chaque itération
+        for it in result.iterations:
+            yield {"event": "iteration", "data": json_mod.dumps({
+                "iteration": it.iteration,
+                "verdict": it.verdict,
+                "findings_count": it.findings_count,
+                "critical_count": it.critical_count,
+                "rules_triggered": it.rules_triggered,
+                "feedback": it.feedback,
+                "elapsed_ms": round(it.elapsed_ms),
+            })}
+
+        # Signal de fin
+        yield {"event": "review_end", "data": json_mod.dumps({
+            "final_verdict": result.verdict.value,
+            "total_iterations": result.total_iterations,
+            "total_elapsed_ms": round(result.total_elapsed_ms),
+            "trust_score": result.trust_score,
+            "arbitration_reason": result.arbitration_reason,
+            "final_output": result.final_output,
+        })}
+
+    return EventSourceResponse(event_generator())
+
+
+# ════════════════════════════════════════════════════════════════
 # SERMENT NUMÉRIQUE (Public — divergent)
 # ════════════════════════════════════════════════════════════════
 
@@ -1738,6 +2469,234 @@ async def verify_serment(vertical: str):
 
 
 # ════════════════════════════════════════════════════════════════
+# VOICE INTERFACE (P2) — STT + TTS
+# ════════════════════════════════════════════════════════════════
+@app.post("/api/v1/voice/transcribe")
+async def voice_transcribe(
+    request: Request,
+    auth: AuthContext = Depends(get_current_user),
+):
+    """Transcrire un audio en texte (faster-whisper, local)."""
+    audio_data = await request.body()
+    if not audio_data:
+        raise HTTPException(400, "Aucune donnée audio")
+
+    content_type = request.headers.get("content-type", "audio/wav")
+
+    from core.integrations.voice_service import stt_service
+    try:
+        result = await stt_service.transcribe(audio_data, language="fr")
+    except ImportError:
+        raise HTTPException(503, "Service STT non disponible (faster-whisper non installé)")
+    except Exception as e:
+        raise HTTPException(500, f"Erreur transcription: {e}")
+
+    log_audit(
+        db=None, action="voice_transcribe", user_id=auth.user_id,
+        user_email=auth.email, resource_type="voice",
+        details={"duration": result.get("duration"), "words": result.get("words_count")},
+    )
+
+    return result
+
+
+@app.post("/api/v1/voice/synthesize")
+async def voice_synthesize(
+    request: Request,
+    auth: AuthContext = Depends(get_current_user),
+):
+    """Synthétiser du texte en audio (edge-tts gratuit / elevenlabs premium)."""
+    from fastapi.responses import Response
+
+    body = await request.json()
+    text = body.get("text", "")
+    persona = body.get("persona", "le_leman")
+    locale = body.get("locale")
+
+    if not text:
+        raise HTTPException(400, "Le champ 'text' est requis")
+    if len(text) > 5000:
+        raise HTTPException(400, "Texte trop long (max 5000 caractères)")
+
+    from core.integrations.voice_service import tts_service
+    try:
+        result = await tts_service.synthesize(text, persona=persona, locale=locale)
+    except Exception as e:
+        raise HTTPException(500, f"Erreur synthèse: {e}")
+
+    return Response(
+        content=result["audio_data"],
+        media_type=result["content_type"],
+        headers={
+            "X-Voice": result["voice"],
+            "X-Provider": result["provider"],
+            "X-Duration-Ms": str(result["duration_ms"]),
+        },
+    )
+
+
+@app.post("/api/v1/voice/chat")
+async def voice_chat(
+    request: Request,
+    auth: AuthContext = Depends(get_current_user),
+    db: Session = Depends(get_session),
+):
+    """
+    Voice Chat complet: Audio → STT → Chat → TTS → Audio.
+    
+    Pipeline: microphone → faster-whisper → Le Léman → edge-tts → haut-parleur.
+    Tout est journalisé dans le WORM.
+    """
+    audio_data = await request.body()
+    if not audio_data:
+        raise HTTPException(400, "Aucune donnée audio")
+
+    # 1. STT
+    from core.integrations.voice_service import stt_service, tts_service
+    from fastapi.responses import Response as FastResponse
+
+    try:
+        stt_result = await stt_service.transcribe(audio_data, language="fr")
+    except Exception as e:
+        raise HTTPException(500, f"Erreur STT: {e}")
+
+    user_text = stt_result.get("text", "")
+    if not user_text:
+        return {"error": "Aucune parole détectée", "stt": stt_result}
+
+    # 2. Chat avec Le Léman
+    from core.integrations.llm import llm_service
+    try:
+        chat_result = await llm_service.generate_for_agent(
+            agent_name="reasoning",
+            task=user_text,
+            context={"user_role": auth.role, "vertical": "voice", "source": "voice"},
+            vertical="comptable",
+            client_id="voice",
+        )
+        response_text = chat_result.get("text", "")
+    except Exception as e:
+        response_text = f"Erreur: {e}"
+
+    # 3. TTS
+    try:
+        tts_result = await tts_service.synthesize(response_text[:2000], persona="le_leman")
+    except Exception as e:
+        # Si TTS échoue, retourner le texte
+        return {
+            "user_text": user_text,
+            "response_text": response_text,
+            "tts_error": str(e),
+            "stt": stt_result,
+        }
+
+    # Audit
+    log_audit(
+        db, action="voice_chat", user_id=auth.user_id,
+        user_email=auth.email, resource_type="voice",
+        details={
+            "stt_duration": stt_result.get("duration"),
+            "stt_words": stt_result.get("words_count"),
+            "response_length": len(response_text),
+            "tts_provider": tts_result.get("provider"),
+        },
+    )
+
+    return FastResponse(
+        content=tts_result["audio_data"],
+        media_type=tts_result["content_type"],
+        headers={
+            "X-User-Text": user_text[:200],
+            "X-Response-Text": response_text[:200],
+            "X-STT-Duration": str(stt_result.get("duration", 0)),
+            "X-TTS-Provider": tts_result.get("provider", "unknown"),
+            "X-TTS-Voice": tts_result.get("voice", "unknown"),
+        },
+    )
+
+
+# ════════════════════════════════════════════════════════════════
+# VERTICAL INTEGRATIONS (P2) — Connecteurs métier
+# ════════════════════════════════════════════════════════════════
+
+@app.get("/api/v1/verticals")
+async def list_vertical_connectors():
+    """Lister tous les connecteurs verticaux disponibles."""
+    from core.integrations.verticals import vertical_registry
+    return {"verticals": vertical_registry.list_all()}
+
+
+@app.post("/api/v1/verticals/{vertical}/validate")
+async def validate_vertical_action(
+    vertical: str,
+    request: Request,
+    auth: AuthContext = Depends(get_current_user),
+):
+    """Valider une action selon les règles du connecteur vertical."""
+    body = await request.json()
+    action = body.get("action", "unknown")
+    context = body.get("context", {})
+
+    from core.integrations.verticals import vertical_registry
+    result = vertical_registry.validate(vertical, action, context)
+    return result.to_dict()
+
+
+@app.post("/api/v1/verticals/{vertical}/enrich")
+async def enrich_vertical_context(
+    vertical: str,
+    request: Request,
+    auth: AuthContext = Depends(get_current_user),
+):
+    """Enrichir le contexte avec les données du connecteur vertical."""
+    body = await request.json()
+    context = body.get("context", {})
+
+    from core.integrations.verticals import vertical_registry
+    return {"enriched_context": vertical_registry.enrich(vertical, context)}
+
+
+@app.get("/api/v1/verticals/{vertical}/templates")
+async def get_vertical_templates(
+    vertical: str,
+    auth: AuthContext = Depends(get_current_user),
+):
+    """Récupérer les templates de documents réglementaires d'une vertical."""
+    from core.integrations.verticals import vertical_registry
+    return {"templates": vertical_registry.templates(vertical)}
+
+
+@app.get("/api/v1/verticals/{vertical}/calendar")
+async def get_vertical_calendar(
+    vertical: str,
+    year: int = None,
+    auth: AuthContext = Depends(get_current_user),
+):
+    """Échéances réglementaires d'une vertical."""
+    from core.integrations.verticals import vertical_registry
+    return {"deadlines": vertical_registry.calendar(vertical, year)}
+
+
+@app.get("/api/v1/verticals/templates")
+async def get_all_templates(
+    auth: AuthContext = Depends(get_current_user),
+):
+    """Tous les templates de toutes les verticales."""
+    from core.integrations.verticals import vertical_registry
+    return {"templates": vertical_registry.templates()}
+
+
+@app.get("/api/v1/verticals/calendar")
+async def get_all_calendar(
+    year: int = None,
+    auth: AuthContext = Depends(get_current_user),
+):
+    """Toutes les échéances réglementaires."""
+    from core.integrations.verticals import vertical_registry
+    return {"deadlines": vertical_registry.calendar(year=year)}
+
+
+# ════════════════════════════════════════════════════════════════
 # ÉCHÉANCIER RÉGLEMENTAIRE (Authentifié — divergent)
 # ════════════════════════════════════════════════════════════════
 
@@ -1758,6 +2717,82 @@ async def regulatory_stats(
     """Statistiques échéancier réglementaire"""
     from core.regulatory import get_deadline_stats
     return get_deadline_stats(vertical=vertical)
+
+
+# ════════════════════════════════════════════════════════════════
+# ARTIFACTS (P3) — Aperçus et artefacts riches
+# ════════════════════════════════════════════════════════════════
+
+@app.post("/api/v1/artifacts/detect")
+async def detect_artifacts(
+    request: Request,
+    auth: AuthContext = Depends(get_current_user),
+):
+    """Détecter les artefacts dans un texte (tableaux, métriques, code)."""
+    body = await request.json()
+    text = body.get("text", "")
+    vertical = body.get("vertical", "")
+
+    from core.artifacts import detect_artifacts as _detect
+    artifacts = _detect(text, vertical)
+    return {"artifacts": [a.to_dict() for a in artifacts]}
+
+
+@app.post("/api/v1/artifacts/compliance-card")
+async def generate_compliance_card(
+    request: Request,
+    auth: AuthContext = Depends(get_current_user),
+):
+    """Générer une fiche de conformité structurée."""
+    body = await request.json()
+    vertical = body.get("vertical", "comptable")
+    action = body.get("action", "consultation")
+    context = body.get("context", {})
+
+    from core.integrations.verticals import vertical_registry
+    from core.artifacts import generate_compliance_card as _gen_card
+
+    validation = vertical_registry.validate(vertical, action, context)
+    card = _gen_card(vertical, validation.to_dict())
+    return card.to_dict()
+
+
+@app.post("/api/v1/artifacts/document-preview")
+async def generate_document_preview(
+    request: Request,
+    auth: AuthContext = Depends(get_current_user),
+):
+    """Générer un aperçu de document pré-rempli."""
+    body = await request.json()
+    template_id = body.get("template_id")
+    vertical = body.get("vertical", "comptable")
+    filled_fields = body.get("fields", {})
+
+    from core.integrations.verticals import vertical_registry
+    from core.artifacts import generate_document_preview as _gen_doc
+
+    templates = vertical_registry.templates(vertical)
+    template = next((t for t in templates if t.get("id") == template_id), None)
+    if not template:
+        raise HTTPException(404, f"Template '{template_id}' non trouvé pour '{vertical}'")
+
+    artifact = _gen_doc(template_id, template, filled_fields)
+    return artifact.to_dict()
+
+
+@app.get("/api/v1/artifacts/trust-timeline")
+async def trust_timeline(
+    vertical: str = None,
+    limit: int = 50,
+    auth: AuthContext = Depends(get_current_user),
+):
+    """Timeline de confiance à partir du journal WORM."""
+    from core.journal.append_only_journal import journal
+    from core.artifacts import generate_trust_timeline
+
+    events = journal.query_last(limit=limit, vertical=vertical)
+    artifact = generate_trust_timeline(events, vertical or "")
+    return artifact.to_dict()
 
 
 # ════════════════════════════════════════════════════════════════

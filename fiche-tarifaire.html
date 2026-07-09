@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cortex Leman — Grille Tarifaire 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+    --blue:#3b82f6;--blue-s:rgba(59,130,246,0.10);
+    --green:#10b981;--green-s:rgba(16,185,129,0.10);
+    --amber:#f59e0b;--amber-s:rgba(245,158,11,0.10);
+    --red:#ef4444;--red-s:rgba(239,68,68,0.08);
+    --bg:#0a0e17;--bg2:#0f1525;
+    --text:#e8eaf0;--t2:rgba(232,234,240,0.55);--t3:rgba(232,234,240,0.30);
+    --bdr:rgba(255,255,255,0.07);--bdr2:rgba(255,255,255,0.12);
+    --card:rgba(255,255,255,0.03);--card-h:rgba(255,255,255,0.06);
+    --f:'Inter',-apple-system,sans-serif;
+    --m:'JetBrains Mono',monospace;
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--f);background:var(--bg);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+
+/* ═══ NAV ═══ */
+header{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(10,14,23,0.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--bdr)}
+.nav{display:flex;align-items:center;justify-content:space-between;max-width:1100px;margin:0 auto;height:64px;padding:0 clamp(20px,4vw,50px)}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+.brand-logo{width:38px;height:38px;border-radius:9px;background:linear-gradient(135deg,var(--blue),var(--green));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;color:var(--bg)}
+.brand-name{font-weight:700;font-size:20px;letter-spacing:-0.5px;color:var(--text)}
+.brand-name span{color:var(--blue)}
+.nav-links{display:flex;gap:24px}
+.nav-links a{font-size:14px;color:var(--t2);text-decoration:none;font-weight:500;transition:color .2s}
+.nav-links a:hover{color:var(--text)}
+
+/* ═══ HERO ═══ */
+.hero{min-height:52vh;display:flex;flex-direction:column;justify-content:flex-end;background:var(--bg);position:relative;overflow:hidden;padding-top:64px}
+.hero-bg{position:absolute;inset:0;background-image:linear-gradient(rgba(59,130,246,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(59,130,246,0.03) 1px,transparent 1px);background-size:64px 64px;mask-image:radial-gradient(ellipse 70% 50% at 50% 50%,black,transparent)}
+.hero-glow{position:absolute;top:10%;left:30%;width:600px;height:600px;background:radial-gradient(circle,rgba(59,130,246,0.05) 0%,transparent 70%);pointer-events:none}
+.hero-inner{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:0 clamp(20px,4vw,50px);width:100%;padding-bottom:60px}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;font-family:var(--m);font-size:12px;padding:5px 14px;border-radius:100px;font-weight:500;letter-spacing:.03em;border:1px solid var(--bdr2);color:var(--t2);margin-bottom:24px}
+.hero-badge::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--green)}
+.hero h1{font-size:clamp(32px,5vw,60px);font-weight:800;letter-spacing:-2px;line-height:1.05;margin-bottom:18px;max-width:700px}
+.hero h1 em{font-style:normal;color:var(--green)}
+.hero-sub{font-size:clamp(15px,1.3vw,20px);color:var(--t2);max-width:580px;line-height:1.65}
+
+/* ═══ DECORATIVE BARS ═══ */
+.deco{width:100%;overflow:hidden}
+.deco .r1{display:flex}
+.deco .r1 .a{height:10px;width:34%;background:var(--blue)}
+.deco .r1 .b{height:10px;flex:1;background:var(--blue);opacity:.35}
+.deco .r2{height:6px;width:100%;background:var(--green);opacity:.2}
+
+/* ═══ SECTIONS ═══ */
+.sec{padding:clamp(60px,8vw,100px) 0}
+.si{max-width:1100px;margin:0 auto;padding:0 clamp(20px,4vw,50px)}
+.sl{display:inline-block;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;margin-bottom:16px;font-family:var(--m);color:var(--blue)}
+.sec-title{font-size:clamp(26px,3.2vw,40px);font-weight:800;letter-spacing:-1px;line-height:1.1;margin-bottom:16px}
+.sec-desc{font-size:clamp(14px,1.1vw,18px);color:var(--t2);max-width:600px;margin-bottom:clamp(40px,5vw,64px)}
+
+/* ═══ PRICING CARDS ═══ */
+.tiers{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:24px}
+.tier{background:var(--card);border:1px solid var(--bdr);border-radius:16px;padding:clamp(28px,3vw,40px);display:flex;flex-direction:column;transition:border-color .2s,background .2s;position:relative;overflow:hidden}
+.tier:hover{border-color:var(--bdr2);background:var(--card-h)}
+.tier.featured{border-color:var(--green);background:linear-gradient(180deg,var(--green-s) 0%,var(--card) 40%)}
+.tier-tag{position:absolute;top:0;right:0;background:var(--green);color:var(--bg);font-size:11px;font-weight:700;padding:5px 14px;border-bottom-left-radius:10px;font-family:var(--m);letter-spacing:.05em}
+.tier-name{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--t2);font-family:var(--m);margin-bottom:8px}
+.tier-title{font-size:clamp(22px,2.5vw,30px);font-weight:800;letter-spacing:-0.5px;margin-bottom:20px}
+.tier-price{display:flex;align-items:baseline;gap:4px;margin-bottom:6px}
+.tier-price .amount{font-size:clamp(36px,4vw,52px);font-weight:800;letter-spacing:-2px;line-height:1}
+.tier-price .cur{font-size:18px;color:var(--t2);font-weight:500}
+.tier-price .per{font-size:14px;color:var(--t2);margin-left:4px}
+.tier-price-chf{font-size:13px;color:var(--t3);font-family:var(--m);margin-bottom:24px}
+.tier-desc{font-size:14px;color:var(--t2);line-height:1.6;margin-bottom:28px;padding-bottom:24px;border-bottom:1px solid var(--bdr)}
+.tier-features{list-style:none;display:flex;flex-direction:column;gap:12px;margin-bottom:32px;flex:1}
+.tier-features li{display:flex;align-items:flex-start;gap:10px;font-size:14px;color:var(--text);line-height:1.5}
+.tier-features li .ico{flex-shrink:0;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;margin-top:2px}
+.tier-features li.yes .ico{background:var(--green-s);color:var(--green)}
+.tier-features li.no .ico{background:rgba(255,255,255,0.04);color:var(--t3)}
+.tier-features li.no{color:var(--t3)}
+.tier-features li.add .ico{background:var(--blue-s);color:var(--blue)}
+.tier-btn{display:block;text-align:center;padding:14px 24px;border-radius:10px;font-size:15px;font-weight:600;text-decoration:none;transition:all .2s}
+.tier-btn.primary{background:var(--green);color:var(--bg)}
+.tier-btn.primary:hover{background:#0ea572}
+.tier-btn.secondary{background:var(--card-h);color:var(--text);border:1px solid var(--bdr2)}
+.tier-btn.secondary:hover{border-color:var(--blue);color:var(--blue)}
+.tier-meta{display:flex;gap:16px;margin-top:14px;font-size:12px;color:var(--t3);font-family:var(--m)}
+
+/* ═══ COMPARISON TABLE ═══ */
+.table-wrap{overflow-x:auto;border-radius:16px;border:1px solid var(--bdr)}
+table{width:100%;border-collapse:collapse;font-size:14px;min-width:700px}
+thead th{background:var(--bg2);padding:18px 20px;text-align:left;font-weight:600;color:var(--t2);font-size:13px;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--bdr2);font-family:var(--m)}
+thead th.feat-col{width:32%}
+tbody td{padding:14px 20px;border-bottom:1px solid var(--bdr);color:var(--text)}
+tbody tr:last-child td{border-bottom:none}
+tbody td.feat-name{color:var(--t2);font-size:13px}
+tbody td.check{text-align:center}
+tbody td.check .yes{color:var(--green);font-weight:600}
+tbody td.check .no{color:var(--t3)}
+tbody td.check .partial{color:var(--amber)}
+tbody tr:hover td{background:var(--card)}
+
+/* ═══ ADD-ONS ═══ */
+.addons{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-top:8px}
+.addon{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;background:var(--card);border:1px solid var(--bdr);border-radius:12px;transition:border-color .2s}
+.addon:hover{border-color:var(--bdr2)}
+.addon-info h4{font-size:15px;font-weight:600;margin-bottom:4px}
+.addon-info p{font-size:13px;color:var(--t2);line-height:1.4}
+.addon-price{font-size:18px;font-weight:700;color:var(--blue);font-family:var(--m);white-space:nowrap;margin-left:16px}
+
+/* ═══ ROI ═══ */
+.roi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px}
+.roi-card{background:var(--card);border:1px solid var(--bdr);border-radius:14px;padding:28px}
+.roi-card h4{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--t2);font-family:var(--m);margin-bottom:16px}
+.roi-stat{font-size:clamp(32px,3.5vw,44px);font-weight:800;letter-spacing:-1.5px;line-height:1;color:var(--green);margin-bottom:4px}
+.roi-card.conservator .roi-stat{color:var(--blue)}
+.roi-card.optimist .roi-stat{color:var(--amber)}
+.roi-label{font-size:13px;color:var(--t2);margin-bottom:20px}
+.roi-detail{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--t2)}
+.roi-detail span{display:flex;justify-content:space-between}
+.roi-detail span strong{color:var(--text);font-family:var(--m)}
+
+/* ═══ POSITIONING ═══ */
+.pos-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;margin-bottom:40px}
+.pos-item{padding:24px;background:var(--card);border:1px solid var(--bdr);border-radius:12px}
+.pos-item h4{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--t2);font-family:var(--m);margin-bottom:10px}
+.pos-item p{font-size:14px;color:var(--text);line-height:1.5}
+.pos-item .highlight{color:var(--green);font-weight:600}
+
+/* ═══ CTA ═══ */
+.cta-sec{padding:clamp(60px,8vw,100px) 0;text-align:center}
+.cta-box{max-width:700px;margin:0 auto;padding:0 clamp(20px,4vw,50px)}
+.cta-box h2{font-size:clamp(28px,3.5vw,44px);font-weight:800;letter-spacing:-1px;line-height:1.1;margin-bottom:16px}
+.cta-box p{font-size:clamp(15px,1.2vw,19px);color:var(--t2);margin-bottom:32px}
+.cta-actions{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.cta-actions a{display:inline-flex;align-items:center;gap:8px;padding:14px 28px;border-radius:10px;font-size:15px;font-weight:600;text-decoration:none;transition:all .2s}
+.cta-actions .btn-primary{background:var(--green);color:var(--bg)}
+.cta-actions .btn-primary:hover{background:#0ea572}
+.cta-actions .btn-ghost{background:transparent;color:var(--text);border:1px solid var(--bdr2)}
+.cta-actions .btn-ghost:hover{border-color:var(--blue);color:var(--blue)}
+
+/* ═══ FOOTER ═══ */
+footer{border-top:1px solid var(--bdr);padding:40px 0}
+.foot{max-width:1100px;margin:0 auto;padding:0 clamp(20px,4vw,50px);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px}
+.foot-brand{display:flex;align-items:center;gap:10px}
+.foot-brand .brand-logo{width:32px;height:32px;font-size:13px;border-radius:8px}
+.foot-brand span{font-weight:700;font-size:16px}
+.foot-info{font-size:13px;color:var(--t3);text-align:right}
+.foot-info a{color:var(--t2);text-decoration:none}
+.foot-info a:hover{color:var(--blue)}
+
+/* ═══ RESPONSIVE ═══ */
+@media(max-width:768px){
+    .nav-links{display:none}
+    .hero h1{max-width:100%}
+    .tiers{grid-template-columns:1fr}
+}
+
+/* ═══ PRINT ═══ */
+@media print{
+    body{background:#fff;color:#111}
+    header,.cta-actions .btn-ghost{display:none}
+    .hero{min-height:auto;padding-top:20px}
+    .hero-bg,.hero-glow{display:none}
+    .hero h1,.hero-sub{color:#111}
+    .hero h1 em{color:#0d7c4a}
+    .hero-badge{color:#555;border-color:#ccc}
+    .tier,.addon,.roi-card,.pos-item{border:1px solid #ddd;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,0.06)}
+    .tier.featured{border-color:#10b981;background:#f0fdf9}
+    .tier-name,.sl{color:#2563eb}
+    .sec-title,.tier-title{color:#111}
+    .tier-desc,.sec-desc,.hero-sub{color:#444}
+    .tier-price .amount{color:#111}
+    .tier-features li{color:#222}
+    .tier-features li.no{color:#999}
+    table thead th{background:#f5f5f5;color:#444}
+    table tbody td{color:#222;border-color:#eee}
+    table tbody td.feat-name{color:#666}
+    .deco .r1 .a{background:#3b82f6}
+    .deco .r1 .b{background:#3b82f6;opacity:.3}
+    .deco .r2{background:#10b981;opacity:.2}
+    .tier-btn{display:none}
+    .cta-sec{border-top:1px solid #ddd}
+    .cta-box h2{color:#111}
+    .cta-box p{color:#444}
+    .foot-info{color:#999}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ NAV ═══ -->
+<header>
+    <nav class="nav">
+        <a href="#" class="brand">
+            <div class="brand-logo">CL</div>
+            <div class="brand-name">Cortex <span>Leman</span></div>
+        </a>
+        <div class="nav-links">
+            <a href="#offres">Offres</a>
+            <a href="#comparatif">Comparatif</a>
+            <a href="#addons">Add-ons</a>
+            <a href="#roi">ROI</a>
+            <a href="#contact">Contact</a>
+        </div>
+    </nav>
+</header>
+
+<!-- ═══ HERO ═══ -->
+<section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-glow"></div>
+    <div class="hero-inner">
+        <div class="hero-badge">Grille Tarifaire 2026</div>
+        <h1>L'IA conforme,<br>du <em>diagnostic</em> à la <em>conformité continue</em></h1>
+        <p class="hero-sub">Audit RGPD & IA Act pour PME et professions réglementées en France et Suisse. Les agences IA font de l'automatisation. Les auditeurs font du RGPD. Nous faisons les deux.</p>
+    </div>
+</section>
+
+<!-- decorative bars -->
+<div class="deco">
+    <div class="r1"><div class="a"></div><div class="b"></div></div>
+    <div class="r2"></div>
+</div>
+
+<!-- ═══ POSITIONING ═══ -->
+<section class="sec" style="padding-top:clamp(50px,6vw,80px)">
+    <div class="si">
+        <div class="sl">Pourquoi Cortex Leman</div>
+        <h2 class="sec-title">La conformité IA n'est pas optionnelle</h2>
+        <p class="sec-desc">AI Act (UE 2024/1689), RGPD, LPD suisse — les obligations s'accumulent. Les sanctions aussi.</p>
+
+        <div class="pos-grid">
+            <div class="pos-item">
+                <h4>Double expertise</h4>
+                <p>Auditeurs RGPD classiques connaissent le RGPD, pas l'IA. Agences IA connaissent l'automatisation, pas la compliance. <span class="highlight">Nous couvrons les deux.</span></p>
+            </div>
+            <div class="pos-item">
+                <h4>FR-CH transfrontalier</h4>
+                <p>RGPD + AI Act côté UE, LPD + PFPDT côté suisse. Cartographie des data flows <span class="highlight">CH→EU→US</span> documentée.</p>
+            </div>
+            <div class="pos-item">
+                <h4>OWASP GenAI</h4>
+                <p>Premier audit à couvrir <span class="highlight">OWASP Top 10 GenAI</span> en plus du RGPD classique. Menaces IA spécifiques incluses.</p>
+            </div>
+            <div class="pos-item">
+                <h4>Récurrent, pas one-shot</h4>
+                <p>La conformité n'est pas un événement, c'est un processus. <span class="highlight">Veille réglementaire continue</span> + re-audits trimestriels.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══ PRICING TIERS ═══ -->
+<section class="sec" id="offres" style="background:var(--bg2)">
+    <div class="si">
+        <div class="sl">Nos offres</div>
+        <h2 class="sec-title">Trois niveaux d'engagement</h2>
+        <p class="sec-desc">Du diagnostic rapide à la conformité continue. Choisissez selon votre maturité IA.</p>
+
+        <div class="tiers">
+            <!-- Tier 1 -->
+            <div class="tier">
+                <div class="tier-name">Tier 1</div>
+                <div class="tier-title">Diagnostic Flash</div>
+                <div class="tier-price">
+                    <span class="cur">€</span>
+                    <span class="amount">890</span>
+                </div>
+                <div class="tier-price-chf">≈ 1 050 CHF · one-shot</div>
+                <p class="tier-desc">Savoir où vous en êtes en 72h. Idéal pour valider un besoin avant investissement.</p>
+                <ul class="tier-features">
+                    <li class="yes"><span class="ico">✓</span> Scan codebase & architecture</li>
+                    <li class="yes"><span class="ico">✓</span> Score conformité 0–1 (5 domaines RGPD)</li>
+                    <li class="yes"><span class="ico">✓</span> 4 dimensions IA (autonomie, traçabilité…)</li>
+                    <li class="yes"><span class="ico">✓</span> Kill Switch : détection violations critiques</li>
+                    <li class="yes"><span class="ico">✓</span> Top 5 actions prioritaires</li>
+                    <li class="yes"><span class="ico">✓</span> Rapport PDF professionnel</li>
+                    <li class="no"><span class="ico">—</span> Mise en conformité</li>
+                    <li class="no"><span class="ico">—</span> DPIA / Support</li>
+                </ul>
+                <a href="#contact" class="tier-btn secondary">Demander un diagnostic</a>
+                <div class="tier-meta"><span>⏱ 48–72h</span></div>
+            </div>
+
+            <!-- Tier 2 -->
+            <div class="tier featured">
+                <div class="tier-tag">RECOMMANDÉ</div>
+                <div class="tier-name">Tier 2</div>
+                <div class="tier-title">Audit Complet</div>
+                <div class="tier-price">
+                    <span class="cur">€</span>
+                    <span class="amount">3 500</span>
+                </div>
+                <div class="tier-price-chf">≈ 4 200 CHF · one-shot</div>
+                <p class="tier-desc">Audit complet pour PME avec IA en production ou en projet. La référence du marché.</p>
+                <ul class="tier-features">
+                    <li class="yes"><span class="ico">✓</span> Tout le Diagnostic Flash +</li>
+                    <li class="yes"><span class="ico">✓</span> OWASP Top 10 GenAI complet</li>
+                    <li class="yes"><span class="ico">✓</span> AI Act risk classification</li>
+                    <li class="yes"><span class="ico">✓</span> Cartographie data flows CH→EU→US</li>
+                    <li class="yes"><span class="ico">✓</span> DPIA initiale (Art. 35 RGPD)</li>
+                    <li class="yes"><span class="ico">✓</span> Plan de conformité 90 jours</li>
+                    <li class="yes"><span class="ico">✓</span> Restitution visio 1h</li>
+                    <li class="yes"><span class="ico">✓</span> Support 30 jours (email / Telegram)</li>
+                </ul>
+                <a href="#contact" class="tier-btn primary">Réserver un audit</a>
+                <div class="tier-meta"><span>⏱ 2–3 semaines</span></div>
+            </div>
+
+            <!-- Tier 3 -->
+            <div class="tier">
+                <div class="tier-name">Tier 3</div>
+                <div class="tier-title">Conformité Continue</div>
+                <div class="tier-price">
+                    <span class="cur">€</span>
+                    <span class="amount">750</span>
+                    <span class="per">/ mois</span>
+                </div>
+                <div class="tier-price-chf">≈ 900 CHF/mois · engagement 12 mois</div>
+                <p class="tier-desc">Rester conforme dans le temps. Veille, alertes et re-audits pour PME qui utilisent l'IA régulièrement.</p>
+                <ul class="tier-features">
+                    <li class="yes"><span class="ico">✓</span> Tout l'Audit Complet inclus +</li>
+                    <li class="yes"><span class="ico">✓</span> Veille réglementaire personnalisée (hebdo)</li>
+                    <li class="yes"><span class="ico">✓</span> Alertes sanctions CNIL / EDPB / PFPDT</li>
+                    <li class="yes"><span class="ico">✓</span> Re-audit trimestriel (score évolutif)</li>
+                    <li class="yes"><span class="ico">✓</span> Validation nouveaux déploiements IA</li>
+                    <li class="yes"><span class="ico">✓</span> Ligne directe (Telegram / WhatsApp)</li>
+                    <li class="yes"><span class="ico">✓</span> Rapport annuel conformité direction</li>
+                    <li class="no"><span class="ico">—</span> Implémentation code</li>
+                </ul>
+                <a href="#contact" class="tier-btn secondary">Souscrire</a>
+                <div class="tier-meta"><span>⏱ En continu</span></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══ COMPARISON TABLE ═══ -->
+<section class="sec" id="comparatif">
+    <div class="si">
+        <div class="sl">Détail</div>
+        <h2 class="sec-title">Comparatif détaillé</h2>
+        <p class="sec-desc">Ce qui est inclus dans chaque offre, ligne par ligne.</p>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th class="feat-col">Prestation</th>
+                        <th>Diagnostic Flash</th>
+                        <th>Audit Complet</th>
+                        <th>Conformité Continue</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="feat-name">Prix</td>
+                        <td class="check"><strong>890 €</strong></td>
+                        <td class="check"><strong>3 500 €</strong></td>
+                        <td class="check"><strong>750 €/mois</strong></td>
+                    </tr>
+                    <tr>
+                        <td class="feat-name">Délai de livraison</td>
+                        <td class="check">72h</td>
+                        <td class="check">2–3 sem.</td>
+                        <td class="check">Continu</td>
+                    </tr>
+                    <tr>
+                        <td class="feat-name">Scan codebase & architecture</td>
+                        <td class="check"><span class="yes">✓</span></td>
+                        <td class="check"><span class="yes">✓</span></td>
+                        <td class="check"><span class="yes">✓</span></td>
+                    </tr>
+                    <tr>
+                        <td class="feat-name">Score conformité 5 domaines</td>
+                        <td class="check"><span class="yes">✓</span></td>
+                        <td class="check"><span class="yes">✓</span></td>
+                        <td class="check"><span class="yes">✓</span></td>
+                    </tr>
+                    <tr>
+                        <td class="feat-name">4 dimensions IA</td>
+                        <td class="check"><span class="yes">✓</span></td>
+                        <td class="check"><span class="yes">✓</span></td>
+                        <td class="check"><span class="yes">✓</span></td>
+                    </tr>
+                    <tr>
+                        <td class="feat-name">Kill Switch (violations critiques)</td>
+                        <td class="check"><span class="yes">✓</span></td>
+                        <td class="check"><span class="yes">✓</span></td>
+                        <td class="check"><span class="yes">✓</span></td>
+                    </tr>
+                    <tr>
+                        <td class="feat-name">OWASP Top 10 GenAI</td>
+                        <td class="check"><span class="no">—</span></td>
+                        <td class="check"><span class="yes">✓</span></td>
+                        <td class="check"><span class="yes">✓</span></td>
+                    </tr>
+                    <tr>
+                        <td class="feat-name">AI Act risk classification</td>
+                        <td class="check"><span class="no">—</span></td>
+                        <td class="check"><span class="yes">✓</span></td>
+                        <td class="check"><span class="yes">✓</span></td>
+                    </tr>
+                    <tr>
+                        <td class="feat-name">Cartographie data flows transfrontaliers</td>
+                        <td class="check"><span class="no">—</span></td>
+                        <td class="check"><span class="yes">✓</span></td>
+                        <td class="check"><span class="yes">✓</span></td>
+                    </tr>
+                    <tr>
+                        <td class="feat-name">DPIA (Art. 35 RGPD)</td>
+                        <td class="check"><span class="no">—</span></td>
+                        <td class="check"><span class="partial">Initiale</span></td>
+                        <td class="check"><span class="yes">Annuelle ✓</span></td>
+                    </tr>
+                    <tr>
+                        <td class="feat-name">Plan conformité 90 jours</td>
+                        <td class="check"><span class="partial">Top 5</span></td>
+                        <td class="check"><span class="yes">Complet</span></td>
+                        <td class="check"><span class="yes">Complet</span></td>
+                    </tr>
+                    <tr>
+                        <td class="feat-name">Veille réglementaire personnalisée</td>
+                        <td class="check"><span class="no">—</span></td>
+                        <td class="check"><span class="no">—</span></td>
+                        <td class="check"><span class="yes">Hebdo ✓</span></td>
+                    </tr>
+                    <tr>
+                        <td class="feat-name">Alertes sanctions (temps réel)</td>
+                        <td class="check"><span class="no">—</span></td>
+                        <td class="check"><span class="no">—</span></td>
+                        <td class="check"><span class="yes">✓</span></td>
+                    </tr>
+                    <tr>
+                        <td class="feat-name">Re-audit trimestriel</td>
+                        <td class="check"><span class="no">—</span></td>
+                        <td class="check"><span class="no">—</span></td>
+                        <td class="check"><span class="yes">✓</span></td>
+                    </tr>
+                    <tr>
+                        <td class="feat-name">Validation nouveaux déploiements IA</td>
+                        <td class="check"><span class="no">—</span></td>
+                        <td class="check"><span class="no">—</span></td>
+                        <td class="check"><span class="yes">✓</span></td>
+                    </tr>
+                    <tr>
+                        <td class="feat-name">Restitution</td>
+                        <td class="check">Rapport PDF</td>
+                        <td class="check">Visio 1h</td>
+                        <td class="check">Rapport annuel</td>
+                    </tr>
+                    <tr>
+                        <td class="feat-name">Support</td>
+                        <td class="check"><span class="no">—</span></td>
+                        <td class="check">30 j email</td>
+                        <td class="check">Ligne directe</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<!-- ═══ ADD-ONS ═══ -->
+<section class="sec" id="addons" style="background:var(--bg2)">
+    <div class="si">
+        <div class="sl">Options</div>
+        <h2 class="sec-title">Add-ons & prestations complémentaires</h2>
+        <p class="sec-desc">Pour aller plus loin selon vos besoins spécifiques.</p>
+
+        <div class="addons">
+            <div class="addon">
+                <div class="addon-info">
+                    <h4>Implémentation correctifs</h4>
+                    <p>Code des fixes identifiés pendant l'audit</p>
+                </div>
+                <div class="addon-price">1 500–5 000 €</div>
+            </div>
+            <div class="addon">
+                <div class="addon-info">
+                    <h4>Formation équipe RGPD-IA</h4>
+                    <p>Demi-journée, vos équipes, vos use cases</p>
+                </div>
+                <div class="addon-price">1 200 €</div>
+            </div>
+            <div class="addon">
+                <div class="addon-info">
+                    <h4>Audit urgence post-violation</h4>
+                    <p>Intervention 48h après incident confirmé</p>
+                </div>
+                <div class="addon-price">2 500 €</div>
+            </div>
+            <div class="addon">
+                <div class="addon-info">
+                    <h4>Conformité transfrontalière CH↔EU</h4>
+                    <p>Documentation transfers + SCCs</p>
+                </div>
+                <div class="addon-price">+ 800 €</div>
+            </div>
+            <div class="addon">
+                <div class="addon-info">
+                    <h4>Vérification sous-traitants IA</h4>
+                    <p>Art. 28 RGPD, par fournisseur IA</p>
+                </div>
+                <div class="addon-price">450 € / sous-traitant</div>
+            </div>
+            <div class="addon">
+                <div class="addon-info">
+                    <h4>DPIA approfondie</h4>
+                    <p>Haut risque (Art. 35) — santé, RH, scoring</p>
+                </div>
+                <div class="addon-price">1 800 €</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══ ROI ═══ -->
+<section class="sec" id="roi">
+    <div class="si">
+        <div class="sl">Retour sur investissement</div>
+        <h2 class="sec-title">Le coût de l'inaction</h2>
+        <p class="sec-desc">Une sanction CNIL moyenne coûte 100× plus cher qu'un audit annuel.</p>
+
+        <div class="roi-grid" style="margin-bottom:40px">
+            <div class="roi-card">
+                <h4>Sanction CNIL moyenne</h4>
+                <div class="roi-stat">30–200K€</div>
+                <div class="roi-label">Amende pour non-conformité RGPD + IA</div>
+            </div>
+            <div class="roi-card">
+                <h4>Audit Cortex Leman</h4>
+                <div class="roi-stat">3 500€</div>
+                <div class="roi-label">Audit complet one-shot</div>
+            </div>
+            <div class="roi-card">
+                <h4>ROI minimal</h4>
+                <div class="roi-stat">×10</div>
+                <div class="roi-label">Même sur la sanction la plus basse</div>
+            </div>
+        </div>
+
+        <div class="sl">Projections année 1</div>
+        <div class="roi-grid">
+            <div class="roi-card conservator">
+                <h4>Scénario conservateur</h4>
+                <div class="roi-stat">15K€</div>
+                <div class="roi-label">CA année 1</div>
+                <div class="roi-detail">
+                    <span>3 × Diagnostic <strong>2 670 €</strong></span>
+                    <span>1 × Audit <strong>3 500 €</strong></span>
+                    <span>1 × Conformité (12 mois) <strong>9 000 €</strong></span>
+                </div>
+            </div>
+            <div class="roi-card">
+                <h4>Scénario réaliste</h4>
+                <div class="roi-stat">31K€</div>
+                <div class="roi-label">CA année 1</div>
+                <div class="roi-detail">
+                    <span>5 × Diagnostic <strong>4 450 €</strong></span>
+                    <span>2 × Audit <strong>7 000 €</strong></span>
+                    <span>2 × Conformité (12 mois) <strong>18 000 €</strong></span>
+                </div>
+            </div>
+            <div class="roi-card optimist">
+                <h4>Scénario optimiste</h4>
+                <div class="roi-stat">53K€</div>
+                <div class="roi-label">CA année 1</div>
+                <div class="roi-detail">
+                    <span>8 × Diagnostic <strong>7 120 €</strong></span>
+                    <span>4 × Audit <strong>14 000 €</strong></span>
+                    <span>3 × Conformité (12 mois) <strong>27 000 €</strong></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══ CTA ═══ -->
+<section class="cta-sec" id="contact">
+    <div class="cta-box">
+        <h2>Prêt à auditer votre conformité IA ?</h2>
+        <p>Démarrage sous 72h. Sans engagement. Diagnostic initial offert.</p>
+        <div class="cta-actions">
+            <a href="mailto:contact@cortexleman.ch" class="btn-primary">Réserver un appel →</a>
+            <a href="#" class="btn-ghost" onclick="window.print();return false;">📄 Télécharger la fiche (PDF)</a>
+        </div>
+    </div>
+</section>
+
+<!-- ═══ FOOTER ═══ -->
+<footer>
+    <div class="foot">
+        <div class="foot-brand">
+            <div class="brand-logo">CL</div>
+            <span>Cortex Leman</span>
+        </div>
+        <div class="foot-info">
+            Audit RGPD-IA pour PME FR-CH · Genève · Annecy · Lausanne<br>
+            <a href="mailto:contact@cortexleman.ch">contact@cortexleman.ch</a>
+        </div>
+    </div>
+</footer>
+
+</body>
+</html>

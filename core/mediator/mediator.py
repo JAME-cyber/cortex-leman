@@ -18,6 +18,7 @@ from core.journal.append_only_journal import journal
 from core.journal.models import JournalEventType, ConflictRecord
 from core.mediator.rules_engine import rules_engine, RuleResult
 from core.mediator.reviewer import code_reviewer, ReviewVerdict
+from core.mediator.precedent_store import precedent_store, PrecedentStrength
 from core.security.auditor import security_auditor
 from core.config import settings
 
@@ -43,6 +44,28 @@ class AgentMediator:
     # et explicitement ajoutés au dossier d'arbitrage.
     _CONSOLIDATION_WINDOW_SEC = 5.0
 
+    # ═══ CROSS-VALIDATION CORRECTIONS (2026-05-21) ═══
+    # Identifié par Nemotron-120B + Mistral Nemotron:
+    # 1.1: Timeout mode dégradé — ne pas rester indéfiniment en DEGRADED_FROZEN
+    # 1.3: Matrice de gravité — graduation au lieu du gel binaire
+
+    # Timeout maximal en mode dégradé (secondes).
+    # Au-delà, l'intention passe automatiquement à FROZEN (gel complet)
+    # puis CANCELLED si aucun arbitrage lancé.
+    _DEGRADED_TIMEOUT_SEC = 1800.0  # 30 minutes
+
+    # Matrice de gravité : severity → niveau 1-5
+    # Niveau 1-2 → DEGRADED_FROZEN (Data+Raisonnement continuent)
+    # Niveau 3-5 → FROZEN immédiat (tout est gelé)
+    _SEVERITY_TO_GRAVITY = {
+        "low": 1,
+        "medium": 2,
+        "high": 3,
+        "critical": 4,
+        "block": 5,
+    }
+    _DEGRADED_MAX_GRAVITY = 2  # Niveau max pour mode dégradé
+
     def __init__(self):
         self._active_conflicts: dict[str, ConflictRecord] = {}
         self._agent_positions: dict[str, dict] = {}  # intention_id -> {agent: result}
@@ -60,6 +83,9 @@ class AgentMediator:
         # Robustesse: intentions récemment dégelées — fenêtre de consolidation
         # key = intention_id, value = datetime du dégel
         self._recently_unfrozen: dict[str, datetime] = {}
+        # CORRECTION 1.1: Timestamps des gels dégradés pour timeout
+        # key = intention_id, value = datetime du gel dégradé
+        self._degraded_frozen_at: dict[str, datetime] = {}
 
     async def start(self) -> None:
         """Démarrer le Médiateur et s'abonner au bus"""
@@ -82,11 +108,38 @@ class AgentMediator:
         client_id = data.get("client_id", "unknown")
         vertical = data.get("vertical", "unknown")
 
+        # ── PrecedentStore: rechercher les précédents applicables ──
+        precedent_matches = precedent_store.query(
+            vertical=vertical,
+            question=str(data.get("context", {}).get("query", "")),
+            conflict_reason="",
+            limit=3,
+        )
+        precedent_guidance = None
+        if precedent_matches:
+            best = precedent_matches[0]
+            precedent_guidance = {
+                "precedent_id": best.precedent.precedent_id,
+                "relevance": best.relevance,
+                "decision": best.precedent.decision,
+                "justification": best.precedent.justification[:200],
+                "strength": best.precedent.strength.value,
+            }
+            logger.info(
+                f"Médiateur: {len(precedent_matches)} précédent(s) trouvé(s) "
+                f"pour {vertical}/{intention_id[:8] if intention_id else 'N/A'}... "
+                f"meilleur={best.precedent.strength.value} "
+                f"relevance={best.relevance:.2f}"
+            )
+
         # Évaluer les règles de la verticale
         context = data.get("context", {})
         results = rules_engine.evaluate(vertical, context)
 
         triggered = [r for r in results if r.triggered]
+
+        # Évaluer le niveau de risque (même si aucune règle déclenchée)
+        risk_level, risk_action = rules_engine.evaluate_risk_level(vertical, context)
 
         journal.append(
             event_type=JournalEventType.MEDIATOR_CHECK,
@@ -98,12 +151,29 @@ class AgentMediator:
                 "rules_evaluated": len(results),
                 "rules_triggered": len(triggered),
                 "actions": [r.action for r in triggered],
+                "risk_level": risk_level,
+                "risk_action": risk_action,
+                "precedent_guidance": precedent_guidance,
             },
         )
+
+        # Notifier le Superviseur du niveau de risque
+        await bus.publish("cleman.mediator.risk_level", {
+            "intention_id": intention_id,
+            "vertical": vertical,
+            "risk_level": risk_level,
+            "risk_action": risk_action,
+        })
 
         if triggered:
             await self._handle_triggered_rules(
                 intention_id, client_id, vertical, triggered, data
+            )
+        elif risk_level > 1:
+            logger.info(
+                f"Médiateur: risque {risk_level}/5 ({risk_action}) "
+                f"pour {vertical}/{intention_id[:8]}... — "
+                f"aucune règle déclenchée mais contexte sensible"
             )
 
     async def _on_agent_result(self, data: dict, meta: dict) -> None:
@@ -126,11 +196,28 @@ class AgentMediator:
 
         # Si gel dégradé (DEGRADED_FROZEN): seul l'Action est bloqué
         # Data et Raisonnement continuent d'enrichir le dossier d'arbitrage
+        # CORRECTION 1.1: Timeout — vérifier si le mode dégradé a expiré
         if intention and intention_store.is_degraded_frozen(intention_id):
+            # Vérifier le timeout du mode dégradé
+            if await self._check_degraded_timeout(intention_id, intention_store):
+                logger.warning(
+                    f"Médiateur: TIMEOUT mode dégradé pour {intention_id[:8]}... "
+                    f"→ passage en FROZEN après {self._DEGRADED_TIMEOUT_SEC}s"
+                )
+                # Re-évaluer avec le même résultat → cette fois ce sera FROZEN
+                return  # L'intention est maintenant FROZEN, ce résultat est ignoré
+
             if agent_source == "action":
                 logger.info(f"Médiateur: intention {intention_id[:8]}... dégradé, Action bloqué")
                 return
             else:
+                # CORRECTION 1.2: Re-validation LLM avant enrichissement
+                if not self._validate_enrichment(agent_source, data):
+                    logger.warning(
+                        f"Médiateur: enrichissement de {agent_source} REJETÉ "
+                        f"pour {intention_id[:8]}... (LLM instable)"
+                    )
+                    return
                 await self._capture_enrichment(intention_id, agent_source, data)
                 return
 
@@ -351,10 +438,26 @@ class AgentMediator:
     ) -> None:
         """Créer un conflit et geler la branche.
         
-        Args:
-            degraded: Si True, gel dégradé — Action bloqué, Data+Raisonnement
-                      continuent d'enrichir le dossier d'arbitrage.
+        CORRECTION 1.3: Matrice de gravité.
+        Si severity ≥ high (niveau 3+) → FROZEN complet (pas de dégradé).
+        Si severity ≤ medium (niveau 1-2) → DEGRADED_FROZEN.
         """
+        # CORRECTION 1.3: Matrice de gravité
+        gravity = self._SEVERITY_TO_GRAVITY.get(severity, 2)
+        if gravity > self._DEGRADED_MAX_GRAVITY:
+            # Niveau 3+ → gel complet, ignorer le flag degraded
+            degraded = False
+            logger.info(
+                f"Médiateur: gravité {gravity}/5 → FROZEN complet "
+                f"(severity={severity})"
+            )
+        else:
+            # Niveau 1-2 → gel dégradé si demandé
+            degraded = degraded
+            logger.info(
+                f"Médiateur: gravité {gravity}/5 → {'DEGRADED' if degraded else 'COMPLET'} "
+                f"(severity={severity})"
+            )
         conflict = ConflictRecord(
             conflict_id=str(uuid.uuid4()),
             intention_id=intention_id,
@@ -385,6 +488,14 @@ class AgentMediator:
         from core.orchestrator.intention import intention_store
         intention_store.freeze(intention_id, reason=reason, degraded=degraded)
 
+        # CORRECTION 1.1: Enregistrer le timestamp du gel dégradé pour le timeout
+        if degraded:
+            self._degraded_frozen_at[intention_id] = datetime.now(timezone.utc)
+            logger.info(
+                f"Médiateur: mode dégradé démarré pour {intention_id[:8]}... "
+                f"timeout={self._DEGRADED_TIMEOUT_SEC}s"
+            )
+
         freeze_subject = subjects.MEDIATOR_DEGRADED_FREEZE if degraded else subjects.MEDIATOR_FREEZE
         await bus.publish(freeze_subject, {
             "intention_id": intention_id,
@@ -412,6 +523,10 @@ class AgentMediator:
             conflict.arbitration_id = data.get("arbitration_id")
 
             intention_id = conflict.intention_id
+
+            # CORRECTION 1.1: Nettoyer le timestamp du mode dégradé
+            if intention_id in self._degraded_frozen_at:
+                del self._degraded_frozen_at[intention_id]
 
             # Robustesse: enregistrer le moment du dégel pour la fenêtre
             # de consolidation (résultats Data/Raisonnement encore en vol)
@@ -508,6 +623,96 @@ class AgentMediator:
             for c in self._active_conflicts.values()
             if not c.resolved
         ]
+
+    # ═══ CROSS-VALIDATION CORRECTIONS (2026-05-21) ═══
+
+    async def _check_degraded_timeout(
+        self, intention_id: str, intention_store
+    ) -> bool:
+        """CORRECTION 1.1: Vérifier si le mode dégradé a expiré.
+        
+        Si le mode dégradé dure plus de _DEGRADED_TIMEOUT_SEC (30 min),
+        on passe automatiquement en FROZEN complet puis CANCELLED.
+        
+        Returns:
+            True si le timeout a été déclenché (l'intention est maintenant FROZEN)
+        """
+        if intention_id not in self._degraded_frozen_at:
+            # Pas encore enregistré → enregistrer maintenant
+            self._degraded_frozen_at[intention_id] = datetime.now(timezone.utc)
+            return False
+
+        elapsed = (datetime.now(timezone.utc) - self._degraded_frozen_at[intention_id]).total_seconds()
+
+        if elapsed > self._DEGRADED_TIMEOUT_SEC:
+            # TIMEOUT → passage en FROZEN complet
+            logger.warning(
+                f"Médiateur: TIMEOUT DÉGRADÉ {intention_id[:8]}... "
+                f"({elapsed:.0f}s > {self._DEGRADED_TIMEOUT_SEC}s) → FROZEN"
+            )
+
+            # Journaliser le timeout
+            journal.append(
+                event_type=JournalEventType.MEDIATOR_CONFLICT,
+                client_id="system",
+                vertical="unknown",
+                agent_source="mediator",
+                intention_id=intention_id,
+                payload={
+                    "event": "degraded_timeout",
+                    "elapsed_seconds": elapsed,
+                    "max_seconds": self._DEGRADED_TIMEOUT_SEC,
+                    "action": "auto_frozen",
+                },
+            )
+
+            # Forcer le passage en FROZEN complet
+            intention_store.freeze(intention_id, reason=f"Timeout mode dégradé ({elapsed:.0f}s)", degraded=False)
+
+            # Nettoyer
+            if intention_id in self._degraded_frozen_at:
+                del self._degraded_frozen_at[intention_id]
+
+            return True
+
+        return False
+
+    def _validate_enrichment(self, agent_source: str, data: dict) -> bool:
+        """CORRECTION 1.2: Valider la qualité d'un enrichissement avant de l'accepter.
+        
+        Vérifie que le résultat du LLM n'est pas manifestement erroné
+        (hallucination, confidence trop basse, réponse vide).
+        
+        Returns:
+            True si l'enrichissement est valide, False sinon.
+        """
+        result = data.get("result", {})
+
+        # 1. Résultat vide → rejeter
+        if not result:
+            logger.warning(f"Médiateur: enrichissement vide de {agent_source} → rejeté")
+            return False
+
+        # 2. Confidence trop basse → rejeter
+        confidence = result.get("confidence")
+        if confidence is not None and confidence < 0.3:
+            logger.warning(
+                f"Médiateur: confidence {confidence:.2f} < 0.3 → enrichissement rejeté"
+            )
+            return False
+
+        # 3. Erreur explicite dans le résultat → rejeter
+        if result.get("error"):
+            logger.warning(f"Médiateur: erreur dans enrichissement → rejeté: {result['error'][:100]}")
+            return False
+
+        # 4. Réponse trop courte (probable échec) → rejeter
+        text = result.get("text", result.get("analysis", ""))
+        if isinstance(text, str) and len(text) < 10:
+            logger.warning(f"Médiateur: réponse trop courte ({len(text)} chars) → enrichissement rejeté")
+            return False
+
+        return True
 
 
 # Singleton

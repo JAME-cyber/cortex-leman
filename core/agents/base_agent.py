@@ -62,7 +62,7 @@ class BaseAgent(ABC):
 
     async def _handle_message(self, data: dict, meta: dict) -> None:
         """
-        Handler principal avec circuit breaker et gestion d'erreurs.
+        Handler principal avec circuit breaker, vérification d'identité et gestion d'erreurs.
         """
         cb = circuit_registry.get(self.name)
         if not cb.allow_request():
@@ -72,6 +72,39 @@ class BaseAgent(ABC):
         intention_id = data.get("intention_id", "unknown")
         client_id = data.get("client_id", "unknown")
         vertical = data.get("vertical", "unknown")
+
+        # ── Agent Identity: vérification KYA ──
+        try:
+            from core.security.agent_identity import agent_identity_provider, AgentScope
+            scope_map = {
+                "data": AgentScope.DATA_READ,
+                "reasoning": AgentScope.REASONING_WRITE,
+                "action": AgentScope.ACTION_EXECUTE,
+                "supervisor": AgentScope.JOURNAL_READ,
+                "mediator": AgentScope.MEDIATOR_EVALUATE,
+                "orchestrator": AgentScope.SYSTEM_HEALTH,
+                "chief_of_staff": AgentScope.JOURNAL_READ,
+            }
+            required_scope = scope_map.get(self.name)
+            if required_scope:
+                allowed, reason = agent_identity_provider.verify_permission(
+                    f"agent-{self.name}", required_scope, vertical
+                )
+                if not allowed:
+                    logger.warning(
+                        f"Agent [{self.name}] BLOQUÉ par KYA: {reason}"
+                    )
+                    journal.append(
+                        event_type=JournalEventType.AGENT_ERROR,
+                        client_id=client_id,
+                        vertical=vertical,
+                        agent_source=self.name,
+                        intention_id=intention_id,
+                        payload={"error": f"KYA blocked: {reason}", "kya": True},
+                    )
+                    return
+        except ImportError:
+            pass  # AgentIdentity pas disponible (tests unitaires)
 
         # v5.3: Démarrer le trace
         trace = self._tracer.start_trace(

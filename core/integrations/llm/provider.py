@@ -76,6 +76,10 @@ class ModelRouter:
         model = self._routing.get(vertical)
 
         if model:
+            # Vérifier si c'est un modèle NVIDIA NIM
+            if model.startswith("nvidia/"):
+                return f"nvidia/{model.replace('nvidia/', '')}", model
+
             # Le modèle peut être "provider/model" ou juste "model"
             if "/" not in model:
                 # Pas de provider prefix → utiliser le provider par défaut
@@ -135,6 +139,10 @@ class LLMService:
         # OpenRouter
         if settings.llm_api_key:
             os.environ.setdefault("OPENROUTER_API_KEY", settings.llm_api_key)
+
+        # NVIDIA NIM (Mistral Nemotron)
+        if settings.nvidia_api_key:
+            os.environ.setdefault("NVIDIA_API_KEY", settings.nvidia_api_key)
 
         # Les autres clés sont lues depuis l'environnement par LiteLLM:
         # ANTHROPIC_API_KEY, OPENAI_API_KEY, DEEPSEEK_API_KEY, etc.

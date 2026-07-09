@@ -19,7 +19,7 @@ class FernetEncryption:
     """Chiffrement symétrique Fernet pour données au repos.
     
     - Utilise AES-128-CBC + HMAC-SHA256
-    - Clé dérivée du SECRET_KEY via HKDF
+    - Clé dérivée du SECRET_KEY via SHA-256
     - Rotation de clé supportée (max 2 clés actives)
     """
 

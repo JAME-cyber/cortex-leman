@@ -62,6 +62,40 @@ class JournalEventType(str, Enum):
     COMPLIANCE_CHECK = "compliance.check"
     COMPLIANCE_VIOLATION = "compliance.violation"
 
+    # Observabilité (Module 1 — Tracing OTel)
+    TRACE_SPAN = "trace.span"
+
+    # Red Teaming (Module 2 — Agent hostile)
+    RED_TEAM_ATTACK = "red_team.attack"
+    RED_TEAM_REPORT = "red_team.report"
+
+    # Méta-évaluation (Module 3 — Audit des règles)
+    META_EVALUATION = "meta.evaluation"
+
+    # Observabilité (Module 4 — Observe Skill)
+    OBSERVE_DASHBOARD = "observe.dashboard"
+    OBSERVE_DRIFT = "observe.drift"
+
+    # Observabilité (Module 5 — Eval Pipeline, inspiration Laurie Voss / Arize)
+    EVAL_ROUTER_RESULT = "eval.router_result"         # Résultat d'une évaluation par rubric
+    GOLDEN_CASE_ADDED = "eval.golden_case_added"       # Nouveau cas dans le golden dataset
+    GOLDEN_CASE_ANNOTATED = "eval.golden_case_annotated"  # Annotation humaine d'un cas
+    RULE_EXPERIMENT = "eval.rule_experiment"           # Expérience sur une règle JsonLogic
+    JUDGE_ADVERSARIAL = "eval.judge_adversarial"       # Test adversarial d'un rubric
+
+    # Agent Évaluateur (pattern Generator-Evaluator Anthropic)
+    EVALUATOR_RUN = "evaluator.run"                # Demande d'évaluation
+    EVALUATOR_RESULT = "evaluator.result"          # Rapport d'évaluation
+    EVALUATOR_REJECT = "evaluator.reject"          # FAIL → renvoie au Reasoning
+
+    # Contract Negotiation
+    CONTRACT_NEGOTIATED = "contract.negotiated"    # Contrat négocié (agreed ou rejected)
+    CONTRACT_CRITERION_MET = "contract.criterion_met"  # Un critère validé
+
+    # Handoff
+    HANDOFF_WRITTEN = "handoff.written"            # Handoff persisté
+    HANDOFF_READ = "handoff.read"                  # Handoff lu par un agent
+
     # Système
     SYSTEM = "system"
     SYSTEM_START = "system.start"

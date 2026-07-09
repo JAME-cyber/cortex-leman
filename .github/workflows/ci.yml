@@ -72,7 +72,7 @@ jobs:
 
       - name: Coverage report
         if: always()
-        run: coverage report --fail-under=60
+        run: coverage report --fail-under=75
 
   # ── Frontend Build ─────────────────────────────────────
   frontend:

@@ -1,6 +1,12 @@
 {
   "vertical": "comptable",
   "description": "Règles de conformité pour cabinets comptables FR-CH",
+  "risk_appetite": {
+    "accept_max": 2,
+    "arbitrate_threshold": 3,
+    "block_threshold": 5,
+    "comment": "Modéré: conformité fiscale importante mais plus de marge opérationnelle"
+  },
   "rules": [
     {
       "id": "comptable-001",
@@ -180,78 +186,69 @@
     },
     {
       "id": "comptable-008",
-      "name": "Conformité avec les normes OSCAL",
-      "severity": "medium",
-      "condition": {
-        "==": [
-          {
-            "var": "action.type"
-          },
-          "IA_high_risk"
-        ]
-      },
-      "action": "warn",
-      "message": "Assurez-vous que les systèmes d'IA respectent les exigences de conformité OSCAL."
-    },
-    {
-      "id": "comptable-009",
-      "name": "Conformité avec les normes de gouvernance IA",
-      "severity": "medium",
-      "condition": {
-        "==": [
-          {
-            "var": "action.type"
-          },
-          "IA_governance"
-        ]
-      },
-      "action": "warn",
-      "message": "Assurez-vous que les systèmes d'IA respectent les normes de gouvernance harmonisées."
-    },
-    {
-      "id": "comptable-010",
-      "name": "Conformité RGPD pour transferts de données",
+      "name": "Transfert données hors EU/CH",
       "severity": "high",
       "condition": {
-        "==": [
-          {
-            "var": "data.transfer"
-          },
-          "international"
+        "and": [
+          { "==": [{"var": "action.type"}, "data_transfer"] },
+          { "!": [{"var": "hosting_in_eu_or_ch"}] }
         ]
       },
       "action": "arbitrate",
-      "message": "Assurez-vous que les transferts de données internationales respectent les exigences du RGPD."
+      "message": "RGPD Chap. V: Transfert de données hors UE/CH détecté. Garanties adequates requises (SCC, decision d'adequation, ou derogation)."
+    },
+    {
+      "id": "comptable-009",
+      "name": "Gouvernance IA — AI Act risque limite",
+      "severity": "medium",
+      "condition": {
+        "and": [
+          { "==": [{"var": "action.type"}, "llm_query"] },
+          { "!": [{"var": "ai_act_registered"}] }
+        ]
+      },
+      "action": "warn",
+      "message": "AI Act Art. 52: Le systeme IA doit etre enregistre si profilage ou decision impactant les personnes."
+    },
+    {
+      "id": "comptable-010",
+      "name": "DPIA si traitement sensible",
+      "severity": "high",
+      "condition": {
+        "and": [
+          { "==": [{"var": "action.type"}, "data_transfer"] },
+          { "==": [{"var": "data.transfer"}, "international"] },
+          { "!": [{"var": "dpia_completed"}] }
+        ]
+      },
+      "action": "arbitrate",
+      "message": "RGPD Art. 35: AIPD/DPIA obligatoire avant tout transfert international de données comptables."
     },
     {
       "id": "comptable-011",
-      "name": "Conformité avec le règlement IA de l'UE pour les opérations transfrontalières",
+      "name": "Opération transfrontalière EU-CH",
       "severity": "medium",
       "condition": {
-        "==": [
-          {
-            "var": "action.type"
-          },
-          "cross_border"
+        "and": [
+          { "==": [{"var": "action.type"}, "data_transfer"] },
+          { "==": [{"var": "data_residency"}, "cross_border"] }
         ]
       },
       "action": "warn",
-      "message": "Assurez-vous que toutes les opérations transfrontalières respectent le règlement IA de l'UE."
+      "message": "Operations transfrontalieres EU-CH: verifier la conformite avec le RGPD et la nLPD suisse."
     },
     {
       "id": "comptable-012",
-      "name": "Conformité avec les normes de gouvernance IA basées sur blockchain",
-      "severity": "medium",
+      "name": "Ecriture comptable sans pièce justificative",
+      "severity": "high",
       "condition": {
-        "==": [
-          {
-            "var": "action.type"
-          },
-          "transborder_compliance"
+        "and": [
+          { "==": [{"var": "action.type"}, "ecriture_comptable"] },
+          { "!": [{"var": "piece_justificative_presente"}] }
         ]
       },
-      "action": "warn",
-      "message": "Assurez-vous que les systèmes d'IA respectent les normes de gouvernance basées sur blockchain pour les opérations transfrontalières."
+      "action": "arbitrate",
+      "message": "Normes DEC/OEC: Toute ecriture comptable doit etre accompagnee d'une piece justificative. Arbitrage expert."
     }
   ]
 }

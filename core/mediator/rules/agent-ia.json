@@ -6,12 +6,23 @@
   "base_legale": "RGPD Art. 6(1)(f) — Intérêt légitime + Art. 22 — Décision automatisée",
   "secret_professionnel": false,
   "haute_protection": false,
+  "risk_appetite": {
+    "accept_max": 2,
+    "arbitrate_threshold": 3,
+    "block_threshold": 4,
+    "comment": "Prudent: AI Act + RGPD + manipulation comportementale"
+  },
   "rules": [
     {
       "id": "agent-ia-001",
       "name": "Transparence IA obligatoire",
       "description": "L'utilisateur doit être informé qu'il interagit avec une IA, pas un humain",
-      "condition": "agent_ia_sans_label_transparence",
+      "condition": {
+        "and": [
+          { "==": [{"var": "action.type"}, "agent_interaction"] },
+          { "!": [{"var": "ai_label_visible"}] }
+        ]
+      },
       "action": "freeze",
       "severity": "HIGH",
       "references": ["AI Act Art. 52", "RGPD Art. 13-14"],
@@ -21,7 +32,12 @@
       "id": "agent-ia-002",
       "name": "Consentement biométrique",
       "description": "Le clonage de visage/voix nécessite un consentement explicite (Art. 9 RGPD)",
-      "condition": "clone_biometrique_sans_consentement",
+      "condition": {
+        "and": [
+          { "==": [{"var": "action.type"}, "clone_biometrique"] },
+          { "!": [{"var": "biometric_consent"}] }
+        ]
+      },
       "action": "freeze",
       "severity": "CRITICAL",
       "references": ["RGPD Art. 9", "AI Act Art. 52(3)", "LPerD Art. 31"],
@@ -31,7 +47,12 @@
       "id": "agent-ia-003",
       "name": "Décision automatisée avec droit d'explication",
       "description": "Si l'agent IA prend des décisions affectant l'utilisateur (prix, éligibilité, refus), celui-ci a droit à une explication et à une intervention humaine",
-      "condition": "decision_automatisee_sans_recours",
+      "condition": {
+        "and": [
+          { "in": [{"var": "action.type"}, ["pricing", "eligibility", "filtering", "decision_automatisee"]] },
+          { "!": [{"var": "human_recours_available"}] }
+        ]
+      },
       "action": "freeze",
       "severity": "HIGH",
       "references": ["RGPD Art. 22", "AI Act Art. 14"],
@@ -41,7 +62,12 @@
       "id": "agent-ia-004",
       "name": "DPIA obligatoire pour agents IA",
       "description": "Un agent IA qui collecte des données personnelles via conversation nécessite une AIPD/DPIA",
-      "condition": "agent_collectant_donnees_personnelles",
+      "condition": {
+        "and": [
+          { "==": [{"var": "action.type"}, "collecte_donnees_personnelles"] },
+          { "!": [{"var": "dpia_completed"}] }
+        ]
+      },
       "action": "warn",
       "severity": "HIGH",
       "references": ["RGPD Art. 35", "AI Act Art. 9"],
@@ -51,7 +77,12 @@
       "id": "agent-ia-005",
       "name": "Data residency des conversations IA",
       "description": "Les conversations avec l'agent IA doivent être hébergées conformément à la réglementation locale",
-      "condition": "conversations_hebergees_hors_ue_ch",
+      "condition": {
+        "and": [
+          { "==": [{"var": "action.type"}, "data_transfer"] },
+          { "!": [{"var": "hosting_in_eu_or_ch"}] }
+        ]
+      },
       "action": "freeze",
       "severity": "MEDIUM",
       "references": ["RGPD Chap. V", "LPerD Art. 6", "Schrems II"],
@@ -61,7 +92,12 @@
       "id": "agent-ia-006",
       "name": "Manipulation comportementale",
       "description": "L'agent IA ne doit pas utiliser de techniques de manipulation exploitées pour influencer le comportement de l'utilisateur",
-      "condition": "techniques_manipulation_detectees",
+      "condition": {
+        "and": [
+          { "==": [{"var": "action.type"}, "interaction_utilisateur"] },
+          { "==": [{"var": "manipulation_detected"}, true] }
+        ]
+      },
       "action": "freeze",
       "severity": "CRITICAL",
       "references": ["AI Act Art. 5", "AI Act Art. 52"],
@@ -71,7 +107,12 @@
       "id": "agent-ia-007",
       "name": "Conservation des logs de conversation",
       "description": "Les conversations avec l'agent IA sont des données personnelles et doivent respecter les règles de conservation",
-      "condition": "logs_conversation_sans_duree_conservation",
+      "condition": {
+        "and": [
+          { "==": [{"var": "action.type"}, "log_conversation"] },
+          { "!": [{"var": "retention_period_defined"}] }
+        ]
+      },
       "action": "warn",
       "severity": "MEDIUM",
       "references": ["RGPD Art. 5(1)(e)", "RGPD Art. 17"],
@@ -79,9 +120,14 @@
     },
     {
       "id": "agent-ia-008",
-      "name": "Registro de sistemas de IA",
+      "name": "Registre des systèmes d'IA",
       "description": "Les systèmes d'IA déployés doivent pouvoir être identifiés et tracés",
-      "condition": "systeme_ia_non_inventorie",
+      "condition": {
+        "and": [
+          { "==": [{"var": "action.type"}, "deploiement_ia"] },
+          { "!": [{"var": "system_registered"}] }
+        ]
+      },
       "action": "warn",
       "severity": "MEDIUM",
       "references": ["AI Act Art. 71", "AI Act Art. 52"],
@@ -89,13 +135,15 @@
     },
     {
       "id": "agent-ia-009",
-      "name": "Auto-extension doit \u00eatre m\u00e9diationn\u00e9e",
-      "description": "Un agent IA ne peut pas se modifier lui-m\u00eame sans approbation humaine via le M\u00e9diateur",
-      "condition": {"==": [{"var": "event_type"}, "extension.proposed"]},
+      "name": "Auto-extension doit être médiationnée",
+      "description": "Un agent IA ne peut pas se modifier lui-même sans approbation humaine via le Médiateur",
+      "condition": {
+        "==": [{"var": "event_type"}, "extension.proposed"]
+      },
       "action": "freeze",
       "severity": "HIGH",
       "references": ["AI Act Art. 14", "RGPD Art. 22", "AI Act Art. 9"],
-      "details": "Inspir\u00e9 de Jonas Templestein (dynamic worker configured) mais adapt\u00e9 pour la conformit\u00e9: un agent peut PROPOSER une auto-modification (nouveau code, nouvelle r\u00e8gle, nouveau comportement), mais le M\u00e9diateur g\u00e8le l'extension en attente d'arbitrage humain. Aucune auto-modification non-audit\u00e9e n'est permise. Pattern: EXTENSION_PROPOSED → MEDIATOR_FREEZE → ARBITRATION_REQUESTED → EXTENSION_APPROVED/REJECTED → EXTENSION_APPLIED."
+      "details": "Inspiré de Jonas Templestein (dynamic worker configured) mais adapté pour la conformité: un agent peut PROPOSER une auto-modification (nouveau code, nouvelle règle, nouveau comportement), mais le Médiateur gèle l'extension en attente d'arbitrage humain. Aucune auto-modification non-auditée n'est permise. Pattern: EXTENSION_PROPOSED → MEDIATOR_FREEZE → ARBITRATION_REQUESTED → EXTENSION_APPROVED/REJECTED → EXTENSION_APPLIED."
     }
   ],
   "pricing_note": "Même tarification que la verticale startup. Les fournisseurs d'agents IA sont un marché en expansion rapide.",

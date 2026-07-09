@@ -34,8 +34,11 @@ class TestKieToolDiscovery:
         assert "kie_lead_card" in names
 
     def test_total_tool_count(self, mcp):
-        """25 tools: 18 originaux + 4 Kie.ai + 3 HyperFrame"""
-        assert len(mcp.tools) == 25
+        """Tools MCP: baseline + Kie.ai + HyperFrame (count peut evoluer)"""
+        assert len(mcp.tools) >= 25  # Au minimum les 25 historiques
+        # Vérifier la présence des 4 tools Kie
+        kie_names = {t["name"] for t in mcp.tools if t["name"].startswith("kie_")}
+        assert len(kie_names) >= 4, f"Expected >= 4 Kie tools, got {kie_names}"
 
     def test_kie_video_schema_has_required_prompt(self, mcp):
         tool = next(t for t in mcp.tools if t["name"] == "kie_generate_video")

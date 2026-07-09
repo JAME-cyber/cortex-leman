@@ -1,0 +1,71 @@
+Tu es un ingénieur Python senior en architecture d'agents IA de confiance. Tu codes pour Cortex Leman v5 (infrastructure IA pour professions régulées franco-suisses).
+
+## CONTEXTE DU PROJET
+- Cortex Leman v5 : "graphe de confiance" pour professions régulées (comptable, avocat, santé, banque, startup, RH).
+- Architecture : 5 agents pair-à-pair sur bus NATS + Médiateur 100% déterministe (JsonLogic) + journal WORM hash-chainé + arbitrage humain.
+- Back-end = "japonais/suisse" (souverain, déterministe, on-prem, audit). C'est le moat.
+- CONTRE-ANALYSE : Cortex a un ANGLE MORT — il lui manque le "playbook chinois" sur l'ADOPTION (onboarding rapide, UX, templates métier prêts, démos, freemium sandbox). Produit sûr mais lent/sous-adopté = risque.
+- ET : le vertical "avocat" en général est trop large comme premier wedge. Il faut un WEDGE ULTRA-PRÉCIS. Recommandation : "Revue de contrats" (workflow douloureux, répétable, facturable, secret pro respecté, ROI mesurable).
+
+## DEUX LIVRABLES À CODER
+
+### LIVRABLE 1 — WEDGE VERTICAL "REVUE DE CONTRATS" (avocat)
+Créer un module `/home/tars/cortex-leman-v5/core/verticals/contract_review/` :
+
+**`__init__.py`**
+**`models.py`** — Pydantic v2 :
+- `ContractDocument` : document analysé (type : NDA/contrat commercial/CGV/contrat travail/etc., parties, juridiction, langue, texte/sections)
+- `ContractIssue` : un problème détecté (clause abusive, déséquilibre, obligation manquante, droit applicable suspect, jurisdiction risk) avec sévérité, localisation (section/clause), base juridique, recommandation
+- `ReviewResult` : résultat de revue = liste de ContractIssue + score de risque global + résumé + points à valider par l'avocat
+
+**`reviewer.py`** — le moteur de revue (chaîne assistée, PAS décision automatique) :
+- `review_contract(contract)` → ReviewResult
+- Étapes : (1) extraction structure/clauses, (2) détection d'issues via un LLM (interface `LLMProvider` abstraite — pas d'appel en dur), (3) croisement avec une base de règles déterministes JsonLogic (clauses toujours risquées : droit applicable étranger, juridiction exclusive défavorable, pénalité disproportionnée, non-concurrence sans limite), (4) scoring de risque, (5) préparation des points pour arbitrage humain.
+- JAMAIS rendre une décision finale — l'avocat arbitre. L'outil ASSISTE.
+
+**`rules.json`** — règles JsonLogic déterministes pour contract_review (à brancher dans le Médiateur). 8-12 règles concrètes (ex : "clause de non-concurrence > 2 ans → freeze pour validation", "droit applicable hors UE/CH → flag risque", "pénalité > 10% du contrat → flag"). Format identique aux règles existantes (voir exemple comptable fourni).
+
+**`prompts.yaml`** — system prompts pour le LLM (rôle "Juriste-Analyste Contractuel Lémanique", instructions, output schema, disclaimers). Style cohérent avec `core/agents/prompts/*.md` existants.
+
+**`cli.py`** — `python -m core.verticals.contract_review "chemin/vers/contrat.pdf"` (ou .txt) → affiche le rapport de revue.
+
+### LIVRABLE 2 — COUCHE ADOPTION "PLAYBOOK CHINOIS"
+Créer `/home/tars/cortex-leman-v5/core/adoption/` :
+
+**`__init__.py`**
+**`onboarding.py`** — onboarding rapide : `quickstart(vertical, user_role)` qui génère un environnement démo en < 2 min (compte sandbox, 3 intentions d'exemple pré-remplies, 1 dossier d'arbitrage exemplaire). Le but : l'avocat voit la valeur AVANT d'investir. Pas de setup lourd.
+
+**`templates.py`** — bibliothèque de templates métier prêts (intentions pré-configurées par vertical) : pour avocat (revue contrat, recherche jurisprudence, synthèse pièces), comptable (rapprochement, alerte seuil TVA), banque (KYC, conformité transaction). Un `TemplateRegistry` qui liste/charge/applique les templates. Objectif : l'utilisateur démarre d'un template, pas de zéro.
+
+**`demo_pack.py`** — générateur de démo : `generate_demo(vertical)` produit un dossier démo convaincant (cas réel anonymisé, parcours complet dans le graphe, résultat arbitré). Pour vente/pitch. Doit montrer : la chaîne agents → médiateur → gel → arbitrage humain → dégel → résultat. Met en valeur le moat.
+
+**`freemium.py`** — sandbox gratuite : `FreemiumSandbox` avec quotas (N intentions/mois, N arbitrages, mode Haute Protection local only, pas de données persistées au-delà de 7 jours, watermark "DEMO"). Acquisition par contenu, pas par sales.
+
+## CONTRAINTES DE STYLE (obligatoires)
+- Python 3.12, type hints, Pydantic v2, async.
+- Docstrings en français.
+- LLM TOUJOURS derrière interface abstraite (le projet utilise déjà `core/integrations/llm/provider.py` — y faire référence, ne pas recoder).
+- Règles JsonLogic au format EXACT des règles existantes (exemple fourni ci-dessous — champs : vertical, description, risk_appetite, rules[] avec id/name/severity/condition (JsonLogic)/action/message).
+- Les modules d'adoption NE DOIVENT JAMAIS contourner le Médiateur ou le journal WORM. L'UX est rapide, la confiance ne l'est pas.
+- Disclaimers légaux partout (secret professionnel Art. 321 CP, RGPD, "assiste, ne remplace pas l'expert").
+
+## EXEMPLE DE FORMAT RÈGLE JSONLOGIC EXISTANT (à imiter exactement)
+```json
+{
+  "vertical": "comptable",
+  "description": "...",
+  "risk_appetite": {"accept_max": 2, "arbitrate_threshold": 3, "block_threshold": 5},
+  "rules": [
+    {
+      "id": "comptable-001",
+      "name": "Aucune décision fiscale automatique",
+      "severity": "critical",
+      "condition": {"and": [{"==": [{"var": "action.type"}, "decision_fiscale"]}, {"!": [{"var": "human_validated"}]}]},
+      "action": "freeze",
+      "message": "..."
+    }
+  ]
+}
+```
+
+Code complet, production-ready, commenté. Pas de placeholder. Tous les fichiers listés. Sois rigoureux : la sécurité de l'architecture ne doit JAMAIS être compromise par la couche adoption.

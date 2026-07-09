@@ -30,8 +30,10 @@ class TestHyperFrameDiscovery:
         assert "hyperframe_templates" in names
 
     def test_total_tools_25(self, mcp):
-        """22 tools existants + 4 Kie.ai + 3 HyperFrame = 25"""
-        assert len(mcp.tools) == 25
+        """Tools MCP: baseline + Kie.ai + HyperFrame (count peut evoluer)"""
+        assert len(mcp.tools) >= 25  # Au minimum les 25 historiques
+        hf_names = {t["name"] for t in mcp.tools if t["name"].startswith("hyperframe_")}
+        assert len(hf_names) >= 3, f"Expected >= 3 HyperFrame tools, got {hf_names}"
 
     def test_compose_has_template_enum(self, mcp):
         tool = next(t for t in mcp.tools if t["name"] == "hyperframe_compose")

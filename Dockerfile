@@ -1,5 +1,5 @@
 # Cortex Leman v5 — Dockerfile multi-stage
-FROM python:3.11-slim AS base
+FROM python:3.12-slim AS base
 
 LABEL maintainer="Cortex Leman <contact@cortex-leman.com>"
 LABEL version="5.0.0"

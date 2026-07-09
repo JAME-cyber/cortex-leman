@@ -1,0 +1,299 @@
+{
+  "vertical": "contract_review",
+  "description": "Règles déterministes JsonLogic pour la revue assistée de contrats avocat. Elles déclenchent flags ou gels pour validation humaine et ne rendent jamais de décision juridique finale.",
+  "risk_appetite": {
+    "accept_max": 2,
+    "arbitrate_threshold": 3,
+    "block_threshold": 5
+  },
+  "rules": [
+    {
+      "id": "contract-review-001",
+      "name": "Non-concurrence supérieure à 24 mois",
+      "severity": "critical",
+      "condition": {
+        "and": [
+          {
+            "==": [
+              {
+                "var": "clauses.non_compete.present"
+              },
+              true
+            ]
+          },
+          {
+            ">": [
+              {
+                "var": "clauses.non_compete.duration_months"
+              },
+              24
+            ]
+          }
+        ]
+      },
+      "action": "freeze",
+      "message": "Clause de non-concurrence supérieure à 2 ans : gel pour validation de proportionnalité par l'avocat."
+    },
+    {
+      "id": "contract-review-002",
+      "name": "Non-concurrence sans limite territoriale",
+      "severity": "high",
+      "condition": {
+        "and": [
+          {
+            "==": [
+              {
+                "var": "clauses.non_compete.present"
+              },
+              true
+            ]
+          },
+          {
+            "==": [
+              {
+                "var": "clauses.non_compete.geographic_unlimited"
+              },
+              true
+            ]
+          }
+        ]
+      },
+      "action": "freeze",
+      "message": "Clause de non-concurrence sans limite territoriale claire : gel pour arbitrage humain."
+    },
+    {
+      "id": "contract-review-003",
+      "name": "Droit applicable hors UE/CH",
+      "severity": "high",
+      "condition": {
+        "==": [
+          {
+            "var": "governing_law.region"
+          },
+          "OUTSIDE_EU_CH"
+        ]
+      },
+      "action": "flag",
+      "message": "Droit applicable hors UE/CH détecté : évaluer conflit de lois, exécution et exposition client."
+    },
+    {
+      "id": "contract-review-004",
+      "name": "Juridiction exclusive hors UE/CH",
+      "severity": "critical",
+      "condition": {
+        "and": [
+          {
+            "==": [
+              {
+                "var": "forum.exclusive"
+              },
+              true
+            ]
+          },
+          {
+            "==": [
+              {
+                "var": "forum.region"
+              },
+              "OUTSIDE_EU_CH"
+            ]
+          }
+        ]
+      },
+      "action": "freeze",
+      "message": "Juridiction exclusive hors UE/CH : gel pour validation du risque procédural et économique."
+    },
+    {
+      "id": "contract-review-005",
+      "name": "Pénalité supérieure à 10% du contrat",
+      "severity": "high",
+      "condition": {
+        ">": [
+          {
+            "var": "clauses.penalty.max_percent_of_contract"
+          },
+          10
+        ]
+      },
+      "action": "flag",
+      "message": "Pénalité contractuelle supérieure à 10% : vérifier proportionnalité et pouvoir modérateur du juge."
+    },
+    {
+      "id": "contract-review-006",
+      "name": "Absence de clause de résiliation",
+      "severity": "medium",
+      "condition": {
+        "==": [
+          {
+            "var": "clauses.termination.present"
+          },
+          false
+        ]
+      },
+      "action": "flag",
+      "message": "Aucune clause de résiliation détectée : vérifier durée, sortie, préavis et conséquences financières."
+    },
+    {
+      "id": "contract-review-007",
+      "name": "Modification unilatérale sans préavis ou opt-out",
+      "severity": "high",
+      "condition": {
+        "and": [
+          {
+            "==": [
+              {
+                "var": "clauses.unilateral_modification.present"
+              },
+              true
+            ]
+          },
+          {
+            "==": [
+              {
+                "var": "clauses.unilateral_modification.notice_or_optout"
+              },
+              false
+            ]
+          }
+        ]
+      },
+      "action": "freeze",
+      "message": "Modification unilatérale sans mécanisme de préavis ou d'opposition : gel pour contrôle d'équilibre."
+    },
+    {
+      "id": "contract-review-008",
+      "name": "Responsabilité illimitée non réciproque",
+      "severity": "critical",
+      "condition": {
+        "and": [
+          {
+            "==": [
+              {
+                "var": "clauses.liability.unlimited"
+              },
+              true
+            ]
+          },
+          {
+            "==": [
+              {
+                "var": "clauses.liability.mutual"
+              },
+              false
+            ]
+          }
+        ]
+      },
+      "action": "freeze",
+      "message": "Responsabilité illimitée non réciproque détectée : gel pour arbitrage avocat-client."
+    },
+    {
+      "id": "contract-review-009",
+      "name": "Données personnelles sans DPA",
+      "severity": "critical",
+      "condition": {
+        "and": [
+          {
+            "==": [
+              {
+                "var": "clauses.data_processing.personal_data_present"
+              },
+              true
+            ]
+          },
+          {
+            "==": [
+              {
+                "var": "clauses.data_processing.dpa_present"
+              },
+              false
+            ]
+          }
+        ]
+      },
+      "action": "freeze",
+      "message": "Traitement de données personnelles sans accord de traitement détecté : gel RGPD/LPD pour validation."
+    },
+    {
+      "id": "contract-review-010",
+      "name": "Renouvellement automatique ou préavis excessif",
+      "severity": "medium",
+      "condition": {
+        "and": [
+          {
+            "==": [
+              {
+                "var": "clauses.auto_renewal.present"
+              },
+              true
+            ]
+          },
+          {
+            "or": [
+              {
+                ">": [
+                  {
+                    "var": "clauses.auto_renewal.duration_months"
+                  },
+                  24
+                ]
+              },
+              {
+                ">": [
+                  {
+                    "var": "clauses.auto_renewal.notice_days"
+                  },
+                  90
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "action": "flag",
+      "message": "Renouvellement automatique long ou préavis supérieur à 90 jours : vérifier l'engagement économique."
+    },
+    {
+      "id": "contract-review-011",
+      "name": "Confidentialité supérieure à 5 ans ou perpétuelle",
+      "severity": "medium",
+      "condition": {
+        ">": [
+          {
+            "var": "clauses.confidentiality.duration_years"
+          },
+          5
+        ]
+      },
+      "action": "flag",
+      "message": "Obligation de confidentialité longue ou perpétuelle : vérifier justification, périmètre et exceptions."
+    },
+    {
+      "id": "contract-review-012",
+      "name": "Cession de droits futurs sans contrepartie",
+      "severity": "high",
+      "condition": {
+        "and": [
+          {
+            "==": [
+              {
+                "var": "clauses.ip_assignment.future_rights"
+              },
+              true
+            ]
+          },
+          {
+            "==": [
+              {
+                "var": "clauses.ip_assignment.compensation"
+              },
+              false
+            ]
+          }
+        ]
+      },
+      "action": "freeze",
+      "message": "Cession de droits présents et futurs sans contrepartie détectée : gel pour validation PI."
+    }
+  ]
+}

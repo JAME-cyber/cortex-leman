@@ -31,29 +31,30 @@ class TestModelRouter:
         from core.integrations.llm.provider import ModelRouter
         router = ModelRouter()
         model_id, label = router.resolve_model("comptable")
-        # Doit contenir claude (configuré pour comptable)
-        assert "claude" in model_id.lower() or "anthropic" in model_id.lower()
+        # Doit contenir le modèle configuré dans le routing (GLM 5.1 ou fallback)
+        assert "glm" in model_id.lower() or "openrouter" in model_id.lower()
 
     def test_vertical_routing_avocat(self):
         """Verticale avocat doit router vers le modèle configuré"""
         from core.integrations.llm.provider import ModelRouter
         router = ModelRouter()
         model_id, label = router.resolve_model("avocat")
-        assert "claude" in model_id.lower() or "anthropic" in model_id.lower()
+        assert "glm" in model_id.lower() or "openrouter" in model_id.lower()
 
     def test_vertical_routing_startup(self):
-        """Verticale startup doit router vers mistral (économique)"""
+        """Verticale startup doit router vers le modèle configuré"""
         from core.integrations.llm.provider import ModelRouter
         router = ModelRouter()
         model_id, label = router.resolve_model("startup")
-        assert "mistral" in model_id.lower()
+        # startup = deepseek-v4-flash (économique) ou modèle configuré
+        assert "deepseek" in model_id.lower() or "openrouter" in model_id.lower()
 
     def test_vertical_routing_sante(self):
         """Verticale santé doit router vers le modèle configuré"""
         from core.integrations.llm.provider import ModelRouter
         router = ModelRouter()
         model_id, label = router.resolve_model("sante")
-        assert "gpt" in model_id.lower() or "openai" in model_id.lower()
+        assert "glm" in model_id.lower() or "openrouter" in model_id.lower()
 
     def test_high_protection_forces_ollama(self):
         """Mode Haute Protection doit forcer Ollama"""

@@ -309,6 +309,123 @@ class CortexMCPServer:
                 },
             },
 
+            # ── Precedent Store / Jurisprudence ──
+            {
+                "name": "precedent_query",
+                "description": (
+                    "Rechercher les précédents de jurisprudence IA. "
+                    "Chaque arbitrage humain crée un précédent qui enrichit le Médiateur. "
+                    "Force: WEAK (1), MEDIUM (2), STRONG (3+). "
+                    "STRONG précédents peuvent devenir des règles JsonLogic."
+                ),
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "vertical": {
+                            "type": "string",
+                            "enum": ["comptable", "avocat", "sante", "banque", "startup", "rh"],
+                            "description": "Verticale métier",
+                        },
+                        "question": {"type": "string", "description": "Question ou contexte à matcher"},
+                        "rule_id": {"type": "string", "description": "Filtrer par ID de règle"},
+                        "limit": {"type": "integer", "description": "Max résultats (défaut: 5)"},
+                    },
+                    "required": ["vertical", "question"],
+                },
+            },
+            {
+                "name": "precedent_stats",
+                "description": (
+                    "Statistiques du PrecedentStore: nombre de précédents, "
+                    "candidats de règles, répartition par verticale et force."
+                ),
+                "inputSchema": {"type": "object", "properties": {}},
+            },
+
+            # ── Compliance Goals ──
+            {
+                "name": "compliance_goal_create",
+                "description": (
+                    "Créer un Compliance Goal: tâche de conformité longue durée. "
+                    "Templates disponibles par verticale: Audit RGPD, AI Act, KYC/AML, "
+                    "Secret Professionnel, HDS, Anti-Discrimination. "
+                    "Le système décompose en sous-tâches, chaque étape est vérifiée "
+                    "par le Médiateur, le résultat est journalisé dans le WORM."
+                ),
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "vertical": {
+                            "type": "string",
+                            "enum": ["comptable", "avocat", "sante", "banque", "startup", "rh"],
+                        },
+                        "title": {"type": "string", "description": "Titre de l'objectif"},
+                        "description": {"type": "string", "description": "Description détaillée"},
+                        "client_id": {"type": "string", "description": "ID client"},
+                        "template": {"type": "string", "description": "Nom du template à utiliser"},
+                    },
+                    "required": ["vertical", "title"],
+                },
+            },
+            {
+                "name": "compliance_goal_status",
+                "description": (
+                    "Consulter le statut d'un Compliance Goal: progression, "
+                    "sous-tâches, résultat."
+                ),
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "goal_id": {"type": "string", "description": "ID du goal"},
+                    },
+                    "required": ["goal_id"],
+                },
+            },
+            {
+                "name": "compliance_goal_templates",
+                "description": (
+                    "Lister les templates de Compliance Goals disponibles. "
+                    "Chaque template inclut: nom, description, sous-tâches, verticale."
+                ),
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "vertical": {
+                            "type": "string",
+                            "description": "Filtrer par verticale (optionnel)",
+                        },
+                    },
+                },
+            },
+
+            # ── Agent Identity / KYA ──
+            {
+                "name": "agent_identity_list",
+                "description": (
+                    "Lister les cartes d'identité de tous les agents (KYA). "
+                    "Chaque agent a: ID, rôle, scopes, statut de session, serment signé. "
+                    "Utiliser pour auditer quels agents sont actifs et leurs permissions."
+                ),
+                "inputSchema": {"type": "object", "properties": {}},
+            },
+            {
+                "name": "agent_identity_audit",
+                "description": (
+                    "Audit trail complet d'un agent: actions totales, freezes causés, "
+                    "arbitrages déclenchés, statut de session, serment."
+                ),
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "agent_id": {
+                            "type": "string",
+                            "description": "ID de l'agent (ex: agent-data, mediator, orchestrator)",
+                        },
+                    },
+                    "required": ["agent_id"],
+                },
+            },
+
             # ── Kie.ai Media Generation ──
             {
                 "name": "kie_generate_video",
@@ -571,6 +688,13 @@ class CortexMCPServer:
             "kie_generate_image": self._t_kie_image,
             "kie_generate_music": self._t_kie_music,
             "kie_lead_card": self._t_kie_lead_card,
+            "precedent_query": self._t_precedent_query,
+            "precedent_stats": self._t_precedent_stats,
+            "compliance_goal_create": self._t_goal_create,
+            "compliance_goal_status": self._t_goal_status,
+            "compliance_goal_templates": self._t_goal_templates,
+            "agent_identity_list": self._t_agent_list,
+            "agent_identity_audit": self._t_agent_audit,
             "hyperframe_compose": self._t_hf_compose,
             "hyperframe_render": self._t_hf_render,
             "hyperframe_templates": self._t_hf_templates,
@@ -793,6 +917,110 @@ class CortexMCPServer:
             return {"reflection_enabled": enabled}
         except Exception as e:
             return {"error": str(e)}
+
+    # ── Precedent Store ──
+
+    def _t_precedent_query(self, args: dict) -> dict:
+        """Rechercher les précédents de jurisprudence"""
+        from core.mediator.precedent_store import precedent_store
+        matches = precedent_store.query(
+            vertical=args.get("vertical", "comptable"),
+            question=args.get("question", ""),
+            rule_id=args.get("rule_id"),
+            limit=args.get("limit", 5),
+        )
+        return {
+            "matches": [
+                {
+                    "relevance": m.relevance,
+                    "decision": m.precedent.decision,
+                    "justification": m.precedent.justification[:300],
+                    "strength": m.precedent.strength.value,
+                    "arbiter": m.precedent.arbiter_name,
+                    "match_reason": m.match_reason,
+                }
+                for m in matches
+            ],
+            "total": len(matches),
+        }
+
+    def _t_precedent_stats(self, _: dict) -> dict:
+        """Statistiques du PrecedentStore"""
+        from core.mediator.precedent_store import precedent_store
+        return precedent_store.get_stats()
+
+    # ── Compliance Goals ──
+
+    def _t_goal_create(self, args: dict) -> dict:
+        """Créer un Compliance Goal"""
+        from core.orchestrator.compliance_goal import compliance_goal_runner
+        goal = compliance_goal_runner.create_goal(
+            client_id=args.get("client_id", "mcp"),
+            vertical=args.get("vertical", "startup"),
+            title=args.get("title", "Compliance Audit"),
+            description=args.get("description", ""),
+            template_name=args.get("template"),
+        )
+        return {
+            "goal_id": goal.goal_id,
+            "title": goal.title,
+            "vertical": goal.vertical,
+            "status": goal.status.value,
+            "subtasks": [{"name": st.name, "agent": st.agent} for st in goal.subtasks],
+        }
+
+    def _t_goal_status(self, args: dict) -> dict:
+        """Statut d'un Compliance Goal"""
+        from core.orchestrator.compliance_goal import compliance_goal_runner
+        goal = compliance_goal_runner.get_goal(args.get("goal_id", ""))
+        if not goal:
+            return {"error": "Goal non trouvé"}
+        return {
+            "goal_id": goal.goal_id,
+            "title": goal.title,
+            "status": goal.status.value,
+            "progress": goal.progress,
+            "subtasks": [
+                {
+                    "name": st.name,
+                    "status": st.status.value if hasattr(st.status, 'value') else st.status,
+                    "confidence": st.confidence,
+                }
+                for st in goal.subtasks
+            ],
+        }
+
+    def _t_goal_templates(self, args: dict) -> dict:
+        """Lister les templates de Compliance Goals"""
+        from core.orchestrator.compliance_goal import compliance_goal_runner
+        return compliance_goal_runner.get_templates(args.get("vertical"))
+
+    # ── Agent Identity / KYA ──
+
+    def _t_agent_list(self, _: dict) -> dict:
+        """Lister les identités d'agents"""
+        from core.security.agent_identity import agent_identity_provider
+        identities = agent_identity_provider.get_all_identities()
+        return {
+            "agents": [
+                {
+                    "agent_id": i.agent_id,
+                    "name": i.agent_name,
+                    "role": i.agent_role,
+                    "status": i.status.value,
+                    "session_active": i.session_id is not None,
+                    "oath_signed": i.oath_hash is not None,
+                    "scopes": [s.value for s in i.scopes],
+                }
+                for i in identities
+            ],
+            "total": len(identities),
+        }
+
+    def _t_agent_audit(self, args: dict) -> dict:
+        """Audit trail d'un agent"""
+        from core.security.agent_identity import agent_identity_provider
+        return agent_identity_provider.get_audit_trail(args.get("agent_id", ""))
 
     # ── Kie.ai Media Generation ──
 

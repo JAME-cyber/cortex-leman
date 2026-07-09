@@ -1,6 +1,12 @@
 {
   "vertical": "banque",
   "description": "Règles de conformité pour établissements bancaires CH (Art. 47 LB, FINMA)",
+  "risk_appetite": {
+    "accept_max": 2,
+    "arbitrate_threshold": 3,
+    "block_threshold": 4,
+    "comment": "Très prudent: secret bancaire + anti-blanchiment"
+  },
   "rules": [
     {
       "id": "banque-001",

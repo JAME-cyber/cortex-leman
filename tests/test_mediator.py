@@ -143,3 +143,114 @@ class TestConflictDetection:
             "reasoning", {"recommendation": "proceed", "confidence": 0.75},
         )
         assert conflict is None
+
+
+class TestRiskAppetite:
+    """Tests de l'appétit aux risques et de la graduation"""
+
+    def test_risk_appetite_in_rules_file(self, rules_engine):
+        """L'appétit aux risques est chargé depuis le fichier JSON"""
+        # Les règles de test n'ont pas de risk_appetite → valeurs par défaut
+        appetite = rules_engine.get_risk_appetite("test")
+        assert "accept_max" in appetite
+        assert "arbitrate_threshold" in appetite
+        assert "block_threshold" in appetite
+
+    def test_risk_appetite_avocat(self):
+        """La verticale avocat a un appétit ultra-prudent"""
+        engine = RulesEngine()  # Utilise le vrai répertoire
+        engine.load_rules()
+        appetite = engine.get_risk_appetite("avocat")
+        assert appetite["accept_max"] == 1
+        assert appetite["arbitrate_threshold"] == 2
+        assert appetite["block_threshold"] == 4
+
+    def test_risk_appetite_startup(self):
+        """La verticale startup a un appétit plus permissif"""
+        engine = RulesEngine()
+        engine.load_rules()
+        appetite = engine.get_risk_appetite("startup")
+        assert appetite["accept_max"] == 3
+        assert appetite["arbitrate_threshold"] == 4
+        assert appetite["block_threshold"] == 5
+
+    def test_evaluate_risk_level_no_trigger(self, rules_engine):
+        """Aucune règle déclenchée → risque niveau 1, accept"""
+        level, action = rules_engine.evaluate_risk_level("test", {
+            "action": {"type": "normal"},
+            "payload": {"montant": 100},
+            "user_consent": True,
+        })
+        assert level == 1
+        assert action == "accept"
+
+    def test_evaluate_risk_level_warn_trigger(self, rules_engine):
+        """Règle warn (medium) déclenchée → niveau 3, action selon appétit"""
+        level, action = rules_engine.evaluate_risk_level("test", {
+            "user_consent": False,
+        })
+        assert level == 3  # medium → 3
+        # Appétit par défaut: arbitrate_threshold=3, donc arbitrate
+        assert action == "arbitrate"
+
+    def test_evaluate_risk_level_critical_trigger(self, rules_engine):
+        """Règle critical déclenchée → niveau 5, block"""
+        level, action = rules_engine.evaluate_risk_level("test", {
+            "action": {"type": "forbidden"},
+        })
+        assert level == 5  # critical → 5
+        assert action == "block"  # 5 >= block_threshold (5)
+
+    def test_risk_level_enriches_rule_result(self, rules_engine):
+        """Le risk_level est ajouté aux RuleResult déclenchés"""
+        level, action = rules_engine.evaluate_risk_level("test", {
+            "action": {"type": "forbidden"},
+        })
+        assert level == 5
+        # Vérifier via une évaluation fraîche que le risk_level est propagé
+        results = rules_engine.evaluate("test", {
+            "action": {"type": "forbidden"},
+        })
+        triggered = [r for r in results if r.triggered]
+        assert len(triggered) >= 1
+        # evaluate_risk_level retourne le bon niveau
+        assert level == 5
+        assert action == "block"
+
+    def test_intention_health_risk_level(self):
+        """IntentionHealth gère le risk_level"""
+        from core.agents.supervisor_agent import IntentionHealth
+        health = IntentionHealth("test-intention")
+        assert health.risk_level == 0
+        assert health.risk_label == "Non évalué"
+
+        health.update_risk_level(3, "arbitrate")
+        assert health.risk_level == 3
+        assert health.risk_label == "Élevé"
+        assert health.risk_action == "arbitrate"
+
+    def test_intention_health_risk_labels(self):
+        """Tous les labels de risque sont corrects"""
+        from core.agents.supervisor_agent import IntentionHealth
+        health = IntentionHealth("test")
+        labels = {
+            0: "Non évalué",
+            1: "Faible",
+            2: "Modéré",
+            3: "Élevé",
+            4: "Très élevé",
+            5: "Critique",
+        }
+        for level, expected_label in labels.items():
+            health.update_risk_level(level, "accept")
+            assert health.risk_label == expected_label
+
+    def test_intention_health_to_dict_includes_risk(self):
+        """Le dict de santé inclut les champs de risque"""
+        from core.agents.supervisor_agent import IntentionHealth
+        health = IntentionHealth("test")
+        health.update_risk_level(4, "block")
+        d = health.to_dict()
+        assert d["risk_level"] == 4
+        assert d["risk_label"] == "Très élevé"
+        assert d["risk_action"] == "block"

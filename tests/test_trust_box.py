@@ -9,6 +9,20 @@ from fastapi.testclient import TestClient
 @pytest.fixture(scope="module")
 def client():
     from api.main import app
+    from fastapi.testclient import TestClient
+    from core.db.session import init_db, get_engine
+    from core.security.auth import seed_users
+    from sqlalchemy.orm import Session
+
+    # Initialiser la DB et seeder les utilisateurs de test
+    init_db()
+    engine = get_engine()
+    with Session(engine) as db:
+        try:
+            seed_users(db)
+        except Exception:
+            pass  # Déjà seedé
+
     return TestClient(app)
 
 
@@ -19,7 +33,7 @@ def auth_headers(client):
         "email": "admin@cortex-leman.com",
         "password": "C0rt3xL3m4n!"
     })
-    assert resp.status_code == 200
+    assert resp.status_code == 200, f"Login failed: {resp.status_code} {resp.text}"
     token = resp.json()["access_token"]
     return {"Authorization": f"Bearer {token}"}
 

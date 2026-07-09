@@ -1,0 +1,123 @@
+{
+  "name": "Cortex Leman — Anti-IA Humanizer",
+  "description": "Pipeline post-traitement anti-IA : applique les étapes 4 (crédibilité) et 6 (nettoyeur clichés IA) du skill anti-ia-humanizer sur tout contenu généré par LLM avant livraison client. Inspiré du thread @PaulYoungX.",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "cortex-anti-ia",
+        "httpMethod": "POST",
+        "responseMode": "lastNode"
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            { "name": "text", "value": "={{ $json.body.text }}" },
+            { "name": "source", "value": "={{ $json.body.source || 'unknown' }}" },
+            { "name": "context", "value": "={{ $json.body.context || 'general' }}" },
+            { "name": "target_score", "value": "={{ $json.body.target_score || '3' }}" }
+          ]
+        }
+      },
+      "id": "extract-input",
+      "name": "Extraction Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [250, 0]
+    },
+    {
+      "parameters": {
+        "model": "anthropic/claude-sonnet-4-20250514",
+        "options": {
+          "baseURL": "https://openrouter.ai/api/v1"
+        },
+        "prompt": "Agis comme un lecteur sceptique.\n\nTon rôle est de repérer toutes les phrases qui paraissent artificielles, trop travaillées ou trop répétées.\n\nPasse ce texte en revue phrase par phrase et réécris tout ce qui ne donne pas l'impression d'avoir été écrit par une vraie personne.\n\nJe veux que le résultat soit :\n• Plus crédible\n• Moins lisse et artificiel\n• Plus direct\n• Plus personnel\n• Moins conçu pour plaire à tout le monde\n\nRègles :\n• Si une phrase semble trop belle ou trop parfaite, simplifie-la\n• Si une idée paraît générique, rends-la plus concrète\n• Si le ton rappelle trop une IA, modifie-le\n• S'il manque un point de vue, affirme une position claire\n• S'il y a trop d'explications, coupe dans le superflu\n\nCONTEXTE : Ce texte est destiné à {{ $json.context }}. Adapte le ton en conséquence.\n\nTexte :\n\n{{ $json.text }}"
+      },
+      "id": "credibility-pass",
+      "name": "Étape 4 — Test de Crédibilité",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [500, 0]
+    },
+    {
+      "parameters": {
+        "model": "anthropic/claude-sonnet-4-20250514",
+        "options": {
+          "baseURL": "https://openrouter.ai/api/v1"
+        },
+        "prompt": "Agis comme un éditeur spécialisé dans l'élimination des formulations typiques de ChatGPT, Claude et des autres modèles d'IA.\n\nAnalyse ce texte et supprime toutes les tournures qui ressemblent à :\n• « Dans le monde d'aujourd'hui... »\n• « Il est important de souligner que... »\n• « Non seulement..., mais aussi... »\n• « En conclusion... »\n• « La clé est de... »\n• « Transformez votre... »\n• « Améliorez votre... »\n• « Découvrez comment... »\n• « En effet »\n• « Par ailleurs »\n• « Il convient de noter que »\n• « De plus »\n• « Il est essentiel de »\n• « Notons que »\n• « Cela dit »\n\nPuis réécris le texte avec un langage plus humain, plus simple et plus direct.\n\nJe veux qu'on ait l'impression qu'il a été écrit rapidement, avec des idées claires et une intention précise.\n\nRègles :\n• Conserve le message d'origine\n• Raccourcis le texte si nécessaire\n• Remplace les mots compliqués par des mots courants\n• Supprime les explications évidentes ou inutiles\n• Ajoute une touche plus personnelle si cela améliore le texte\n• Varie les longueurs de phrases (courtes + longues)\n• Casse les structures symétriques\n\nCONTEXTE : Ce texte est destiné à {{ $json.context }}.\n\nTexte :\n\n{{ $json.message.content }}"
+      },
+      "id": "cliche-cleaner",
+      "name": "Étape 6 — Nettoyeur Clichés IA",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [750, 0]
+    },
+    {
+      "parameters": {
+        "model": "anthropic/claude-sonnet-4-20250514",
+        "options": {
+          "baseURL": "https://openrouter.ai/api/v1"
+        },
+        "prompt": "Agis comme un détecteur humain de textes artificiels.\n\nLis ce texte et attribue-lui une note de 1 à 10 selon le degré auquel il semble avoir été écrit par une IA (1 = totalement humain, 10 = clairement IA).\n\nIndique :\n• Note anti-IA (1-10)\n• Formulations qui trahissent l'IA (liste)\n• Schémas répétitifs détectés\n\nRéponds UNIQUEMENT au format JSON :\n{\"score\": <nombre>, \"flags\": [\"flag1\", \"flag2\"], \"patterns\": [\"pattern1\"]}\n\nTexte :\n\n{{ $json.message.content }}"
+      },
+      "id": "anti-ia-score",
+      "name": "Étape 7 — Score Anti-IA",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [1000, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const humanized = $input.first().json;\nconst scoreResult = $('Étape 7 — Score Anti-IA').item.json;\nconst originalSource = $('Extraction Input').item.json.source;\nconst targetScore = parseInt($('Extraction Input').item.json.target_score);\n\nlet scoreData;\ntry {\n  const content = scoreResult.message?.content || scoreResult.message?.text || JSON.stringify(scoreResult);\n  const jsonMatch = content.match(/\\{[\\s\\S]*\\}/);\n  scoreData = jsonMatch ? JSON.parse(jsonMatch[0]) : { score: 5, flags: ['parse_error'], patterns: [] };\n} catch(e) {\n  scoreData = { score: 5, flags: ['parse_error'], patterns: [] };\n}\n\nconst passed = scoreData.score <= targetScore;\n\nreturn {\n  json: {\n    text: humanized.message?.content || humanized.message?.text || '',\n    anti_ia_score: scoreData.score,\n    anti_ia_flags: scoreData.flags,\n    anti_ia_patterns: scoreData.patterns,\n    passed: passed,\n    source: originalSource,\n    target_score: targetScore,\n    processed_at: new Date().toISOString()\n  }\n};"
+      },
+      "id": "compile-output",
+      "name": "Compilation Résultat",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [1250, 0]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}"
+      },
+      "id": "respond-webhook",
+      "name": "Réponse Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1500, 0]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [[{ "node": "Extraction Input", "type": "main", "index": 0 }]]
+    },
+    "Extraction Input": {
+      "main": [[{ "node": "Étape 4 — Test de Crédibilité", "type": "main", "index": 0 }]]
+    },
+    "Étape 4 — Test de Crédibilité": {
+      "main": [[{ "node": "Étape 6 — Nettoyeur Clichés IA", "type": "main", "index": 0 }]]
+    },
+    "Étape 6 — Nettoyeur Clichés IA": {
+      "main": [[{ "node": "Étape 7 — Score Anti-IA", "type": "main", "index": 0 }]]
+    },
+    "Étape 7 — Score Anti-IA": {
+      "main": [[{ "node": "Compilation Résultat", "type": "main", "index": 0 }]]
+    },
+    "Compilation Résultat": {
+      "main": [[{ "node": "Réponse Webhook", "type": "main", "index": 0 }]]
+    }
+  },
+  "tags": [
+    { "name": "cortex-leman" },
+    { "name": "anti-ia" },
+    { "name": "post-processing" }
+  ]
+}

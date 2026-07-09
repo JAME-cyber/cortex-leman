@@ -1,0 +1,42 @@
+Tu es un analyste stratégique indépendant, avocat du diable. On te demande une CONTRE-ANALYSE critique d'une analyse produite par un autre assistant (Gemini/Claude). Ton job n'est PAS de valider — c'est de stress-tester chaque conclusion, pointer les failles de raisonnement, les biais, les affirmations non prouvées, et dire où l'analyste s'est TROMPÉ ou a été trop prudent/trop audacieux.
+
+CONTEXTE — 3 projets d'un même entrepreneur (franco-suisse, IA/agents), qui a déjà copié le "playbook chinois" (agents agentic horizontaux, freemium, dropshipping, distribution directe) et se demande quoi copier du "playbook japonais" (LayerX, NEC, Fujitsu, WinActor — vertical régulé, on-prem souverain, déterminisme de sécurité, distribution via SI, product+service wrapping).
+
+PROJET 1 — CORTEX LEMAN v5 :
+- Infrastructure de confiance IA pour professions régulées franco-suisses (comptable, avocat, santé, banque, startup, RH).
+- Architecture "graphe de confiance" : 5 agents pair-à-pair sur bus NATS + Médiateur 100% déterministe (JsonLogic, 20 règles × 6 verticales) + journal WORM hash-chainé + arbitrage humain.
+- Deux modes : Standard (LLM cloud OpenRouter) et Haute Protection (K3s + Ollama local, zero appel externe, obligatoire pour avocat/banque/santé).
+- Agent Action = jamais de LLM (transactionnel pur, saga + compensation).
+- 6 verticales métier régulées, conformité RGPD/AI Act/secret professionnel FR-CH.
+
+PROJET 2 — DROPATOM (dropship-atom) :
+- Pivot juin 2026 vers "Pioche" : SaaS B2B "Usine à Dossiers de Lancement", 48 agents wrappés en API + Telegram.
+- Avant : dropshipping→brandshipping (private label + IA + premium), marge 15%→40-60%.
+- Cible : solopreneurs e-commerce. Inspiration Eprolo (Shenzhen), 1688, Jonathan Ecom.
+- PROJECT.yaml annonce : "Break-even: 1 abonné Pro. Max 5 exemplaires/dossier."
+- Hérite du Journal WORM + JsonLogic de Cortex.
+
+PROJET 3 — IMPORTEXPORT PRO :
+- 5 agents IA (sourcing, logistique, legal-fiscal, market-analyzer, brand-builder) pour import-export Chine→Europe/Afrique.
+- Base de connaissances de 24h de vidéos YouTube expertes (782KB).
+- Hybride consulting+produit.
+
+MARCHÉ (données de recherche) :
+- Japon : GenAI pro adoption 19,2% (fev 2025), lente. Microsoft Copilot = 85% des entreprises Nikkei 225 (avril 2025). RPA Japon (WinActor, BizRobo!) = marché mature 911M$→5,78Md$ (2034).
+- LayerX (finance AI, 192M$ levés, 15000 entreprises) a mis 7 ans pour Serie B.
+- Chine : WPS AI 100M DAU, Tencent Workbuddy agent workspace local-first, Accio Work (Alibaba) e-commerce agents.
+
+CONCLUSIONS DE L'ANALYSTE À CONTRE-ANALYSER :
+1. DropAtom et ImportExport Pro sont à 100% "playbook chinois" ; copier le playbook japonais (on-prem, déterminisme, distribution SI) sur eux est une ERREUR DE CATÉGORIE car leurs clients sont des e-commerçants/PME importatrices, pas des régulés.
+2. Sur DropAtom, SEUL est copiable le "framing ROI mesuré" (type LayerX Ai Workforce : heures économisées, coût du dossier). Le reste du japonais détruit la thèse.
+3. Sur ImportExport, copier : (a) conformité douanière déterministe (classification HS code, incoterms, CE/RoHS) comme moat — inspiré de NEC Procurement Negotiation AI ; (b) product+service wrapping (ExaWizards/SHIFT).
+4. "Break-even: 1 abonné Pro" est absurde. Recalcul : 48 agents × coût variable ≈ 30-80€/mois/abonné, break-even réel à 50-150 abonnés, pas 1.
+5. 48 agents = dispersion = anti-pattern LayerX (qui a dominé 1 vertical en 7 ans). Recommandation : prioriser 3-5 agents critiques.
+6. Cortex Leman ne doit SURTOUT PAS copier le playbook chinois (sa force est d'être anti-chinois : lent, vertical, souverain, déterministe).
+7. Cortex doit ouvrir 4 chantiers : dashboard ROI, distribution via fiduciaires/ordres, focus sur 1-2 verticales phares (reco compta+avocat), RAG droit suisse.
+8. Règle générale : le playbook japonais s'applique là où il y a risque réglementaire/compliance (Cortex, ImportExport douane) ; JAMAIS sur le marketing/e-commerce créatif (DropAtom brandshipping).
+
+TA MISSION :
+Pour CHACUNE des 8 conclusions ci-dessus, donne : (a) d'accord / partiellement / en désaccord ; (b) le raisonnement ; (c) si désaccord, la position que TU défends à la place.
+Puis ajoute : les 2-3 BIAIS de l'analyste que tu détectes, les points aveugles (ce qu'il a oublié), et ton VERDICT global (l'analyse est-elle solide, trop prudente, ou audacieuse à tort ?).
+Sois direct, argumenté, sans flatterie. Si l'analyste a raison, dis-le mais montre la limite. Si tu penses qu'il se trompe, défends ta position fermement avec arguments.

@@ -32,6 +32,8 @@ class IntentionHealth:
         self.conflicts_detected: int = 0
         self.frozen_count: int = 0
         self.overall_confidence: float = 1.0
+        self.risk_level: int = 0                         # 0=non évalué, 1-5 (matrice)
+        self.risk_action: str = "accept"                 # accept|warn|arbitrate|block
         self.last_activity: datetime = datetime.now(timezone.utc)
         self.completed: bool = False
 
@@ -77,10 +79,25 @@ class IntentionHealth:
         """Secondes depuis la dernière activité"""
         return (datetime.now(timezone.utc) - self.last_activity).total_seconds()
 
+    def update_risk_level(self, level: int, action: str) -> None:
+        """Mettre à jour le niveau de risque évalué par le Médiateur"""
+        self.risk_level = level
+        self.risk_action = action
+        self.last_activity = datetime.now(timezone.utc)
+
+    @property
+    def risk_label(self) -> str:
+        """Label lisible du niveau de risque"""
+        labels = {0: "Non évalué", 1: "Faible", 2: "Modéré", 3: "Élevé", 4: "Très élevé", 5: "Critique"}
+        return labels.get(self.risk_level, "Inconnu")
+
     def to_dict(self) -> dict:
         return {
             "intention_id": self.intention_id,
             "overall_confidence": round(self.overall_confidence, 2),
+            "risk_level": self.risk_level,
+            "risk_label": self.risk_label,
+            "risk_action": self.risk_action,
             "agents_reported": list(self.agent_results.keys()),
             "check_runs": self.check_runs,
             "conflicts_detected": self.conflicts_detected,
@@ -120,6 +137,7 @@ class SupervisorAgent(BaseAgent):
         await bus.subscribe(subjects.MEDIATOR_CONFLICT, self._on_conflict)
         await bus.subscribe(subjects.MEDIATOR_FREEZE, self._on_freeze)
         await bus.subscribe(subjects.ARBITRATION_DECISION, self._on_arbitration_done)
+        await bus.subscribe("cleman.mediator.risk_level", self._on_risk_level)
 
         logger.info("Superviseur V2: observateur continu démarré")
 
@@ -195,6 +213,23 @@ class SupervisorAgent(BaseAgent):
                     "arbiter": data.get("arbiter_name"),
                 },
             )
+
+    async def _on_risk_level(self, data: dict, meta: dict) -> None:
+        """Réception du niveau de risque évalué par le Médiateur"""
+        intention_id = data.get("intention_id")
+        risk_level = data.get("risk_level", 0)
+        risk_action = data.get("risk_action", "accept")
+
+        if not intention_id:
+            return
+
+        health = self._get_or_create_health(intention_id)
+        health.update_risk_level(risk_level, risk_action)
+
+        logger.info(
+            f"Superviseur: risque {risk_level}/5 ({health.risk_label}) "
+            f"→ {risk_action} pour {intention_id[:8]}..."
+        )
 
     # === Validation (rétrocompatible V1) ===
 

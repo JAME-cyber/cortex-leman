@@ -1,0 +1,61 @@
+Tu es un ingénieur Python senior en conformité douanière et commerce international. Tu codes le MODULE CONFORMITÉ DOUANIÈRE du projet ImportExport Pro.
+
+## CONTEXTE DU PROJET
+- ImportExport Pro : 5 agents IA pour import-export Chine→Europe/Afrique. Base de connaissances actuelle = 24h de vidéos YouTube (782KB) — INSUFFISANTE pour de la conformité sérieuse.
+- Une contre-analyse a montré que la classification HS code n'est PAS mécanique : elle dépend de la composition exacte, de l'usage principal, de la jurisprudence douanière, du pays d'import, des notes explicatives du SH, des renseignements tarifaires contraignants (RTC).
+- Conclusion CRITIQUE : NE PAS vendre un "agent qui donne le bon HS code" (faux moat dangereux). À la place : une CHAÎNE DE DÉCISION ASSISTÉE, TRAÇABLE, ESCALADABLE.
+
+## OBJECTIF
+Créer un package Python `/home/tars/import-export-project/agents/compliance/` avec :
+
+### 1. `__init__.py`
+### 2. `models.py` — modèles Pydantic v2
+- `ProductDescription` : description produit structurée (nom, matière/composition, usage principal, pays origine, pays import, images, certifications connues, composants)
+- `ClassificationProposal` : un code HS proposé AVEC niveau de confiance (low/medium/high), source (WCO/TARIC/RTC), justification, hypothèses retenues
+- `ComplianceCheck` : résultat d'un contrôle (CE, RoHS, REACH, sanctions, quotas, licences) avec statut (pass/fail/unknown/requires_expert) + source officielle
+- `DecisionChain` : objet central qui chaîne les étapes (audit trail) — chaque étape horodatée, avec acteur (machine/expert/transitaire), sources citées
+- `EscalationTicket` : quand la confiance est insuffisante → ticket vers expert humain / transitaire / courtier en douane
+
+### 3. `classifier.py` — la chaîne de classification assistée (PAS déterministe magique)
+Fonction `classify_product()` qui :
+- Prend une `ProductDescription`
+- Génère 1-3 `ClassificationProposal` candidates (LLM — laisser un point d'injection pour le provider, ne pas coder l'appel API en dur, utiliser une interface `LLMProvider` abstraite)
+- Pour chaque candidate : calcule un score de confiance basé sur des règles explicites (composition précise? usage clair? jurisprudence connue? données manquantes?)
+- Si confiance >= seuil haut → retourne la proposition + sources + disclaimer
+- Si confiance entre seuil bas et haut → retourne proposition(s) + liste des DONNÉES MANQUANTES qui amélioreraient la confiance + suggestion de demander un RTC
+- Si confiance < seuil bas → génère un `EscalationTicket` (refuse de donner un code, oriente vers expert)
+- JAMAIS affirmer un code comme vérité absolue. Toujours avec disclaimer + sources + niveau de confiance.
+
+### 4. `compliance_checks.py` — contrôles réglementaires
+Fonctions pour vérifier (via des sources configurables, abstraites derrière `RegulatorySource` interface) :
+- Marquage CE obligatoire (selon directive/règlement applicable)
+- RoHS (substances dangereuses électronique)
+- REACH (chimique)
+- Sanctions commerciales (pays origine/destination — listes UE)
+- Quotas / licences d'importation
+- Documents requis (certificat d'origine, facture commerciale, etc.)
+Chaque check = source officielle citée + statut + recommandation.
+
+### 5. `sources.py` — registre des sources officielles (interfaces + implémentations bouchon/stub)
+Définir une interface `RegulatorySource` (async method `query()`) et lister les sources RÉELLES à brancher (avec URL/stub pour l'instant, pas d'appel réseau réel) :
+- **TARIC** (tarif douanier UE) : https://ec.europa.eu/taxation_customs/dds2/taric/taric_consultation.jsp
+- **EUR-Lex** (législation UE) : https://eur-lex.europa.eu/
+- **WCO HS** (classification mondiale) : https://www.wcoomd.org/en/topics/nomenclature
+- **Access2Markets** (Commission EU) : https://trade.ec.europa.eu/access-to-markets/fr/home
+- **Douanes françaises (douane.gouv.fr)** — RTC, BODACC
+- **Sanctions UE** : https://webgate.ec.europa.eu/fsd/fsf
+
+### 6. `journal.py` — audit trail
+Journal append-only (hash-chainé SHA-256, comme le WORM de Cortex) pour tracer TOUTE la chaîne de décision (qui/classification/checks/sources/escalade). Fonction `verify_integrity()`.
+
+### 7. `cli.py` — interface en ligne de commande
+`python -m agents.compliance "Climatiseur portable, compresseur R410A, usage domestique, origine Chine, import France"` qui exécute la chaîne complète et affiche un rapport structuré.
+
+## CONTRAINTES DE STYLE
+- Python 3.12, type hints, Pydantic v2, async pour les appels sources.
+- Docstrings en français.
+- LLM et sources externes TOUJOURS derrière une interface (Dependency Injection). Aucun appel réseau en dur.
+- Disclaimer légal visible partout : "Cet outil ASSISTE la classification et la conformité. Il ne remplace pas l'expert humain. Toute décision douanière engage votre responsabilité."
+- Tests unitaires minimaux (`tests.py`) : classifier avec confiance haute/basse, escalation, journal integrity.
+
+Code complet, production-ready, commenté. Pas de placeholder. 7 fichiers. Sois rigoureux sur la conformité.

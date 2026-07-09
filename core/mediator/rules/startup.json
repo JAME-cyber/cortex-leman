@@ -1,6 +1,12 @@
 {
   "vertical": "startup",
   "description": "Règles de conformité pour startups FR (RGPD standard, AI Act Limited)",
+  "risk_appetite": {
+    "accept_max": 3,
+    "arbitrate_threshold": 4,
+    "block_threshold": 5,
+    "comment": "Acceptant: RGPD standard, moins de contraintes réglementaires"
+  },
   "rules": [
     {
       "id": "startup-001",
