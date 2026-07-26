@@ -253,24 +253,36 @@ class RAGService:
         if not results:
             return "Aucun contexte supplémentaire trouvé."
 
+        # TICKET-010: Sanitize retrieved content before prompt injection (MemPoison defense)
+        from core.security.memory_sanitizer import MemorySanitizer
+        _sanitizer = MemorySanitizer()
+
         context_parts = ["CONTEXTE RAG (documents et textes pertinents):"]
 
         for i, result in enumerate(results, 1):
             source = result.get("source", "unknown")
             relevance = result.get("relevance", 0)
+            raw_content = result.get('content', '')
+
+            # Sanitize chaque chunk récupéré avant injection dans le prompt
+            safe = _sanitizer.sanitize_for_retrieval(raw_content, context=f"rag:{source}")
+            if safe.action == "block":
+                logger.warning(f"RAG context chunk BLOCKED (source={source}, risk={safe.risk_score})")
+                continue
+            display_content = safe.clean_content
 
             if source == "regulatory":
                 context_parts.append(
                     f"\n--- Référence réglementaire (pertinence: {relevance:.0%}) ---"
                     f"\nTitre: {result.get('title', 'N/A')}"
                     f"\nSource: {result.get('vertical', 'N/A')}"
-                    f"\n{result.get('content', '')}"
+                    f"\n{display_content}"
                 )
             else:
                 context_parts.append(
                     f"\n--- Document client (pertinence: {relevance:.0%}) ---"
                     f"\nDocument: {result.get('doc_id', 'N/A')}"
-                    f"\n{result.get('content', '')}"
+                    f"\n{display_content}"
                 )
 
         return "\n".join(context_parts)

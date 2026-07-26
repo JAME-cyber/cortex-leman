@@ -102,6 +102,19 @@ class KnowledgeVault:
         if not client_dir.exists():
             raise ValueError(f"Espace client {client_id} non trouvé")
 
+        # TICKET-010: Sanitize document content before storage (MemPoison defense)
+        from core.security.memory_sanitizer import MemorySanitizer
+        _sanitizer = MemorySanitizer()
+        safe = _sanitizer.sanitize_for_storage(content, source=f"vault:{client_id}/{document_name}")
+        if safe.action == "block":
+            logger.warning(
+                f"KnowledgeVault: BLOCKED document storage '{document_name}' for {client_id} "
+                f"— prompt injection detected (risk={safe.risk_score})"
+            )
+            return {"doc_id": None, "name": document_name, "stored": False,
+                    "reason": "blocked_injection", "risk_score": safe.risk_score}
+        content = safe.clean_content
+
         doc_id = hashlib.sha256(
             f"{client_id}:{document_name}:{datetime.now(timezone.utc).isoformat()}".encode()
         ).hexdigest()[:16]

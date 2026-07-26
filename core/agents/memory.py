@@ -54,9 +54,27 @@ class ProceduralMemory:
         except (json.JSONDecodeError, KeyError):
             return ""
     
-    def update_instructions(self, agent_name: str, vertical: str, 
+    def update_instructions(self, agent_name: str, vertical: str,
                            instructions: str, insight_summary: str = "") -> None:
         """Mettre à jour les instructions procédurales"""
+        # TICKET-010: Sanitize avant stockage (protection Bad Memory / MemPoison)
+        from core.security.memory_sanitizer import MemorySanitizer
+        sanitizer = MemorySanitizer()
+        safe = sanitizer.sanitize_for_storage(instructions, source=f"procedural:{agent_name}/{vertical}")
+        if safe.action == "block":
+            logger.warning(f"ProceduralMemory: BLOCKED memory update for {agent_name}/{vertical} — prompt injection detected (risk={safe.risk_score})")
+            journal.append(
+                event_type=JournalEventType.AGENT_ERROR,
+                client_id="system",
+                vertical=vertical,
+                agent_source=agent_name,
+                intention_id="procedural_update_blocked",
+                payload={"action": "memory_injection_blocked", "risk_score": safe.risk_score,
+                         "threats": [t.category for t in safe.threats_found]},
+            )
+            return
+        instructions = safe.clean_content
+
         mem_dir = self._path / agent_name
         mem_dir.mkdir(parents=True, exist_ok=True)
         

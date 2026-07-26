@@ -256,6 +256,26 @@ class LLMService:
                     text = "[Réponse filtrée par garde-fou de sécurité]"
                     guardrail_flags = output_result.violations
 
+            # === Phase 6: Watermarking AI Act Art. 50 (TICKET-022) ===
+            # Toute sortie LLM destinée à un tiers doit être marquée machine-lisible
+            watermark_metadata = None
+            watermark_id = None
+            if text and not text.startswith("[Réponse filtrée"):
+                try:
+                    from core.security.watermarker import ChainMarkWatermarker
+                    wm = ChainMarkWatermarker(tenant_id=client_id)
+                    wm_result = wm.watermark(
+                        text,
+                        model=actual_model,
+                        visible=settings.watermark_visible if hasattr(settings, 'watermark_visible') else True,
+                        language="fr",
+                    )
+                    text = wm_result.text
+                    watermark_metadata = wm_result.metadata
+                    watermark_id = wm_result.metadata.get("watermark_id")
+                except Exception as e:
+                    logger.error(f"Watermarking failed (non-blocking): {e}")
+
             # Stats
             self._total_calls += 1
             self._total_tokens += tokens
@@ -267,6 +287,8 @@ class LLMService:
                 "provider": provider_label,
                 "tokens": tokens,
                 "guardrail_flags": guardrail_flags,
+                "watermark_id": watermark_id,
+                "watermark_metadata": watermark_metadata,
             }
 
         except litellm.AuthenticationError as e:

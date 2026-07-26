@@ -18,6 +18,14 @@ build/
 
 # Virtual environments
 .venv/
+
+# Backups & temp
+*.bak
+*.vtt
+
+# Misc root scripts
+compliance_rescan.py
+remediation_p0.py
 venv/
 ENV/
 

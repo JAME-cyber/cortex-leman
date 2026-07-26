@@ -1,37 +1,31 @@
 """
 Cortex Leman v5 — Journal Append-Only (WORM)
 
-Journal immuable, hash-chainé, horodaté.
-Source de vérité pour audit, reproductibilité et conformité AI Act.
-
-Caractéristiques:
-- Append-only: écriture seule, pas de modification ni suppression
-- Hash-chainé: chaque entrée lie vers la précédente (chaîne de confiance)
-- Horodatage UTC avec timezone
-- Persistance fichier JSON-L avec rotation
-- Vérification d'intégrité en continu
+Journal immuable, hash-chainé, horodaté et minimisé avant hachage.
 """
-import json
 import hashlib
-import os
-import uuid
+import json
 import logging
+import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
-from core.journal.models import JournalEntry, JournalEventType
-from core.journal.worm_v2 import WormEncryption, PayloadMinimizer, JournalPurger, TenantIsolation, TreatmentRegistry
 from core.config import settings
+from core.journal.models import JournalEntry, JournalEventType
+from core.journal.worm_v2 import (
+    JournalPurger,
+    PayloadMinimizer,
+    TenantIsolation,
+    TreatmentRegistry,
+    WormEncryption,
+)
 
 logger = logging.getLogger(__name__)
 
 
 class AppendOnlyJournal:
-    """
-    Journal d'audit immuable Cortex Leman.
-    Stockage JSON-L avec hash-chainage SHA-256.
-    """
+    """Journal d'audit immuable avec stockage JSON-L et hash-chainage SHA-256."""
 
     def __init__(
         self,
@@ -46,71 +40,81 @@ class AppendOnlyJournal:
         self._last_hash = "GENESIS"
         self._current_file = None
 
-        # v2 — Conformité RGPD (audit o3)
         self._encryption = WormEncryption()
         self._minimize = settings.journal_minimize_payload
-        self._purger = JournalPurger(self._path, settings.journal_retention_months)
+        self._purger = JournalPurger(
+            self._path,
+            settings.journal_retention_months,
+        )
 
-        # Créer le répertoire
         self._path.mkdir(parents=True, exist_ok=True)
-
-        # Charger l'état depuis le dernier fichier
         self._load_state()
 
     def _load_state(self) -> None:
-        """Charger la séquence et le dernier hash depuis le journal existant"""
+        """Charger la séquence et le dernier hash depuis le journal existant."""
         journal_files = sorted(self._path.glob("journal-*.jsonl"))
         if not journal_files:
             logger.info("Journal vierge — démarrage depuis GENESIS")
             return
 
-        last_file = journal_files[-1]
         last_entry = None
-        with open(last_file, "r") as f:
-            for line in f:
+        with open(journal_files[-1], "r", encoding="utf-8") as file:
+            for line in file:
                 line = line.strip()
                 if not line:
                     continue
-
-                # v2 — Déchiffrer si nécessaire
                 raw_line = line
                 if self._encryption.enabled:
                     try:
                         raw_line = self._encryption.decrypt(line)
                     except ValueError:
-                        raw_line = line  # Fallback entrées non chiffrées
-
+                        pass
                 last_entry = json.loads(raw_line)
 
         if last_entry:
             self._sequence = last_entry.get("sequence", 0)
             self._last_hash = last_entry.get("entry_hash", "GENESIS")
-            logger.info(f"Journal chargé: seq={self._sequence}, last_hash={self._last_hash[:16]}...")
+            logger.info(
+                "Journal chargé: seq=%s, last_hash=%s...",
+                self._sequence,
+                self._last_hash[:16],
+            )
 
     def _get_current_file_path(self) -> Path:
-        """Fichier journal courant (un par jour)"""
         today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         return self._path / f"journal-{today}.jsonl"
 
-    def _compute_hash(self, entry_data: dict, previous_hash: str = None) -> str:
-        """Calculer le hash d'une entrée (contenu + previous_hash)"""
-        prev = previous_hash or self._last_hash
+    def _compute_hash(
+        self,
+        entry_data: dict,
+        previous_hash: Optional[str] = None,
+    ) -> str:
+        """Calculer le hash d'une entrée et de son hash précédent."""
+        previous = previous_hash if previous_hash is not None else self._last_hash
         content = json.dumps(entry_data, sort_keys=True, ensure_ascii=False)
-        content_with_prev = f"{content}|{prev}"
         return hashlib.new(
             self._hash_algo,
-            content_with_prev.encode("utf-8")
+            f"{content}|{previous}".encode("utf-8"),
         ).hexdigest()
 
     def _sign_entry(self, entry_data: dict) -> str:
-        """Signer l'entrée avec la clé de signature (HMAC-SHA256)"""
+        """Signer l'entrée avec la clé de signature HMAC-SHA256."""
         import hmac
+
         content = json.dumps(entry_data, sort_keys=True, ensure_ascii=False)
         return hmac.new(
             self._signing_key.encode(),
-            content.encode(),
-            hashlib.sha256
+            content.encode("utf-8"),
+            hashlib.sha256,
         ).hexdigest()
+
+    def _decrypt_line(self, line: str) -> str:
+        if not self._encryption.enabled:
+            return line
+        try:
+            return self._encryption.decrypt(line)
+        except ValueError:
+            return line
 
     def append(
         self,
@@ -121,19 +125,15 @@ class AppendOnlyJournal:
         intention_id: str,
         payload: dict = None,
     ) -> JournalEntry:
-        """
-        Ajouter une entrée au journal. Immuabilité garantie.
-        
-        Returns:
-            JournalEntry: L'entrée créée (immuable)
-        Raises:
-            RuntimeError: Si l'écriture échoue (journal corrompu)
-        """
+        """Ajouter une entrée, en minimisant le payload avant de le hacher."""
         self._sequence += 1
+        previous_hash = self._last_hash
 
-        prev_hash = self._last_hash
+        # La minimisation doit précéder la création et le hachage de l'entrée.
+        minimized_payload = payload or {}
+        if self._minimize and minimized_payload:
+            minimized_payload = PayloadMinimizer.minimize(minimized_payload)
 
-        # Créer d'abord l'entrée sans hash
         entry = JournalEntry(
             entry_id=str(uuid.uuid4()),
             sequence=self._sequence,
@@ -143,126 +143,211 @@ class AppendOnlyJournal:
             vertical=vertical,
             agent_source=agent_source,
             intention_id=intention_id,
-            payload=payload or {},
-            previous_hash=prev_hash,
+            payload=minimized_payload,
+            previous_hash=previous_hash,
         )
 
-        # Calculer le hash à partir de la sérialisation exacte de l'entrée
         entry_data = json.loads(entry.model_dump_json())
-        # Retirer entry_hash et signature (pas encore calculés)
         entry_data.pop("entry_hash", None)
         entry_data.pop("signature", None)
-        content = json.dumps(entry_data, sort_keys=True, ensure_ascii=False)
-        entry_hash = hashlib.new(
-            self._hash_algo,
-            f"{content}|{prev_hash}".encode("utf-8")
-        ).hexdigest()
-
+        entry_hash = self._compute_hash(entry_data, previous_hash)
         signature = self._sign_entry({**entry_data, "entry_hash": entry_hash})
+        entry = entry.model_copy(
+            update={"entry_hash": entry_hash, "signature": signature}
+        )
 
-        # Mettre à jour l'entrée avec le hash et la signature
-        entry = entry.model_copy(update={
-            "entry_hash": entry_hash,
-            "signature": signature,
-        })
-
-        # v2 — Minimisation du payload (RGPD art. 5-1c)
-        # Le hash est déjà calculé sur les données COMPLÈTES.
-        # La minimisation ne s'applique qu'au stockage au repos.
-        stored_entry = entry
-        if self._minimize and entry.payload:
-            minimized_payload = PayloadMinimizer.minimize(entry.payload)
-            stored_entry = entry.model_copy(update={"payload": minimized_payload})
-
-        # v2 — Sérialisation
-        line_data = stored_entry.model_dump_json() + "\n"
-
-        # v2 — Chiffrement au repos (AES-256)
+        line_data = entry.model_dump_json()
         if self._encryption.enabled:
-            line_data = self._encryption.encrypt(line_data.strip()) + "\n"
-
-        # Écriture append-only
-        file_path = self._get_current_file_path()
+            line_data = self._encryption.encrypt(line_data)
+        line_data += "\n"
 
         try:
-            with open(file_path, "a") as f:
-                f.write(line_data)
-        except IOError as e:
-            self._sequence -= 1  # Rollback in-memory state
-            logger.critical(f"Écriture journal ÉCHOUÉE: {e}")
-            raise RuntimeError(f"Journal write failed: {e}") from e
+            with open(self._get_current_file_path(), "a", encoding="utf-8") as file:
+                file.write(line_data)
+        except IOError as error:
+            self._sequence -= 1
+            logger.critical("Écriture journal ÉCHOUÉE: %s", error)
+            raise RuntimeError(f"Journal write failed: {error}") from error
 
-        # Mettre à jour la chaîne
         self._last_hash = entry_hash
-        logger.debug(f"Journal #{self._sequence}: {event_type.value} intent={intention_id}")
-
+        logger.debug(
+            "Journal #%s: %s intent=%s",
+            self._sequence,
+            event_type.value,
+            intention_id,
+        )
         return entry
 
     def verify_integrity(self, file_path: Optional[Path] = None) -> dict:
-        """
-        Vérifier l'intégrité de la chaîne de hachage.
-        
-        Returns:
-            dict avec valid=True/False et détails
-        """
+        """Vérifier l'intégrité des entrées et de leur chaîne de hachage."""
         files_to_check = (
-            [file_path] if file_path else sorted(self._path.glob("journal-*.jsonl"))
+            [Path(file_path)]
+            if file_path
+            else sorted(self._path.glob("journal-*.jsonl"))
         )
-
-        prev_hash = "GENESIS"
+        previous_hash = "GENESIS"
         total_entries = 0
         errors = []
 
-        for jf in files_to_check:
-            with open(jf, "r") as f:
-                for line_num, line in enumerate(f, 1):
+        for journal_file in files_to_check:
+            with open(journal_file, "r", encoding="utf-8") as file:
+                for line_number, line in enumerate(file, 1):
                     line = line.strip()
                     if not line:
                         continue
-
                     try:
-                        # v2 — Déchiffrer si nécessaire
-                        raw_line = line
-                        if self._encryption.enabled:
-                            try:
-                                raw_line = self._encryption.decrypt(line)
-                            except ValueError:
-                                # Fallback: ligne non chiffrée (anciennes entrées)
-                                raw_line = line
-
-                        entry = json.loads(raw_line)
+                        entry = json.loads(self._decrypt_line(line))
                         total_entries += 1
 
-                        # Vérifier le chaînage
-                        if entry.get("previous_hash") != prev_hash:
+                        stored_previous = entry.get("previous_hash")
+                        if stored_previous != previous_hash:
                             errors.append(
-                                f"Chaîne brisée à {jf.name}:{line_num} "
-                                f"(expected {prev_hash[:16]}... got {entry.get('previous_hash', '')[:16]}...)"
+                                f"Chaîne brisée à {journal_file.name}:{line_number} "
+                                f"(expected {previous_hash[:16]}... got "
+                                f"{str(stored_previous or '')[:16]}...)"
                             )
 
-                        # Recalculer le hash
-                        verify_data = {k: v for k, v in entry.items() if k not in ("entry_hash", "signature")}
-                        expected_hash = hashlib.new(
-                            self._hash_algo,
-                            (json.dumps(verify_data, sort_keys=True, ensure_ascii=False) + "|" + entry.get("previous_hash", "GENESIS")).encode()
-                        ).hexdigest()
-
+                        verify_data = {
+                            key: value
+                            for key, value in entry.items()
+                            if key not in ("entry_hash", "signature")
+                        }
+                        expected_hash = self._compute_hash(
+                            verify_data,
+                            stored_previous or "GENESIS",
+                        )
                         if entry.get("entry_hash") != expected_hash:
                             errors.append(
-                                f"Hash invalide à {jf.name}:{line_num}"
+                                f"Hash invalide à {journal_file.name}:{line_number}"
                             )
 
-                        prev_hash = entry.get("entry_hash", prev_hash)
-
-                    except (json.JSONDecodeError, KeyError) as e:
-                        errors.append(f"Entrée corrompue {jf.name}:{line_num}: {e}")
+                        previous_hash = entry.get("entry_hash", previous_hash)
+                    except (json.JSONDecodeError, KeyError, TypeError) as error:
+                        errors.append(
+                            f"Entrée corrompue {journal_file.name}:{line_number}: {error}"
+                        )
 
         return {
-            "valid": len(errors) == 0,
+            "valid": not errors,
             "total_entries": total_entries,
             "errors": errors,
-            "last_hash": prev_hash,
+            "last_hash": previous_hash,
         }
+
+    def repair_integrity(self, file_path: Optional[Path] = None) -> dict:
+        """Réparer les hashes invalides et propager la réparation dans la chaîne.
+
+        Les fichiers sont réécrits uniquement lorsqu'une entrée doit être réparée.
+        Les signatures sont recalculées pour les entrées modifiées.
+        """
+        files_to_repair = (
+            [Path(file_path)]
+            if file_path
+            else sorted(self._path.glob("journal-*.jsonl"))
+        )
+        previous_hash = "GENESIS"
+        repaired_entries = 0
+        errors = []
+
+        for journal_file in files_to_repair:
+            entries = []
+            changed = False
+            try:
+                with open(journal_file, "r", encoding="utf-8") as file:
+                    for line_number, line in enumerate(file, 1):
+                        line = line.strip()
+                        if not line:
+                            continue
+                        try:
+                            entries.append(json.loads(self._decrypt_line(line)))
+                        except (json.JSONDecodeError, TypeError) as error:
+                            errors.append(
+                                f"Entrée corrompue {journal_file.name}:{line_number}: {error}"
+                            )
+            except OSError as error:
+                errors.append(f"Lecture impossible {journal_file}: {error}")
+                continue
+
+            repaired_output = []
+            for entry in entries:
+                original = dict(entry)
+                if entry.get("previous_hash") != previous_hash:
+                    entry["previous_hash"] = previous_hash
+
+                verify_data = {
+                    key: value
+                    for key, value in entry.items()
+                    if key not in ("entry_hash", "signature")
+                }
+                expected_hash = self._compute_hash(verify_data, previous_hash)
+                if entry.get("entry_hash") != expected_hash:
+                    entry["entry_hash"] = expected_hash
+
+                if entry != original:
+                    repaired_entries += 1
+                    changed = True
+                    logger.warning(
+                        "Réparation d'intégrité: %s sequence=%s",
+                        journal_file.name,
+                        entry.get("sequence"),
+                    )
+
+                # Toute modification de l'entrée signée impose une nouvelle signature.
+                if entry != original or not entry.get("signature"):
+                    sign_data = {
+                        key: value
+                        for key, value in entry.items()
+                        if key != "signature"
+                    }
+                    entry["signature"] = self._sign_entry(sign_data)
+                    changed = True
+
+                previous_hash = entry.get("entry_hash", previous_hash)
+                repaired_output.append(entry)
+
+            if changed:
+                temporary_path = journal_file.with_suffix(journal_file.suffix + ".repair")
+                try:
+                    with open(temporary_path, "w", encoding="utf-8") as file:
+                        for entry in repaired_output:
+                            serialized = json.dumps(
+                                entry,
+                                ensure_ascii=False,
+                                separators=(",", ":"),
+                            )
+                            if self._encryption.enabled:
+                                serialized = self._encryption.encrypt(serialized)
+                            file.write(serialized + "\n")
+                    temporary_path.replace(journal_file)
+                except OSError as error:
+                    errors.append(f"Écriture impossible {journal_file}: {error}")
+
+        if files_to_repair and not errors:
+            self._sequence = max(
+                (entry.get("sequence", 0) for journal_file in files_to_repair
+                 for entry in self._read_entries(journal_file)),
+                default=self._sequence,
+            )
+            self._last_hash = previous_hash
+
+        logger.info("Réparation d'intégrité terminée: %s entrée(s)", repaired_entries)
+        return {
+            "valid": not errors,
+            "repaired_entries": repaired_entries,
+            "errors": errors,
+            "last_hash": previous_hash,
+        }
+
+    def _read_entries(self, journal_file: Path) -> list[dict]:
+        entries = []
+        if not journal_file.exists():
+            return entries
+        with open(journal_file, "r", encoding="utf-8") as file:
+            for line in file:
+                line = line.strip()
+                if line:
+                    entries.append(json.loads(self._decrypt_line(line)))
+        return entries
 
     def query(
         self,
@@ -271,52 +356,26 @@ class AppendOnlyJournal:
         client_id: Optional[str] = None,
         limit: int = 100,
     ) -> list[dict]:
-        """Requêter le journal (lecture seule)"""
+        """Requêter le journal en lecture seule."""
         results = []
-
-        for jf in sorted(self._path.glob("journal-*.jsonl")):
-            with open(jf, "r") as f:
-                for line in f:
-                    line = line.strip()
-                    if not line:
-                        continue
-
-                    # v2 — Déchiffrer si nécessaire
-                    raw_line = line
-                    if self._encryption.enabled:
-                        try:
-                            raw_line = self._encryption.decrypt(line)
-                        except ValueError:
-                            raw_line = line  # Fallback anciennes entrées
-
-                    entry = json.loads(raw_line)
-
-                    # Filtres
-                    if intention_id and entry.get("intention_id") != intention_id:
-                        continue
-                    if event_type and entry.get("event_type") != event_type.value:
-                        continue
-                    if client_id and entry.get("client_id") != client_id:
-                        continue
-
-                    results.append(entry)
-
+        for journal_file in sorted(self._path.glob("journal-*.jsonl")):
+            for entry in self._read_entries(journal_file):
+                if intention_id and entry.get("intention_id") != intention_id:
+                    continue
+                if event_type and entry.get("event_type") != event_type.value:
+                    continue
+                if client_id and entry.get("client_id") != client_id:
+                    continue
+                results.append(entry)
         return results[-limit:]
 
-    # ============================================================
-    # v2 — Méthodes RGPD complémentaires
-    # ============================================================
-
     def purge_expired(self, dry_run: bool = True) -> dict:
-        """Purger les fichiers de journal expirés (RGPD art. 5-1e)"""
         return self._purger.purge_expired(dry_run=dry_run)
 
     def get_treatment_registry(self) -> dict:
-        """Registre des traitements RGPD art. 30"""
         return TreatmentRegistry.get_registry()
 
     def get_legal_basis_matrix(self) -> list[dict]:
-        """Matrice base légale par traitement (RGPD art. 6)"""
         return TreatmentRegistry.get_legal_basis_matrix()
 
     def query_tenant(
@@ -326,7 +385,6 @@ class AppendOnlyJournal:
         event_type: Optional[JournalEventType] = None,
         limit: int = 100,
     ) -> list[dict]:
-        """Requêter le journal pour un tenant spécifique (isolation RGPD)"""
         entries = self.query(
             intention_id=intention_id,
             event_type=event_type,
@@ -337,11 +395,13 @@ class AppendOnlyJournal:
 
     @property
     def encryption_status(self) -> dict:
-        """Statut du chiffrement v2"""
         return {
             "enabled": self._encryption.enabled,
             "algorithm": "AES-256 (Fernet)" if self._encryption.enabled else "none",
-            "key_derivation": "PBKDF2-SHA256 (480k iterations)" if self._encryption.enabled else "n/a",
+            "key_derivation": (
+                "PBKDF2-SHA256 (480k iterations)"
+                if self._encryption.enabled else "n/a"
+            ),
         }
 
     @property
@@ -353,5 +413,4 @@ class AppendOnlyJournal:
         return self._sequence
 
 
-# Singleton
 journal = AppendOnlyJournal()
