@@ -17,12 +17,12 @@ start.sh
 Dockerfile
 nginx.conf
 
-# Docs (not needed for static deploy)
-DEPLOYMENT-READY.md
-FORMSPREE-SETUP.md
-FORMULAIRE-CONFIG.md
-FORMULAIRE-README.md
-README.md
+# Sensitive data
+sankofa/config/commenters_db.json
+*.secret
+*.key
+client_secret*.json
+broadcast.goauth
 
 # Backend (not needed for static deploy)
 backend/
