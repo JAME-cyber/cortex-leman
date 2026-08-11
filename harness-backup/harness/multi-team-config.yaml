@@ -1,0 +1,122 @@
+orchestrator:
+  name: cortex-harness
+  system_prompt: ~/.hermes/agent-harness/orchestrator/SYSTEM.md
+  till_done_path: ~/.hermes/agent-harness/orchestrator/TILL_DONE.md
+  default_model: glm-5-reasoning
+  max_workers: 9
+  policies:
+    no_direct_write: true
+    leads_only_delegation: true
+    validators_required: true
+    autonomy_policy: ~/.hermes/agent-harness/policies/autonomy.yaml
+  skill: ~/.hermes/skills/agent-harness/multi-team-orchestrator/SKILL.md
+leads:
+- id: lead-orchestration
+  file: ~/.hermes/agent-harness/leads/orchestration.md
+  allowed_workers:
+  - architecte-lemanique
+  - ingenieur-de-flux
+  - narrateur-augmente
+- id: lead-marketing
+  file: ~/.hermes/agent-harness/leads/marketing.md
+  allowed_workers:
+  - narrateur-augmente
+- id: lead-service-client
+  file: ~/.hermes/agent-harness/leads/service-client.md
+  allowed_workers:
+  - gardien-des-normes
+  - narrateur-augmente
+- id: lead-securite
+  file: ~/.hermes/agent-harness/leads/securite.md
+  allowed_workers:
+  - gardien-des-normes
+  - oeil-de-cortex
+- id: lead-production
+  file: ~/.hermes/agent-harness/leads/production.md
+  allowed_workers:
+  - ingenieur-de-flux
+  - architecte-lemanique
+workers:
+- id: architecte-lemanique
+  skill: ~/.hermes/skills/cortex-leman/l-architecte-lemanique/SKILL.md
+  model: glm-5-reasoning
+  domain: strategy
+- id: ingenieur-de-flux
+  skill: ~/.hermes/skills/cortex-leman/l-ingenieur-de-flux/SKILL.md
+  model: glm-5-coding
+  domain: devops
+- id: narrateur-augmente
+  skill: ~/.hermes/skills/cortex-leman/le-narrateur-augmente/SKILL.md
+  model: glm-5-multimodal
+  domain: design
+- id: gardien-des-normes
+  skill: ~/.hermes/skills/cortex-leman/le-gardien-des-normes/SKILL.md
+  model: glm-5-reasoning
+  domain: compliance
+- id: oeil-de-cortex
+  skill: ~/.hermes/skills/cortex-leman/l-oeil-de-cortex/SKILL.md
+  model: glm-5-vision
+  domain: monitoring
+validators:
+  soft:
+    file: ~/.hermes/agent-harness/validators/soft.md
+    trigger: after-team-deliverables
+  hard:
+    file: ~/.hermes/agent-harness/validators/hard.md
+    trigger: before-delivery
+workflows:
+  generate_ui:
+    prompt: ~/.hermes/agent-harness/workflows/generate_ui/PROMPT.md
+    till_done: ~/.hermes/agent-harness/workflows/generate_ui/TILL_DONE.md
+    teams:
+    - name: team-a
+      lead: lead-production
+      workers:
+      - architecte-lemanique
+      - ingenieur-de-flux
+    - name: team-b
+      lead: lead-marketing
+      workers:
+      - narrateur-augmente
+    - name: team-c
+      lead: lead-production
+      workers:
+      - ingenieur-de-flux
+  mairie_report:
+    prompt: ~/.hermes/agent-harness/workflows/mairie_report/PROMPT.md
+    till_done: ~/.hermes/agent-harness/workflows/mairie_report/TILL_DONE.md
+    teams:
+    - name: research
+      lead: lead-service-client
+      workers:
+      - gardien-des-normes
+      - architecte-lemanique
+    - name: delivery
+      lead: lead-marketing
+      workers:
+      - narrateur-augmente
+  cortex_leman_audit:
+    prompt: ~/.hermes/agent-harness/workflows/cortex_leman_audit/PROMPT.md
+    till_done: ~/.hermes/agent-harness/workflows/cortex_leman_audit/TILL_DONE.md
+    teams:
+    - name: security
+      lead: lead-securite
+      workers:
+      - gardien-des-normes
+    - name: research
+      lead: lead-service-client
+      workers:
+      - oeil-de-cortex
+    - name: analysis
+      lead: lead-production
+      workers:
+      - ingenieur-de-flux
+    - name: documentation
+      lead: lead-marketing
+      workers:
+      - narrateur-augmente
+validators_required: true
+context_files:
+- /home/tars/.hermes/agent-harness/orchestrator/SYSTEM.md
+- /home/tars/.hermes/agent-harness/multi-team-config.yaml
+- /home/tars/.hermes/agent-harness/policies/autonomy.yaml

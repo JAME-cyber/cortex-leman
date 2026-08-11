@@ -1,0 +1,12 @@
+default:
+  leads:
+    team-a: lead-production
+    team-b: lead-marketing
+    team-c: lead-production
+  validators:
+    - soft
+    - hard
+  models:
+    team-a: glm-5-reasoning
+    team-b: glm-5-multimodal
+    team-c: glm-5-coding

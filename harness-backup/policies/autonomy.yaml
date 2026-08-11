@@ -1,0 +1,173 @@
+version: '1.0'
+last_updated: '2026-06-13'
+global:
+  auto_approved:
+  - description: Lecture de fichiers, logs, configs
+    scope: local
+    reversible: true
+  - description: Recherche dans le codebase (grep, find, rg)
+    scope: local
+    reversible: true
+  - description: Exécution de tests existants (pytest, npm test, lint)
+    scope: local
+    reversible: true
+  - description: Création de fichiers temporaires et livrables
+    scope: local
+    reversible: true
+  - description: Mise à jour de TILL_DONE dans un workflow actif
+    scope: workflow
+    reversible: true
+  - description: Redémarrage de services locaux (gateway Hermes, dev servers)
+    scope: local
+    reversible: true
+  - description: Commit + push sur branches de dev (feature/*, fix/*, workflow/*)
+    scope: repo
+    reversible: true
+  - description: Installation de dépendances Python/Node (pip install, npm install)
+    scope: local
+    reversible: true
+  - description: Scraping de pages web publiques (avec scrapling/youtube-dl)
+    scope: network
+    reversible: true
+  escalation_required:
+  - description: Merge sur main/master/release
+    scope: repo
+    reason: irreversible
+    risk: high
+  - description: Déploiement en staging ou production
+    scope: infra
+    reason: impact_externe
+    risk: critical
+  - description: Modification de secrets, tokens, auth.json, .env
+    scope: security
+    reason: donnees_sensibles
+    risk: critical
+  - description: Envoi de messages sur canaux externes (email, Slack, Telegram, X)
+    scope: external
+    reason: impact_externe
+    risk: high
+  - description: Suppression de bases de données, tables, ou logs de production
+    scope: data
+    reason: irreversible
+    risk: critical
+  - description: Suppression de fichiers/dossiers hors du working dir du workflow
+    scope: system
+    reason: irreversible
+    risk: critical
+  - description: Commandes shell destructives (rm -rf récursif, dd, mkfs, shred, truncate --size=0)
+    scope: system
+    reason: irreversible
+    risk: critical
+  - description: Modification de configs Tailscale, nginx, firewall, permissions
+    scope: infra
+    reason: securite
+    risk: high
+  - description: Exécution en sudo ou avec privilèges élevés
+    scope: system
+    reason: securite
+    risk: high
+  - description: Actions engageant des coûts (API payantes, cloud, achats)
+    scope: financial
+    reason: couts
+    risk: high
+  - description: Publication sur un store (npm, PyPI, App Store, Play Store)
+    scope: external
+    reason: impact_externe
+    risk: critical
+  - description: git push --force, rebase public, amend publié
+    scope: repo
+    reason: irreversible
+    risk: high
+  - description: Modification de configs Hermes globales (config.yaml, multi-team-config)
+    scope: system
+    reason: multi_projet
+    risk: high
+roles:
+  orchestrator:
+    auto_approved:
+    - Déléguer aux leads (delegate)
+    - Mettre à jour TILL_DONE global
+    - Déclencher validators soft/hard
+    - Passer d'une phase à une autre dans le workflow
+    - Documenter les décisions dans les logs
+    - Relancer un worker en échec (même workflow, même params)
+    - Redistribuer une tâche entre workers du même lead
+    escalation_required:
+    - Changer le modèle assigné à un worker
+    - Modifier la structure d'équipe (ajout/suppression de lead/worker)
+    - Annuler un workflow en cours sans livraison
+    - Modifier les variables de workflow après lancement
+    - Escalader vers Tars (propriétaire)
+  lead:
+    auto_approved:
+    - Déléguer aux workers autorisés dans la config
+    - Demander des corrections sur un livrable (retour soft)
+    - Mettre à jour TILL_DONE de son workflow
+    - Documenter les blocages dans les logs
+    - Réassigner une sous-tâche entre workers de son équipe
+    escalation_required:
+    - Déléguer à un worker hors de sa liste autorisée
+    - Contourner un validator (même temporairement)
+    - Modifier les fichiers d'un autre lead
+    - Intervenir directement sur un livrable (au lieu de passer par un worker)
+  worker:
+    auto_approved:
+    - Exécuter son skill dans le cadre de la délégation reçue
+    - Créer/modifier les fichiers de son livrable
+    - Lancer les tests liés à son livrable
+    - Lire les fichiers de contexte du projet
+    escalation_required:
+    - Sortir du cadre de sa délégation initiale
+    - Modifier des fichiers en dehors de son scope de travail
+    - Installer des dépendances non listées dans le projet
+  validator:
+    auto_approved:
+    - Exécuter les checklists soft/hard
+    - Produire le rapport de validation
+    - Demander des corrections (retour KO)
+    - Marquer un livrable comme validé (OK)
+    escalation_required:
+    - Bloquer un workflow (hard block)
+    - Modifier directement un livrable pour le corriger
+escalation_to_owner:
+  triggers:
+  - Aucun lead/worker ne peut résoudre le blocage
+  - Risque sécurité détecté (fail validator hard)
+  - Conflit entre deux leads ou équipes
+  - Décision budgétaire ou coûteuse
+  - Aucune progression après 30 min sur un workflow actif
+  - Modification de la politique d'autonomie elle-même
+  format: "⚠️ ESCALADE vers Tars\n──────────────────────\nRôle : {role}\nWorkflow\
+    \ : {workflow}\nProblème : {problem}\nImpact : {impact}\nOptions proposées :\n\
+    \  (a) {option_a}\n  (b) {option_b}\nEn attente de confirmation explicite.\n"
+watchdog:
+  max_idle_time_minutes: 30
+  check_interval_minutes: 5
+  action_on_timeout: Pause + notification à Tars via log + proposition de next step
+  action_on_validator_hard_fail: Blocage workflow + escalation immédiate à Tars
+  action_on_loop_detection: Détection de 3+ tentatives identiques → pause + escalation
+  escalation_timeout_minutes: 120
+  escalation_timeout_action: Abort l'action en cours + logger l'escalade comme 'timeout_owner_absent'
+    + notifier Tars via Telegram (si dispo) + proposer de reprendre à la prochaine
+    session
+destructive_ops:
+  hard_rules:
+  - JAMAIS de rm -rf (ou équivalent) hors du working dir courant
+  - JAMAIS supprimer un fichier que l'agent n'a pas créé lui-même dans la session
+  - Toute suppression récursive nécessite escalade, même dans le working dir
+  - Backup obligatoire avant modification/suppression de fichiers existants
+  - "Les commandes suivantes sont TOUJOURS escalation_required: rm -rf, dd, mkfs,
+    shred, truncate -s 0, redirection > sur fichier existant non-créé dans la session"
+  safe_harbor:
+  - Suppression de fichiers temporaires créés par l'agent dans la même session (<1h)
+  - git clean -fd sur branches de dev locales
+  - Fichiers /tmp créés par l'agent lui-même
+timeout_owner_absent:
+  trigger: Escalade lancée vers Tars sans réponse après 120 minutes
+  rules:
+  - Ne pas rester bloqué indéfiniment
+  - Abort l'action en cours
+  - Logger la situation dans le run log
+  - Marquer le workflow en 'paused_owner_timeout'
+  - 'Si canal Telegram dispo : envoyer notification de timeout'
+  - Ne pas relancer automatiquement — attendre session suivante

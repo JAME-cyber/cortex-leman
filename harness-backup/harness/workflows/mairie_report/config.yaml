@@ -1,0 +1,10 @@
+default:
+  leads:
+    research: lead-service-client
+    delivery: lead-marketing
+  validators:
+    - soft
+    - hard
+  models:
+    research: glm-5-reasoning
+    delivery: glm-5-multimodal

@@ -1,0 +1,14 @@
+default:
+  leads:
+    discovery: lead-service-client
+    data: lead-production
+    compliance: lead-securite
+    delivery: lead-marketing
+  validators:
+    - soft
+    - hard
+  models:
+    discovery: glm-5-reasoning
+    data: glm-5-coding
+    compliance: glm-5-reasoning
+    delivery: glm-5-multimodal

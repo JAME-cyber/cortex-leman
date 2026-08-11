@@ -1,0 +1,12 @@
+# Vault key names that need to be restored manually
+# Use: python3 ~/.hermes/vault/vault.py set <KEY> <VALUE>
+
+NAME                                LENGTH
+--------------------------------------------------
+CF_ACCOUNT_ID                       32 chars
+CF_DEPLOY_HOOK                      36 chars
+CF_PROJECT                          15 chars
+CF_TOKEN                            53 chars
+GH_JAME_TOKEN                       40 chars
+GH_PAT_KOUSSEK                      40 chars
+INFOMANIAK_USER                     22 chars
