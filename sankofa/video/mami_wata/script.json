@@ -1,0 +1,53 @@
+{
+  "title": "Mami Wata — L'esprit des eaux qui traverse l'Afrique depuis cinq siècles",
+  "format": "9:16 vertical short",
+  "target_duration": "75-90s",
+  "voice": "fr-FR-HenriNeural (pitch -5%)",
+  "beats": [
+    {
+      "id": "01_hook",
+      "slide": "hook",
+      "text": "Un pêcheur jette son dernier filet dans l'eau noire du fleuve. La corde se tend. Mais ce n'est pas un poisson. C'est une femme. Mi-femme, mi-poisson."
+    },
+    {
+      "id": "02_revelation",
+      "slide": "revelation",
+      "text": "Cheveux longs, regard de jade, peau qui scintille. Elle émerge de l'eau et sourit. Elle lui offre ce qu'aucun filet n'a jamais ramené. La richesse."
+    },
+    {
+      "id": "03_identity",
+      "slide": "identity",
+      "text": "Son nom : Mami Wata. La Mère de l'Eau. Esprit vénéré dans plus de vingt pays d'Afrique, du Nigeria au Congo, du Bénin à l'Angola. Un mythe vieux de cinq siècles."
+    },
+    {
+      "id": "04_pacte",
+      "slide": "pacte",
+      "text": "Mais le don a un prix. Mami Wata exige la fidélité. La discrétion. Et son compagnon, le serpent python, veille. Celui qui trahit le pacte perd tout."
+    },
+    {
+      "id": "05_origine",
+      "slide": "origine",
+      "text": "D'où vient ce mythe ? Les chercheurs, comme Henry John Drewal, font remonter son origine au quinzième siècle, quand les marins portugais apportèrent l'image de la sirène sur les côtes africaines."
+    },
+    {
+      "id": "06_greffe",
+      "slide": "greffe",
+      "text": "Mais l'image n'est pas venue seule. Elle s'est greffée sur des croyances bien plus anciennes. Les esprits de l'eau existaient depuis toujours dans les spiritualités africaines."
+    },
+    {
+      "id": "07_diaspora",
+      "slide": "diaspora",
+      "text": "La traite atlantique l'emporte de l'autre côté de l'océan. En Haïti on l'appelle Lasirèn. À la Trinité, Maman Dlo. Au Suriname, Watra-mama. Toujours la même femme. Toujours l'eau."
+    },
+    {
+      "id": "08_vivant",
+      "slide": "vivant",
+      "text": "Aujourd'hui, le culte est vivant. On lui offre des miroirs, des parfums, des couleurs vives. Déesse de la richesse et de la fertilité. La Smithsonian lui a consacré une exposition entière."
+    },
+    {
+      "id": "09_cta",
+      "slide": "cta",
+      "text": "Sankofa. Retourne la chercher. Abonne-toi."
+    }
+  ]
+}

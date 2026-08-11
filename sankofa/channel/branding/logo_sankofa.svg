@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <!-- Sankofa logo concept - geometric modern bird with egg -->
+  <!-- Background circle -->
+  <circle cx="200" cy="200" r="190" fill="#1A1A1A" stroke="#E8A33D" stroke-width="3"/>
+  
+  <!-- Sankofa bird (geometric, stylized) -->
+  <!-- Body: forward-pointing -->
+  <path d="M 280 200 
+           Q 290 180 280 160
+           Q 260 140 230 145
+           Q 200 150 170 165
+           Q 150 175 145 195
+           Q 145 210 155 220
+           Q 175 235 200 235
+           Q 230 235 255 225
+           Q 275 215 280 200 Z"
+        fill="#E8A33D"/>
+  
+  <!-- Head: turned backward -->
+  <circle cx="165" cy="170" r="28" fill="#E8A33D"/>
+  
+  <!-- Beak: backward-pointing, holding egg -->
+  <path d="M 138 168
+           L 110 155
+           L 110 170
+           L 135 178 Z"
+        fill="#E8A33D"/>
+  
+  <!-- Eye -->
+  <circle cx="160" cy="168" r="3.5" fill="#1A1A1A"/>
+  
+  <!-- Egg in beak -->
+  <ellipse cx="108" cy="162" rx="11" ry="13" fill="#F4E8D0" stroke="#E8A33D" stroke-width="1.5"/>
+  
+  <!-- Tail feathers -->
+  <path d="M 275 195
+           L 310 185
+           L 315 200
+           L 310 215
+           L 275 210 Z"
+        fill="#B5522E"/>
+  
+  <!-- Legs -->
+  <line x1="195" y1="235" x2="190" y2="265" stroke="#E8A33D" stroke-width="3" stroke-linecap="round"/>
+  <line x1="215" y1="235" x2="210" y2="265" stroke="#E8A33D" stroke-width="3" stroke-linecap="round"/>
+  
+  <!-- Feet -->
+  <path d="M 185 265 L 195 265 M 190 265 L 190 270" stroke="#E8A33D" stroke-width="2" stroke-linecap="round"/>
+  <path d="M 205 265 L 215 265 M 210 265 L 210 270" stroke="#E8A33D" stroke-width="2" stroke-linecap="round"/>
+  
+  <!-- Decorative Adinkra-style pattern dots -->
+  <circle cx="330" cy="200" r="4" fill="#E8A33D" opacity="0.6"/>
+  <circle cx="340" cy="190" r="3" fill="#E8A33D" opacity="0.5"/>
+  <circle cx="340" cy="210" r="3" fill="#E8A33D" opacity="0.5"/>
+</svg>

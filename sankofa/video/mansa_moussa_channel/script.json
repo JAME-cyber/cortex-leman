@@ -1,0 +1,55 @@
+{
+  "title": "Mansa Moussa a-t-il VRAIMENT fait chuter le prix de l'or ?",
+  "format": "MYTHE OU ARCHIVE ? — 9:16 vertical short",
+  "franchise": "MYTHE OU ARCHIVE ?",
+  "target_duration": "60-70s",
+  "voice": "fr-FR-HenriNeural (pitch -5%)",
+  "labels": ["ARCHIVE", "TRADITION ORALE", "RECONSTITUTION IA"],
+  "beats": [
+    {
+      "id": "01_hook",
+      "slide": "hook",
+      "text": "En 1324, un roi africain aurait fait chuter le prix de l'or au Caire. Son nom ? Mansa Moussa, empereur du Mali."
+    },
+    {
+      "id": "02_promise",
+      "slide": "promise",
+      "text": "Mais ce que les sources racontent sur lui est plus intéressant que la légende."
+    },
+    {
+      "id": "03_context",
+      "slide": "context",
+      "text": "Le Mali du quatorzième siècle produit la moitié de l'or du monde connu. Mansa Moussa contrôle les routes commerciales, les taxes, et un territoire grand comme l'Europe de l'Ouest."
+    },
+    {
+      "id": "04_pelerinage",
+      "slide": "pelerinage",
+      "text": "Cette année-là, il part en pèlerinage vers La Mecque. Soixante mille personnes l'accompagnent. Des milliers de chameaux chargés d'or."
+    },
+    {
+      "id": "05_caire",
+      "slide": "caire",
+      "text": "En passant par le Caire, il distribue tant d'or que sa valeur s'effondre. Les marchands ruinés, l'économie bouleversée pendant des années."
+    },
+    {
+      "id": "06_renversement",
+      "slide": "renversement",
+      "text": "Mais d'où vient cette histoire ? D'un chroniqueur. Al-Umari, qui écrit au Caire douze ans après les faits."
+    },
+    {
+      "id": "07_nuance",
+      "slide": "nuance",
+      "text": "Al-Umari rapporte ce qu'on lui a raconté. Le chiffre de quatre cents milliards de dollars ? Une reconstruction moderne. Aucune archive ne le confirme."
+    },
+    {
+      "id": "08_verdict",
+      "slide": "verdict",
+      "text": "Donc : l'empereur le plus riche de son époque, certainement. L'homme le plus riche de l'histoire ? Ça, c'est une autre histoire."
+    },
+    {
+      "id": "09_cta",
+      "slide": "cta",
+      "text": "Abonne-toi pour la suite. Demain : comment son pèlerinage a transformé l'image du Mali."
+    }
+  ]
+}

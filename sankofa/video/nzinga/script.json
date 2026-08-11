@@ -1,0 +1,53 @@
+{
+  "title": "Nzinga — La reine qui a vaincu l'Empire portugais pendant 40 ans",
+  "format": "9:16 vertical short",
+  "target_duration": "75-90s",
+  "voice": "fr-FR-HenriNeural (pitch -5%)",
+  "beats": [
+    {
+      "id": "01_hook",
+      "slide": "hook",
+      "text": "En 1626, un gouverneur portugais invite une reine africaine à négocier. Pour l'humilier, il la fait asseoir par terre, sur un tapis. Lui, il est sur un trône."
+    },
+    {
+      "id": "02_hook_revelation",
+      "slide": "hook",
+      "text": "La reine ne dit rien. Elle fait agenouiller une servante. Et s'assoit sur son dos. Désormais, elle regarde le gouverneur d'en haut."
+    },
+    {
+      "id": "03_identity",
+      "slide": "identity",
+      "text": "Son nom : Nzinga. Reine du Ndongo et du Matamba. L'actuelle Angola. Née en 1583. Morte en 1663. Elle a tenu tête à l'Empire portugais pendant quarante ans."
+    },
+    {
+      "id": "04_context",
+      "slide": "context",
+      "text": "Les Portugais voulaient l'or, les esclaves et le territoire. Nzinga avait appris leur langue. Leur diplomatie. Et la guerre. Son père l'avait formée comme un prince."
+    },
+    {
+      "id": "05_strategy",
+      "slide": "imbangala",
+      "text": "Quand les Portugais ont rompu les traités, elle a fait ce que personne n'attendait. Elle s'est alliée aux Imbangala — des guerriers redoutés, mercenaires des Portugais. Et elle les a retournés contre eux."
+    },
+    {
+      "id": "06_40ans",
+      "slide": "timeline",
+      "text": "Pendant quarante ans, elle a mené une guerre d'usure. Attaques éclair. Raids. Espionnage. Elle a joué les Néerlandais contre les Portugais. Elle a conquis le royaume voisin de Matamba pour en faire sa base arrière."
+    },
+    {
+      "id": "07_victory",
+      "slide": "victory",
+      "text": "En 1657, à 74 ans, elle signe un traité en position de force. Elle obtient la libération de sa sœur. Et le respect."
+    },
+    {
+      "id": "08_legacy",
+      "slide": "statue",
+      "text": "Aujourd'hui, Nzinga est une héroïne nationale en Angola. Sa statue domine la baie de Luanda. Dans les archives portugaises, on lit cette phrase : tant que Nzinga vivait, le Portugal n'a jamais été en sécurité."
+    },
+    {
+      "id": "09_cta",
+      "slide": "cta",
+      "text": "Sankofa. Retourne la chercher. Abonne-toi."
+    }
+  ]
+}

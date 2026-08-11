@@ -1,0 +1,58 @@
+{
+  "title": "Abla Pokou — La reine qui sacrifia son fils pour fonder un peuple",
+  "format": "9:16 vertical short",
+  "target_duration": "75-110s",
+  "voice": "fr-FR-HenriNeural (pitch -5%)",
+  "beats": [
+    {
+      "id": "01_hook",
+      "slide": "hook",
+      "text": "Une femme se tient au bord d'une rivière en crue. Derrière elle, tout un peuple. Devant elle, l'eau, infranchissable. Et derrière le peuple, les poursuivants se rapprochent. Elle regarde son fils unique. Elle le soulève dans ses bras."
+    },
+    {
+      "id": "02_riviere",
+      "slide": "riviere",
+      "text": "Elle le donne au fleuve. Et l'eau, dit-on, se calma. Le peuple traversa."
+    },
+    {
+      "id": "03_identity",
+      "slide": "identity",
+      "text": "Son nom : Abla Pokou. Reine du peuple akan, au dix-huitième siècle, dans la région que les Européens appellent la Côte de l'Or — l'actuel Ghana."
+    },
+    {
+      "id": "04_context",
+      "slide": "context",
+      "text": "La Confédération ashanti est en pleine expansion. Ses armées avancent. Ses voisins tombent un à un. Le groupe d'Abla Pokou refuse la domination. Et quand la pression devient insoutenable, elle prend sa décision : partir. Mener son peuple vers l'ouest."
+    },
+    {
+      "id": "05_marche",
+      "slide": "marche",
+      "text": "Ce n'est pas une princesse qui fuit seule. C'est une reine qui dirige. Des familles, des guerriers, des anciens, du bétail. Des centaines de kilomètres à travers la brousse et les forêts denses. Pendant des semaines, peut-être des mois."
+    },
+    {
+      "id": "06_comoe",
+      "slide": "comoe",
+      "text": "Ils arrivent au bord d'un cours d'eau que la tradition identifie comme la rivière Comoé, qui traverse aujourd'hui la Côte d'Ivoire. La rivière est en crue. Le passage est mortel. Derrière eux, les poursuivants ne sont plus loin."
+    },
+    {
+      "id": "07_sacrifice",
+      "slide": "sacrifice",
+      "text": "Les devins sont consultés. La tradition raconte que l'eau réclame un prix. Le plus précieux. Abla Pokou prend son fils unique dans ses bras. La tradition ne dit pas exactement comment. Mais l'enfant est donné. Le sacrifice est fait."
+    },
+    {
+      "id": "08_baouli",
+      "slide": "baouli",
+      "text": "Sur l'autre rive, debout sur la berge, elle prononce deux mots : Ba-ouli. L'enfant est mort. De ces deux mots naîtra le nom de tout un peuple. Les Baoulé. Les enfants de ce sacrifice."
+    },
+    {
+      "id": "09_heritage",
+      "slide": "heritage",
+      "text": "Aujourd'hui, les Baoulé sont l'un des groupes les plus nombreux de Côte d'Ivoire. Plusieurs millions de personnes. Leur orfèvrerie, leur tissage, leur sculpture sont des piliers du patrimoine ivoirien. Et chaque génération connaît le nom d'Abla Pokou."
+    },
+    {
+      "id": "10_cta",
+      "slide": "cta",
+      "text": "Sankofa. Retourne la chercher. Abonne-toi."
+    }
+  ]
+}
