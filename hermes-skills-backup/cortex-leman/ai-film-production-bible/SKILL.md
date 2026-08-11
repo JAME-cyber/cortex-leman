@@ -6,7 +6,8 @@ description: "Use when making AI videos. Higgsfield production bible."
 # AI Film Production Bible
 
 Source : Higgsfield "Cully Hill Boys" brief — feature film généré à 100% en AI.
-$1M de R&D, 137 plans, 600 assets, 473K générations. Scales down to team of one.
+$2M de R&D, 137 plans, 600 assets, 473K générations. 100% open-source (prompts + assets publics).
+Scales down to team of one. tweet: x.com/i/status/2086868445543707065
 
 ## 1. CHARACTER SHEETS (Assets)
 
@@ -108,7 +109,11 @@ Ladder : 180° · 135° · 107° · 84° · 63° · 47° · 29° · 18° · 12°
 
 - Pas un asset : un set de conditions écrites (register, timbre, tempo, accent)
 - **Collé verbatim** dans chaque prompt — JAMAIS changer un synonyme
+- Changer le wording élargit ce que le modèle sample → dérive vocale
 - 1 clip = 1 locuteur, 1 ligne courte
+- **Speech count lock** : verrouiller le nombre EXACT de mots parlés dans le plan.
+  Sans lock, le modèle ajoute des mumbles ou des lignes dans une autre langue.
+  Exemple : "SPEECH COUNT LOCK: exactly ONE line — \"Pull it, Oli.\" at ~6.0s"
 
 ## 8. LOOK & COULEUR
 
@@ -128,6 +133,13 @@ Ladder : 180° · 135° · 107° · 84° · 63° · 47° · 29° · 18° · 12°
 | Action complexe bloquée | Ouvrir le prompt par l'action déjà en cours |
 | Foule >15 personnes | Collapse en 3-5 figures → bodies pressed against stage |
 | Portes s'ouvrent seules | Lock : "every door VISIBLE stays SHUT and MOTIONLESS" |
+| Le modèle tire vers le présent | **Epoch lock** : "nothing in frame is newer than [YEAR]". Le modèle ajoute des smartphones/écrans/voitures modernes par défaut. Pour Sankofa/Baobab : "nothing newer than 1300 CE, no plastic, no metal tools, no glass windows" |
+
+### Règle d'époque (Epoch Lock) — CRITIQUE pour Sankofa/Baobab
+- L'année n'est pas déco, c'est une **hard rule**
+- Le modèle tire l'image vers "aujourd'hui" par défaut
+- Sans epoch lock : un figurant tient un iPhone dans l'Empire du Mali
+- Application : "nothing in frame is newer than [year], no smartphones, no glowing screens, no modern cars, no plastic, no synthetic fabrics"
 
 ## 10. MUSIC / LIP-SYNC
 
@@ -140,12 +152,27 @@ Ladder : 180° · 135° · 107° · 84° · 63° · 47° · 29° · 18° · 12°
 ## 11. PRODUCTION WORKFLOW
 
 - Générer en batches, changements chirurgicaux (1 ligne change, reste word-for-word)
-- Log de versioning obligatoire
+- Log de versioning obligatoire (Cully Hill Boys = 137 entrées: version, ce qui change, verdict)
 - L'edit tourne EN PARALLÈLE de la génération
 - Cuts plus agressifs que ressenti → trim 0.5s début et fin de chaque clip
 - "SFX only. No music." obligatoire dans chaque prompt
 - Post-prod : polish pass frame par frame AVANT color
 - Couleur = unification d'abord
+
+## 12. TEXT-TO-VIDEO ONLY (Hard Rule)
+
+- **Pas de starting frame, pas d'image-to-video**
+- Chaque plan naît des références + texte : les assets portent l'image, le wording porte la géométrie
+- C'est plus difficile, mais c'est ce qui rend chaque plan cohérent avec l'univers
+- L'I2V importe une image externe qui peut casser la cohérence stylistique
+
+## 13. HYBRID FALLBACK (quand l'IA échoue)
+
+- Certaines actions ne génèrent pas : combat rapproché, deux corps en contact physique, lutte pour une arme
+- Symptômes : membres fusionnés, armes qui disparaissent/réapparaissent, objets qui changent de main
+- **Solution hybride** : filmer en réel (stunt performers, b-roll) et intégrer en post
+- Pas un échec — c'est la méthode de production professionnelle ($2M film l'utilise)
+- Application Sankofa : scènes de combat (Nzinga vs Portugais, Amanirenas) → b-roll réel si Seedance échoue
 
 ## APPLICATION CORTEX LEMAN
 
@@ -154,11 +181,16 @@ Ladder : 180° · 135° · 107° · 84° · 63° · 47° · 29° · 18° · 12°
 - Character sheets = CRITIQUE (1 héros par vidéo)
 - 1 lieu par Short
 - Optics : rester en zone native 29-84°
+- **Epoch lock obligatoire** : "nothing newer than [year CE]" selon l'épisode
+- **Speech count lock** sur chaque plan avec VO
+- **Hybrid fallback** : combat rapproché → b-roll réel
 
 ### Baobab Kids (Long-form 5-10min)
 - Full 15-block skeleton applicable
 - Character consistency = priorité #1
 - Visual bible par épisode (monde = conte africain)
+- **Epoch lock critique** : contes africains = objets naturels uniquement
+- **T2V-only** : cohérence du style cartoon garanti
 
 ### Stack mapping
 | Block brief | Notre outil |
@@ -168,3 +200,4 @@ Ladder : 180° · 135° · 107° · 84° · 63° · 47° · 29° · 18° · 12°
 | Video generation | Flova (Baobab) / Higgsfield (Sankofa) |
 | Prompts | Claude via Hermes |
 | Assembly | ffmpeg |
+| Combat/stunts (fallback) | B-roll réel + post-prod |
