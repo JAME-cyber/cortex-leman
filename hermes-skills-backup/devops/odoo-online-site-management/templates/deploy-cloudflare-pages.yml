@@ -1,0 +1,29 @@
+# GitHub Actions workflow: auto-deploy to Cloudflare Pages on push to main
+#
+# Prerequisites:
+#   1. Cloudflare Pages project already created
+#   2. GitHub repo secrets set: CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID
+#   3. This file placed at .github/workflows/deploy.yml
+#      (requires PAT with `workflow` scope to push)
+#
+# To set secrets via API (no `workflow` scope needed for secrets):
+#   See SKILL.md → "GitHub Actions Auto-Deploy Setup"
+
+name: Deploy to Cloudflare Pages
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy . --project-name=REPLACE_WITH_PROJECT_NAME --branch=main

@@ -1,0 +1,108 @@
+{
+  "name": "cabinet-rh-rapport",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "cronExpression", "expression": "0 10 1 * *" }]
+        }
+      },
+      "id": "1",
+      "name": "Schedule Monthly",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:3000/api/stats/anonymisees",
+        "method": "GET",
+        "queryParameters": {
+          "parameters": [
+            { "name": "mois", "value": "={{new Date().getMonth() + 1}}" },
+            { "name": "annee", "value": "={{new Date().getFullYear()}}" }
+          ]
+        }
+      },
+      "id": "2",
+      "name": "Stats Anonymisées",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [420, 300]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "prompt": "Tu es un assistant RH. Génère un rapport mensuel d'activité à partir des statistiques anonymisées.\n\nIMPORTANT:\n- Les données sont ANONYMISÉES (pas de nom, pas de données personnelles)\n- AUCUN scoring ou classement de candidats\n- Pas de conclusion sur la qualité des candidats\n\nStatistiques: {{JSON.stringify($json.stats)}}\n\nStructure du rapport:\n1. Volume de candidatures reçues\n2. Délais moyens de traitement\n3. Nombre d'entretiens planifiés\n4. Taux de réponse aux candidats\n5. Point de vigilance si biais détecté dans les statistiques\n6. Recommandations PROCESSUS uniquement (pas de sélection)\n\nDISCLAIMER: Ce document est préparé par IA. Les décisions de recrutement sont humaines.\nDonnées anonymisées conformément au RGPD.",
+        "temperature": 0.2,
+        "maxTokens": 1500
+      },
+      "id": "3",
+      "name": "LLM Résumé RH",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [640, 300]
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/rapports/rh/{{new Date().toISOString().split('T')[0]}}-rapport-mensuel.pdf",
+        "content": "={{$json.message.content}}"
+      },
+      "id": "4",
+      "name": "Rapport PDF",
+      "type": "n8n-nodes-base.writeBinaryFile",
+      "typeVersion": 1,
+      "position": [860, 300]
+    },
+    {
+      "parameters": {
+        "fromEmail": "rapport@rh.ch",
+        "toEmail": "direction@cabinet-rh.ch",
+        "subject": "=Rapport mensuel RH - {{$json.mois}}/{{$json.annee}}",
+        "text": "={{$json.message.content}}\n\n---\nDISCLAIMER: Ce document est préparé par IA. Les décisions de recrutement sont humaines.\nDonnées anonymisées conformément au RGPD."
+      },
+      "id": "5",
+      "name": "Email Rapport",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [1080, 300]
+    }
+  ],
+  "connections": {
+    "Schedule Monthly": {
+      "main": [
+        [{ "node": "Stats Anonymisées", "type": "main", "index": 0 }]
+      ]
+    },
+    "Stats Anonymisées": {
+      "main": [
+        [{ "node": "LLM Résumé RH", "type": "main", "index": 0 }]
+      ]
+    },
+    "LLM Résumé RH": {
+      "main": [
+        [{ "node": "Rapport PDF", "type": "main", "index": 0 }]
+      ]
+    },
+    "Rapport PDF": {
+      "main": [
+        [{ "node": "Email Rapport", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "a1b2c3d4-0006-4000-8000-000000000003",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "cabinet-rh"
+  },
+  "tags": [
+    { "name": "cabinet-rh" },
+    { "name": "rapport-mensuel" },
+    { "name": "anonymise" }
+  ]
+}

@@ -1,0 +1,59 @@
+# Social Media Agent — Config Template
+# Copy this file and customize for each client deployment.
+
+global:
+  llm_model: "openai/gpt-5.6-terra"
+  llm_fallback: "openai/gpt-5.6-luna"
+  language: "fr-CH"
+  timezone: "Europe/Zurich"
+  min_post_interval_hours: 4
+  posting_hours:
+    weekday: ["08:00", "10:30", "12:15", "15:00", "17:30", "19:00"]
+    weekend: ["10:00", "14:00", "18:00"]
+  auto_reply: true
+  auto_reply_delay_minutes: 15
+  auto_reply_max_per_post: 5
+  dry_run: true                      # SAFETY: keep true until tested
+  require_approval: false
+  blocked_topics:
+    - "politique partisane"
+    - "religion"
+    - "conseils fiscaux spécifiques sans disclaimer"
+
+accounts:
+  client-name:
+    name: "[CLIENT NAME]"
+    handle: "@[HANDLE]"
+    bio: "[BIO]"
+    tone:
+      personality: "[e.g. expert accessible]"
+      voice: "[e.g. professionnel mais direct]"
+      forbidden: ["hashtags excessifs", "emojis exagérés"]
+      signature_phrases: ["[phrase signature 1]"]
+    platforms:
+      x:
+        enabled: true
+        post_per_day: 3
+        media_preference: "image+text"
+      linkedin:
+        enabled: false
+        post_per_day: 1
+        media_preference: "article"
+    content_pillars:
+      - theme: "expertise métier"
+        weight: 40
+        examples: ["[example topic 1]", "[example topic 2]"]
+      - theme: "preuve sociale"
+        weight: 30
+        examples: []
+      - theme: "behind the scenes"
+        weight: 20
+        examples: []
+      - theme: "actualités secteur"
+        weight: 10
+        examples: []
+
+scheduler:
+  generate_cron: "0 */6 * * *"
+  engagement_cron: "*/30 * * * *"
+  analytics_cron: "0 9 * * 1"

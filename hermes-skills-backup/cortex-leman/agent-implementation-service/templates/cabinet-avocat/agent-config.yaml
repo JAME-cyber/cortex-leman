@@ -1,0 +1,375 @@
+# ============================================================
+# CORTEX LEMAN AGENT SQUAD TEMPLATE v4.0
+# Vertical : Cabinet d'Avocats
+# Modèle  : Agent Squad (3 spécialistes + orchestrateur)
+# Risque  : HIGH (AI Act Annexe III — données juridiques sensibles)
+# Residency : CH obligatoire (secret professionnel Art. 321 CP)
+# Chiffrement : AES-256 au repos, PGP pour emails
+# ============================================================
+
+# ----------------------------------------------------------
+# SQUAD : 3 agents spécialisés
+# ----------------------------------------------------------
+squad:
+  name: "cabinet-avocat"
+  vertical: "cabinet-avocat"
+  version: "4.0.0"
+
+  agents:
+    # --- Agent 1 : Tri & Routage ---
+    - id: "dossier-assist"
+      role: "Tri & Routage"
+      system_prompt: |
+        Tu es l'agent de tri du cabinet d'avocats. Tu classifies les documents par dossier/client,
+        indexes les pièces, et assures l'isolation stricte entre dossiers.
+        SECRET PROFESSIONNEL Art. 321 CP : tu ne croises JAMAIS les données entre dossiers.
+        RÈGLES STRICTES :
+        - Classifier le document par dossier et type (conclusion, pièces, correspondance)
+        - JAMAais accès au contenu d'un dossier autre que celui du document courant
+        - Indexer avec métadonnées minimales (type, date, dossier_id)
+        - Si classification incertaine → orienter vers l'avocat en charge
+        - Langue : français
+      autonomy_level: "low"
+      data_access:
+        - "documents_entrants"
+        - "metadata_dossiers"
+        - "index_dossier_courant"
+      data_restrictions:
+        - "jamais_acces_inter_dossiers"
+        - "jamais_divulgation_contenu_dossier"
+        - "chiffrement_aes256_obligatoire"
+        - "logs_anonymises_uniquement"
+        - "pas_cloud_hors_suisse"
+      guardrails:
+        human_decision_required:
+          - "transfert_piece_inter_dossier"
+          - "cloture_dossier"
+          - "communication_client"
+        max_requests_per_hour: 50
+        session_timeout_minutes: 30
+        content_filter: true
+        state_verification:
+          enabled: true
+          methods:
+            - "checksum_fichier_attendu"
+            - "log_confirmation_action"
+            - "verification_isolement_dossier"
+          alert_on_mismatch: true
+
+    # --- Agent 2 : Analyse & Synthèse ---
+    - id: "jurisprudence-assist"
+      role: "Analyse & Synthèse"
+      system_prompt: |
+        Tu es l'agent de recherche juridique du cabinet d'avocats. Tu recherches la jurisprudence
+        pertinente, analyses les précédents et synthétises les analyses.
+        Tu ne donnes JAMAIS de conseil juridique définitif.
+        RÈGLES STRICTES :
+        - Rechercher dans les bases BGE, JurisBase, Dalloz
+        - Citer systématiquement les références (articles, arrêts)
+        - JAMais croiser les données entre dossiers/clients
+        - Ne jamais rédiger d'acte sans validation avocat
+        - Toujours ajouter : « Analyse préliminaire, consultez votre avocat »
+        - Langue : français
+      autonomy_level: "low"
+      data_access:
+        - "bases_jurisprudence"
+        - "codes_lois_fr_ch"
+        - "dossier_courant_analyse"
+      data_restrictions:
+        - "jamais_acces_inter_dossiers"
+        - "jamais_conseil_juridique_definitif"
+        - "jamais_redaction_acte_sans_validation"
+        - "chiffrement_aes256_obligatoire"
+        - "logs_anonymises_uniquement"
+      guardrails:
+        human_decision_required:
+          - "validation_analyse_juridique"
+          - "citation_dans_conclusion"
+        max_requests_per_hour: 40
+        session_timeout_minutes: 30
+        content_filter: true
+        state_verification:
+          enabled: true
+          methods:
+            - "checksum_fichier_attendu"
+            - "log_confirmation_action"
+            - "cross_check_par_dossier_assist"
+          alert_on_mismatch: true
+
+    # --- Agent 3 : Action & Suivi ---
+    - id: "audience-assist"
+      role: "Action & Suivi"
+      system_prompt: |
+        Tu es l'agent de suivi du cabinet d'avocats. Tu gères les rappels d'audiences,
+        la préparation des conclusions et le suivi des deadlines par dossier.
+        SECRET PROFESSIONNEL : tu n'accèdes qu'aux métadonnées, jamais au contenu.
+        RÈGLES STRICTES :
+        - Rappeler les audiences et échéances par dossier
+        - Préparer les checklists de pré-audience
+        - Ne jamais accéder au contenu des conclusions sans validation
+        - Isolation stricte : jamais de rappel croisé entre dossiers
+        - Langue : français
+      autonomy_level: "low"
+      data_access:
+        - "calendrier_audiences"
+        - "echeances_dossiers"
+        - "metadata_dossiers"
+      data_restrictions:
+        - "jamais_acces_contenu_conclusions_sans_validation"
+        - "jamais_acces_inter_dossiers"
+        - "chiffrement_aes256_obligatoire"
+        - "pgp_obligatoire_emails"
+        - "logs_anonymises_uniquement"
+      guardrails:
+        human_decision_required:
+          - "envoi_rappel_client"
+          - "modification_echeance_audience"
+          - "preparation_conclusion"
+        max_requests_per_hour: 40
+        session_timeout_minutes: 30
+        content_filter: true
+        state_verification:
+          enabled: true
+          methods:
+            - "log_confirmation_envoi"
+            - "validation_supervision_humaine"
+          alert_on_mismatch: true
+
+# ----------------------------------------------------------
+# ORCHESTRATION
+# ----------------------------------------------------------
+orchestration:
+  routing: "contextual"          # Par dossier/contexte juridique
+  isolation: "strict"            # Jamais cross-dossier — secret professionnel
+  fallback: "human"             # Toujours fallback humain
+  audit_trail: true              # Traces complètes Art. 30 RGPD
+
+# ----------------------------------------------------------
+# INFRASTRUCTURE : 7 règles K8s-compatibles
+# ----------------------------------------------------------
+infrastructure:
+  current: "docker-compose"
+  k8s_compatible: true
+  migration_path: "k3s"
+  migration_trigger: "8+ clients simultanés ou 5+ agents par client"
+
+  # Règle 1 : Un container = un agent
+  containers:
+    dossier-assist:
+      image: "cortex-leman/agent:${AGENT_VERSION}"
+    jurisprudence-assist:
+      image: "cortex-leman/agent:${AGENT_VERSION}"
+    audience-assist:
+      image: "cortex-leman/agent:${AGENT_VERSION}"
+    orchestrator:
+      image: "cortex-leman/orchestrator:${AGENT_VERSION}"
+    postgres:
+      image: "postgres:16"
+
+  # Règle 2 : Configuration via environnement, pas hardcoded
+  environment:
+    - AGENT_ROLE=${AGENT_ROLE}
+    - AGENT_SQUAD=${SQUAD_NAME}
+    - LLM_PROVIDER=${LLM_PROVIDER}
+    - LLM_MODEL=${LLM_MODEL}
+    - DATA_RESIDENCY=${DATA_RESIDENCY}
+    - LOG_LEVEL=${LOG_LEVEL}
+    - GUARDRAILS_CONFIG=/config/guardrails.yaml
+    - ENCRYPTION=AES-256
+
+  # Règle 3 : Health checks obligatoires
+  healthcheck:
+    test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+    interval: "30s"
+    timeout: "10s"
+    retries: 3
+    start_period: "10s"
+
+  # Règle 4 : Resource limits par container
+  resources:
+    limits:
+      cpus: "1.0"
+      memory: "512M"
+    reservations:
+      cpus: "0.25"
+      memory: "128M"
+
+  # Règle 5 : Réseau isolé par client
+  network:
+    method: "network_per_client"
+    driver: "bridge"
+    internal: true
+    documented: true
+    auditable: true
+
+  # Règle 6 : Secrets séparés du code
+  secrets:
+    method: "docker_secrets"
+    never_in_code: true
+    never_in_git: true
+    encryption: "AES-256"
+    items:
+      - llm_api_key
+      - db_password
+      - pgp_private_key
+      - smtp_credentials
+
+  # Règle 7 : Logs structurés JSON
+  logging:
+    format: "structured_json"
+    fields:
+      - "ts"
+      - "agent"
+      - "squad"
+      - "client"
+      - "action"
+      - "result"
+      - "risk"
+      - "latency_ms"
+      - "guardrail_triggered"
+    driver: "json-file"
+    max_size: "10m"
+    max_file: 3
+    retention_days: 365           # Conservation longue — high risk
+
+  # Data residency — CH obligatoire
+  data_residency:
+    vps_location: "CH"            # Suisse OBLIGATOIRE — secret professionnel
+    provider: ""                  # À spécifier (Exoscale/Infomaniak)
+    documented: true
+    verifiable: true
+
+  # Chiffrement
+  encryption:
+    at_rest: "AES-256"
+    in_transit: "TLS 1.3"
+    email: "PGP"
+    documented: true
+
+  # Backup
+  backup:
+    method: "script_cron"
+    frequency: "daily"
+    encryption: "AES-256"
+    tested: false
+    offsite: false
+
+# ----------------------------------------------------------
+# MODÈLE (model-agnostic)
+# ----------------------------------------------------------
+model:
+  provider: "${LLM_PROVIDER}"     # openrouter, ollama, local
+  name: "${LLM_MODEL}"            # anthropic/claude-sonnet-4, gpt-4o, glm-4
+  temperature: 0.1                # Très faible — juridique exige précision
+  max_tokens: 4096
+  embedding_model: "${EMBEDDING_MODEL}"
+  data_residency: "CH"            # Suisse obligatoire
+
+# ----------------------------------------------------------
+# BASE DE CONNAISSANCES (RAG)
+# ----------------------------------------------------------
+knowledge_base:
+  sources:
+    - type: "jurisprudence"
+      description: "Base jurisprudence FR-CH"
+      references:
+        - "BGE (Bundesgerichtsentscheide)"
+        - "JurisBase FR"
+        - "Dalloz FR"
+    - type: "contracts"
+      path: "/data/dossiers/"
+      formats: ["pdf", "docx"]
+      encryption: "AES-256"
+    - type: "legislation"
+      description: "Codes lois FR-CH"
+      references:
+        - "Code civil suisse"
+        - "Code des obligations"
+        - "Code civil français"
+  chunk_size: 1024
+  overlap: 128
+  embedding_model: "${EMBEDDING_MODEL}"
+
+# ----------------------------------------------------------
+# INTÉGRATIONS
+# ----------------------------------------------------------
+integrations:
+  email:
+    enabled: true
+    provider: "imap-encrypted"
+    actions: ["classify", "flag_urgent", "summarize"]
+    encryption: "PGP"
+  documents:
+    enabled: true
+    storage: "local_encrypted_aes256"
+    ocr: true
+    watermark: "CONFIDENTIEL — [CABINET]"
+  calendar:
+    enabled: true
+    provider: "caldav"
+    actions: ["audience_rappel", "echeance_dossier"]
+  n8n:
+    enabled: true
+    workflows:
+      - name: "tri-dossiers"
+        description: "Classer les documents par dossier/client avec isolation"
+        trigger: "email_receipt"
+        template: "cabinet-avocat-tri-dossiers.json"
+      - name: "recherche-jurisprudence"
+        description: "Recherche automatique de jurisprudence pertinente"
+        trigger: "manual"
+        template: "cabinet-avocat-recherche.json"
+      - name: "rappel-audiences"
+        description: "Rappels audiences et échéances"
+        trigger: "schedule_daily"
+        template: "cabinet-avocat-rappels.json"
+
+# ----------------------------------------------------------
+# CONFORMITÉ RGPD-IA
+# ----------------------------------------------------------
+compliance:
+  ai_act_risk_level: "high"      # HIGH — données juridiques sensibles + Annexe III
+  legal_basis: "consent"
+  data_controller: "[CABINET NAME]"
+  state_verification:
+    enabled: true
+    description: "L'agent ne peut pas rapporter complétion sans preuve vérifiable (arXiv:2602.20021)"
+    methods:
+      - "checksum_fichier_attendu"
+      - "log_confirmation_action"
+      - "verification_isolement_dossier"
+      - "cross_check_par_agent_pair"
+    alert_on_mismatch: true
+  register_entry: true           # Art. 30 RGPD — toujours
+  human_oversight: true          # Toujours true par défaut
+  art22_compliant: true          # Pas de décision automatisée
+  special_notes: |
+    Secret professionnel Art. 321 CP (Suisse) prime sur le RGPD.
+    Toute infrastructure doit être hébergée en Suisse.
+    Le DPIA doit documenter les mesures de protection du secret professionnel.
+    DPIA obligatoire : high risk AI Act Annexe III.
+
+# ----------------------------------------------------------
+# MONITORING
+# ----------------------------------------------------------
+monitoring:
+  log_all_interactions: true
+  alert_on:
+    - "tentative d'accès inter-dossiers"
+    - "données privilégiées dans output"
+    - "requête hors juridiction FR-CH"
+    - "tentative d'extraction de données"
+    - "guardrail déclenché"
+  metrics:
+    - name: "requests_per_hour"
+      threshold: 50
+      action: "throttle_and_alert"
+    - name: "cross_dossier_access_attempts"
+      threshold: 0
+      action: "block_and_alert"
+    - name: "latency_p95_ms"
+      threshold: 3000
+      action: "alert"
+  weekly_report: true
+  monthly_compliance_check: true
+  quarterly_audit: true           # Plus fréquent — high risk

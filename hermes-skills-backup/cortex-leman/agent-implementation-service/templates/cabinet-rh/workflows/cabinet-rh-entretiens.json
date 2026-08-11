@@ -1,0 +1,157 @@
+{
+  "name": "cabinet-rh-entretiens",
+  "nodes": [
+    {
+      "parameters": {
+        "fields": {
+          "values": [
+            { "name": "candidat_id", "display": true },
+            { "name": "recruteur_id", "display": true },
+            { "name": "validation_humaine", "display": true }
+          ]
+        }
+      },
+      "id": "1",
+      "name": "Manual Trigger (Post-Validation)",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            { "value1": "={{$json.validation_humaine}}", "operation": "equals", "value2": "approved" }
+          ]
+        }
+      },
+      "id": "2",
+      "name": "Validation Humaine?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [420, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:3000/api/calendar/disponibilites",
+        "method": "GET",
+        "queryParameters": {
+          "parameters": [
+            { "name": "recruteur_id", "value": "={{$json.recruteur_id}}" },
+            { "name": "horizon_jours", "value": "14" }
+          ]
+        }
+      },
+      "id": "3",
+      "name": "Check Disponibilités",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [640, 200]
+    },
+    {
+      "parameters": {
+        "fromEmail": "cabinet@rh.ch",
+        "toEmail": "={{$json.candidat_email}}",
+        "subject": "Invitation à entretien - [CABINET RH]",
+        "text": "=Bonjour {{$json.candidat_prenom}},\n\nSuite à l'examen de votre candidature, nous souhaitons vous rencontrer.\n\nCréneaux proposés:\n{{#each $json.creneaux}}\n- {{this.date}} à {{this.heure}} (durée: {{this.duree}}min)\n{{/each}}\n\nMerci de nous indiquer votre préférence en répondant à cet email.\n\nCordialement,\n[RECRUTEUR]\n\n⚠️ RAPPEL INTERNE: Cette invitation est envoyée APRÈS validation humaine. L'agent ne sélectionne pas les candidats."
+      },
+      "id": "4",
+      "name": "Proposer Créneaux",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [860, 200]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:3000/api/calendar/wait-confirmation",
+        "method": "POST",
+        "body": {
+          "body": [
+            { "name": "candidat_id", "value": "={{$json.candidat_id}}" },
+            { "name": "creneaux", "value": "={{JSON.stringify($json.creneaux)}}" }
+          ]
+        }
+      },
+      "id": "5",
+      "name": "Wait Confirmation",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1080, 200]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:3000/api/calendar/create-event",
+        "method": "POST",
+        "body": {
+          "body": [
+            { "name": "title", "value": "=Entretien - {{$json.candidat_nom}}" },
+            { "name": "date", "value": "={{$json.confirmed_date}}" },
+            { "name": "heure", "value": "={{$json.confirmed_heure}}" },
+            { "name": "duration", "value": "45" },
+            { "name": "attendees", "value": "=[\"{{$json.candidat_email}}\",\"{{$json.recruteur_email}}\"]" }
+          ]
+        }
+      },
+      "id": "6",
+      "name": "Calendar Invite",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1300, 200]
+    },
+    {
+      "parameters": {
+        "fromEmail": "cabinet@rh.ch",
+        "toEmail": "recruteur@cabinet-rh.ch",
+        "subject": "=⚠️ Demande d'entretien sans validation humaine",
+        "text": "=Une demande de planification d'entretien a été initiée pour le candidat {{$json.candidat_id}} SANS validation humaine préalable.\n\nCeci est bloqué par les guardrails RH. Veuillez d'abord valider la candidature avant de planifier un entretien."
+      },
+      "id": "7",
+      "name": "Alert Pas de Validation",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [640, 400]
+    }
+  ],
+  "connections": {
+    "Manual Trigger (Post-Validation)": {
+      "main": [
+        [{ "node": "Validation Humaine?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Validation Humaine?": {
+      "main": [
+        [{ "node": "Check Disponibilités", "type": "main", "index": 0 }],
+        [{ "node": "Alert Pas de Validation", "type": "main", "index": 0 }]
+      ]
+    },
+    "Check Disponibilités": {
+      "main": [
+        [{ "node": "Proposer Créneaux", "type": "main", "index": 0 }]
+      ]
+    },
+    "Proposer Créneaux": {
+      "main": [
+        [{ "node": "Wait Confirmation", "type": "main", "index": 0 }]
+      ]
+    },
+    "Wait Confirmation": {
+      "main": [
+        [{ "node": "Calendar Invite", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "a1b2c3d4-0006-4000-8000-000000000002",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "cabinet-rh"
+  },
+  "tags": [
+    { "name": "cabinet-rh" },
+    { "name": "entretiens" },
+    { "name": "validation-humaine" }
+  ]
+}

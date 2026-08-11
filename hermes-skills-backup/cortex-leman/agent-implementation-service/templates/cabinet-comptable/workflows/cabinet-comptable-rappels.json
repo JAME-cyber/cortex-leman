@@ -1,0 +1,158 @@
+{
+  "name": "cabinet-comptable-rappels",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "cronExpression", "expression": "0 8 * * *" }]
+        }
+      },
+      "id": "1",
+      "name": "Schedule Daily 8h",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:3000/api/echeances-fiscales",
+        "method": "GET",
+        "queryParameters": {
+          "parameters": [
+            { "name": "date", "value": "={{new Date().toISOString().split('T')[0]}}" },
+            { "name": "jours_avant", "value": "7" }
+          ]
+        }
+      },
+      "id": "2",
+      "name": "Check Echeances Fiscales",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [420, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            { "value1": "={{$json.echeances.length}}", "operation": "largerThan", "value2": 0 }
+          ]
+        }
+      },
+      "id": "3",
+      "name": "Echeances Existent",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [640, 300]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "prompt": "Génère un message de rappel professionnel pour les échéances fiscales suivantes. Le message doit être concis, en français, et mentionner la date limite.\n\nEchéances: {{JSON.stringify($json.echeances)}}\n\nFormat: rappel personnalisé par type (TVA, impôt, cotisations).",
+        "temperature": 0.2,
+        "maxTokens": 500
+      },
+      "id": "4",
+      "name": "LLM Message Rappel",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [860, 200]
+    },
+    {
+      "parameters": {
+        "fromEmail": "rappels@cabinet-comptable.ch",
+        "toEmail": "={{$json.client_email}}",
+        "subject": "=Rappel: échéance fiscale {{$json.type}} - {{$json.date_limite}}",
+        "text": "={{$json.message_rappel}}"
+      },
+      "id": "5",
+      "name": "Email Rappel",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [1100, 150]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:3000/api/sms/send",
+        "method": "POST",
+        "body": {
+          "body": [
+            { "name": "to", "value": "={{$json.client_phone}}" },
+            { "name": "message", "value": "={{$json.message_rappel}}" }
+          ]
+        }
+      },
+      "id": "6",
+      "name": "SMS Rappel",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1100, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            { "name": "log_action", "value": "=rappel_envoye" },
+            { "name": "log_date", "value": "={{new Date().toISOString()}}" },
+            { "name": "log_type", "value": "={{$json.type}}" },
+            { "name": "log_client", "value": "={{$json.client_id}}" }
+          ]
+        }
+      },
+      "id": "7",
+      "name": "Log Rappel",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [1340, 200]
+    }
+  ],
+  "connections": {
+    "Schedule Daily 8h": {
+      "main": [
+        [{ "node": "Check Echeances Fiscales", "type": "main", "index": 0 }]
+      ]
+    },
+    "Check Echeances Fiscales": {
+      "main": [
+        [{ "node": "Echeances Existent", "type": "main", "index": 0 }]
+      ]
+    },
+    "Echeances Existent": {
+      "main": [
+        [{ "node": "LLM Message Rappel", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "LLM Message Rappel": {
+      "main": [
+        [
+          { "node": "Email Rappel", "type": "main", "index": 0 },
+          { "node": "SMS Rappel", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Email Rappel": {
+      "main": [
+        [{ "node": "Log Rappel", "type": "main", "index": 0 }]
+      ]
+    },
+    "SMS Rappel": {
+      "main": [
+        [{ "node": "Log Rappel", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "a1b2c3d4-0001-4000-8000-000000000002",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "cabinet-comptable"
+  },
+  "tags": [
+    { "name": "cabinet-comptable" },
+    { "name": "rappels-echeances" },
+    { "name": "schedule" }
+  ]
+}

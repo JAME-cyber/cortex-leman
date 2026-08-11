@@ -1,0 +1,133 @@
+{
+  "name": "banque-finance-aml",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "/webhook/aml-transaction-flag",
+        "httpMethod": "POST",
+        "responseMode": "lastNode"
+      },
+      "id": "1",
+      "name": "Webhook Transaction Flag",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "prompt": "Tu es un analyste anti-blanchiment (AML) pour une banque suisse. Analyse la transaction suivante pour détecter les signaux de blanchiment d'argent.\n\nTransaction: {{JSON.stringify($json.body)}}\n\nAnalyse selon les critères FINMA/LBA:\n1. Montant inhabituel vs profil client\n2. Fréquence anormale de transactions\n3. Pays à risque (FATF grey/black list)\n4. Pattern de structuring/smurfing\n5. Incohérence avec l'activité déclarée\n6. Liens avec PEP ou personnes sous sanctions\n\nAttribue un score de risque de 0 à 100.\n\nRéponds en JSON:\n{\n  \"score_blanchiment\": number,\n  \"signaux_detectes\": [...],\n  \"niveau_risque\": \"faible|moyen|élevé|critique\",\n  \"recommandation\": \"surveiller|signaler|bloquer\",\n  \"justification\": \"...\"\n}\n\nIMPORTANT: Tu es un assistant d'analyse. La décision SAR finale revient au compliance officer.",
+        "temperature": 0.1,
+        "maxTokens": 2000,
+        "options": {
+          "responseFormat": "json_object"
+        }
+      },
+      "id": "2",
+      "name": "LLM Analyse Risque",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [420, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            { "value1": "={{JSON.parse($json.message.content).score_blanchiment}}", "operation": "largerThan", "value2": 70 }
+          ]
+        }
+      },
+      "id": "3",
+      "name": "Score > Seuil?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [640, 300]
+    },
+    {
+      "parameters": {
+        "fromEmail": "aml@banque.ch",
+        "toEmail": "compliance-officer@banque.ch",
+        "subject": "=🚨 SAR ALERT - Score {{$json.score_blanchiment}} - Transaction {{$json.transaction_id}}",
+        "text": "=ALERTE ANTI-BLANCHIMENT (SAR)\n\nTransaction ID: {{$json.transaction_id}}\nScore de risque: {{$json.score_blanchiment}}/100\nNiveau: {{$json.niveau_risque}}\n\nSignaux détectés:\n{{JSON.stringify($json.signaux_detectes)}}\n\nRecommandation: {{$json.recommandation}}\nJustification: {{$json.justification}}\n\n⚠️ DÉCISION SAR REQUISE PAR LE COMPLIANCE OFFICER\n\nCe message est confidentiel (Art. 47 LB - Secret bancaire). Toute divulgation est interdite."
+      },
+      "id": "4",
+      "name": "SAR Alert",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [860, 200]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:3000/api/aml/log-transaction",
+        "method": "POST",
+        "body": {
+          "body": [
+            { "name": "transaction_id", "value": "={{$json.transaction_id}}" },
+            { "name": "score", "value": "={{JSON.parse($json.message.content).score_blanchiment}}" },
+            { "name": "niveau_risque", "value": "={{JSON.parse($json.message.content).niveau_risque}}" },
+            { "name": "sar_filed", "value": "={{JSON.parse($json.message.content).score_blanchiment > 70}}" }
+          ]
+        }
+      },
+      "id": "5",
+      "name": "Log AML",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [860, 400]
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/compliance/aml/{{new Date().toISOString().split('T')[0]}}-{{$json.transaction_id}}.json",
+        "content": "={{JSON.stringify($json)}}"
+      },
+      "id": "6",
+      "name": "Archive AML",
+      "type": "n8n-nodes-base.writeBinaryFile",
+      "typeVersion": 1,
+      "position": [1080, 300]
+    }
+  ],
+  "connections": {
+    "Webhook Transaction Flag": {
+      "main": [
+        [{ "node": "LLM Analyse Risque", "type": "main", "index": 0 }]
+      ]
+    },
+    "LLM Analyse Risque": {
+      "main": [
+        [{ "node": "Score > Seuil?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Score > Seuil?": {
+      "main": [
+        [{ "node": "SAR Alert", "type": "main", "index": 0 }],
+        [{ "node": "Log AML", "type": "main", "index": 0 }]
+      ]
+    },
+    "SAR Alert": {
+      "main": [
+        [{ "node": "Archive AML", "type": "main", "index": 0 }]
+      ]
+    },
+    "Log AML": {
+      "main": [
+        [{ "node": "Archive AML", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "a1b2c3d4-0004-4000-8000-000000000002",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "banque-finance"
+  },
+  "tags": [
+    { "name": "banque-finance" },
+    { "name": "aml" },
+    { "name": "anti-blanchiment" }
+  ]
+}

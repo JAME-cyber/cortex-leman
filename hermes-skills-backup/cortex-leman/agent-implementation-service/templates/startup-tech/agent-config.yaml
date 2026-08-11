@@ -1,0 +1,353 @@
+# ============================================================
+# CORTEX LEMAN AGENT SQUAD TEMPLATE v4.0
+# Vertical : Startup Tech / SaaS
+# Modèle  : Agent Squad (3 spécialistes + orchestrateur)
+# Risque  : Limited (AI Act)
+# Residency : UE acceptable (données techniques, pas santé/finance)
+# Actions bloquées : deploy_production, billing_changes
+# ============================================================
+
+# ----------------------------------------------------------
+# SQUAD : 3 agents spécialisés
+# ----------------------------------------------------------
+squad:
+  name: "startup-tech"
+  vertical: "startup-tech"
+  version: "4.0.0"
+
+  agents:
+    # --- Agent 1 : Tri & Routage ---
+    - id: "triage-assist"
+      role: "Tri & Routage"
+      system_prompt: |
+        Tu es l'agent de triage technique de la startup. Tu classifies les bugs,
+        catégorises les tickets et routes vers l'équipe compétente.
+        Tu ne déploies JAMAIS en production et ne modifies JAMAIS la facturation.
+        RÈGLES :
+        - Classifier les bugs par sévérité (P0-P3)
+        - Router les tickets vers l'équipe compétente (backend, frontend, infra)
+        - Masquer automatiquement les secrets (API keys, tokens, credentials)
+        - Documenter toute action dans le ticket correspondant
+        - Rediriger les questions de facturation vers le compte
+        - Langue : français / anglais
+      autonomy_level: "low"
+      data_access:
+        - "tickets_support"
+        - "metadata_tickets"
+        - "documentation_technique"
+      data_restrictions:
+        - "masquage_secrets_api_keys_obligatoire"
+        - "jamais_acces_donnees_production_directes"
+        - "jamais_dans_logs_secrets"
+        - "anonymisation_donnees_clients_rapports"
+      guardrails:
+        human_decision_required:
+          - "escalade_P0"
+          - "modification_priorite_ticket"
+        max_requests_per_hour: 500
+        session_timeout_minutes: 60
+        content_filter: true
+        state_verification:
+          enabled: true
+          methods:
+            - "checksum_fichier_attendu"
+            - "log_confirmation_action"
+          alert_on_mismatch: true
+
+    # --- Agent 2 : Analyse & Synthèse ---
+    - id: "deploy-assist"
+      role: "Analyse & Synthèse"
+      system_prompt: |
+        Tu es l'agent de déploiement de la startup. Tu prépares les checklists
+        pré-déploiement, vérifies les prérequis de staging et documentes les procédures.
+        Tu ne déploies JAMAIS en production et ne modifies JAMAIS la facturation.
+        RÈGLES :
+        - Préparer les checklists de pré-déploiement
+        - Vérifier les prérequis sur l'environnement de staging
+        - Suggérer des correctifs (jamais les appliquer directement)
+        - blocked_actions : deploy_production, billing_changes, delete_data
+        - Langue : français / anglais
+      autonomy_level: "low"
+      data_access:
+        - "checklists_deploy"
+        - "status_staging"
+        - "config_environnements"
+      data_restrictions:
+        - "jamais_deploy_production"
+        - "jamais_modification_billing"
+        - "jamais_suppression_donnees"
+        - "masquage_secrets_obligatoire"
+        - "lecture_seule_config_prod"
+      guardrails:
+        human_decision_required:
+          - "validation_pre_deploy"
+          - "acces_config_production"
+        max_requests_per_hour: 200
+        session_timeout_minutes: 60
+        content_filter: true
+        state_verification:
+          enabled: true
+          methods:
+            - "checksum_fichier_attendu"
+            - "log_confirmation_action"
+            - "verification_lecture_seule"
+          alert_on_mismatch: true
+
+    # --- Agent 3 : Action & Suivi ---
+    - id: "standup-assist"
+      role: "Action & Suivi"
+      system_prompt: |
+        Tu es l'agent de suivi de la startup. Tu synthétises les standups quotidiens,
+        suis les métriques sprint et génères les rapports d'équipe.
+        Tu n'exécutes JAMAIS d'actions sur les systèmes de production.
+        RÈGLES :
+        - Synthétiser les standups quotidiens
+        - Suivre les métriques du sprint (vélocité, burndown)
+        - Générer les rapports d'équipe
+        - Masquer les secrets dans toutes les réponses
+        - Langue : français / anglais
+      autonomy_level: "low"
+      data_access:
+        - "metriques_sprint"
+        - "notes_standup"
+        - "rapports_equipe"
+      data_restrictions:
+        - "jamais_action_production"
+        - "masquage_secrets_obligatoire"
+        - "jamais_donnees_clients_dans_rapports"
+        - "retention_logs_max_90_jours"
+      guardrails:
+        human_decision_required:
+          - "partage_rapport_externe"
+          - "modification_metriques_sprint"
+        max_requests_per_hour: 300
+        session_timeout_minutes: 60
+        content_filter: true
+        state_verification:
+          enabled: true
+          methods:
+            - "log_confirmation_action"
+            - "validation_supervision_humaine"
+          alert_on_mismatch: true
+
+# ----------------------------------------------------------
+# ORCHESTRATION
+# ----------------------------------------------------------
+orchestration:
+  routing: "contextual"          # Par type de tâche (support, deploy, sprint)
+  isolation: "strict"            # Pas de cross-contexte client
+  fallback: "human"             # Toujours fallback humain
+  audit_trail: true              # Traces complètes
+
+# ----------------------------------------------------------
+# INFRASTRUCTURE : 7 règles K8s-compatibles
+# ----------------------------------------------------------
+infrastructure:
+  current: "docker-compose"
+  k8s_compatible: true
+  migration_path: "k3s"
+  migration_trigger: "8+ clients simultanés ou 5+ agents par client"
+
+  # Règle 1 : Un container = un agent
+  containers:
+    triage-assist:
+      image: "cortex-leman/agent:${AGENT_VERSION}"
+    deploy-assist:
+      image: "cortex-leman/agent:${AGENT_VERSION}"
+    standup-assist:
+      image: "cortex-leman/agent:${AGENT_VERSION}"
+    orchestrator:
+      image: "cortex-leman/orchestrator:${AGENT_VERSION}"
+    postgres:
+      image: "postgres:16"
+
+  # Règle 2 : Configuration via environnement, pas hardcoded
+  environment:
+    - AGENT_ROLE=${AGENT_ROLE}
+    - AGENT_SQUAD=${SQUAD_NAME}
+    - LLM_PROVIDER=${LLM_PROVIDER}
+    - LLM_MODEL=${LLM_MODEL}
+    - DATA_RESIDENCY=${DATA_RESIDENCY}
+    - LOG_LEVEL=${LOG_LEVEL}
+    - GUARDRAILS_CONFIG=/config/guardrails.yaml
+    - BLOCKED_ACTIONS=deploy_production,billing_changes,delete_data
+
+  # Règle 3 : Health checks obligatoires
+  healthcheck:
+    test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+    interval: "30s"
+    timeout: "10s"
+    retries: 3
+    start_period: "10s"
+
+  # Règle 4 : Resource limits par container
+  resources:
+    limits:
+      cpus: "1.0"
+      memory: "512M"
+    reservations:
+      cpus: "0.25"
+      memory: "128M"
+
+  # Règle 5 : Réseau isolé par client
+  network:
+    method: "network_per_client"
+    driver: "bridge"
+    internal: true
+    documented: true
+    auditable: true
+
+  # Règle 6 : Secrets séparés du code
+  secrets:
+    method: "docker_secrets"
+    never_in_code: true
+    never_in_git: true
+    items:
+      - llm_api_key
+      - db_password
+      - github_token
+      - slack_webhook
+
+  # Règle 7 : Logs structurés JSON
+  logging:
+    format: "structured_json"
+    fields:
+      - "ts"
+      - "agent"
+      - "squad"
+      - "client"
+      - "action"
+      - "result"
+      - "risk"
+      - "latency_ms"
+      - "guardrail_triggered"
+    driver: "json-file"
+    max_size: "10m"
+    max_file: 3
+    retention_days: 90
+
+  # Data residency
+  data_residency:
+    vps_location: "EU"            # UE acceptable pour tech
+    provider: ""                  # À spécifier par client
+    documented: true
+    verifiable: true
+
+  # Backup
+  backup:
+    method: "script_cron"
+    frequency: "daily"
+    tested: false
+    offsite: false
+
+# ----------------------------------------------------------
+# MODÈLE (model-agnostic)
+# ----------------------------------------------------------
+model:
+  provider: "${LLM_PROVIDER}"     # openrouter, ollama, local
+  name: "${LLM_MODEL}"            # anthropic/claude-sonnet-4, gpt-4o, glm-4
+  temperature: 0.3                # Plus souple — tech
+  max_tokens: 4096
+  embedding_model: "${EMBEDDING_MODEL}"
+  data_residency: "${DATA_RESIDENCY}"
+
+# ----------------------------------------------------------
+# BASE DE CONNAISSANCES (RAG)
+# ----------------------------------------------------------
+knowledge_base:
+  sources:
+    - type: "documentation"
+      path: "/data/docs/"
+      formats: ["md", "rst", "html"]
+    - type: "codebase"
+      path: "/data/repo/"
+      formats: ["py", "js", "ts"]
+      indexing: "tree-sitter"
+    - type: "tickets"
+      description: "Tickets support historiques"
+      path: "/data/tickets/"
+  chunk_size: 1024
+  overlap: 128
+  embedding_model: "${EMBEDDING_MODEL}"
+
+# ----------------------------------------------------------
+# INTÉGRATIONS
+# ----------------------------------------------------------
+integrations:
+  github:
+    enabled: true
+    actions: ["read_issues", "create_pr", "comment"]
+  slack:
+    enabled: true
+    actions: ["notify", "triage", "summarize"]
+  monitoring:
+    enabled: true
+    provider: "grafana"
+    actions: ["alert_interpretation", "status_summary"]
+  n8n:
+    enabled: true
+    workflows:
+      - name: "triage-support"
+        description: "Triage automatique des tickets support"
+        trigger: "github_issue"
+        template: "startup-tech-triage.json"
+      - name: "deploy-checklist"
+        description: "Checklist pré-déploiement"
+        trigger: "manual"
+        template: "startup-tech-deploy.json"
+      - name: "standup-summary"
+        description: "Résumé quotidien pour standup"
+        trigger: "schedule_daily"
+        template: "startup-tech-standup.json"
+
+# ----------------------------------------------------------
+# CONFORMITÉ RGPD-IA
+# ----------------------------------------------------------
+compliance:
+  ai_act_risk_level: "limited"   # Limited — données techniques
+  legal_basis: "legitimate_interest"
+  data_controller: "[STARTUP NAME]"
+  state_verification:
+    enabled: true
+    description: "L'agent ne peut pas rapporter complétion sans preuve vérifiable (arXiv:2602.20021)"
+    methods:
+      - "checksum_fichier_attendu"
+      - "log_confirmation_action"
+      - "cross_check_par_agent_pair"
+    alert_on_mismatch: true
+  register_entry: true           # Art. 30 RGPD — toujours
+  human_oversight: true          # Toujours true par défaut
+  art22_compliant: true
+  special_notes: |
+    Si la startup utilise l'IA dans son produit SaaS :
+    - Vérifier si le produit est high-risk AI Act
+    - Si oui : obligations Annexe III complètes
+    - Documentation technique du modèle utilisé
+    - Transparency obligation envers les utilisateurs
+    Masquage des secrets/API keys obligatoire dans toutes les réponses.
+
+# ----------------------------------------------------------
+# MONITORING
+# ----------------------------------------------------------
+monitoring:
+  log_all_interactions: true
+  alert_on:
+    - "secret détecté dans output"
+    - "action bloquée tentée (deploy_production, billing_changes, delete_data)"
+    - "erreur technique critique"
+    - "guardrail déclenché"
+  metrics:
+    - name: "secrets_leaked"
+      threshold: 0
+      action: "block_and_alert_immediately"
+    - name: "blocked_actions_attempted"
+      threshold: 0
+      action: "alert"
+    - name: "requests_per_hour"
+      threshold: 500
+      action: "throttle"
+    - name: "latency_p95_ms"
+      threshold: 2000
+      action: "alert"
+  weekly_report: true
+  monthly_compliance_check: true

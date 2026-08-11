@@ -1,0 +1,111 @@
+{
+  "name": "cabinet-avocat-recherche",
+  "nodes": [
+    {
+      "parameters": {
+        "fields": {
+          "values": [
+            { "name": "query", "display": true }
+          ]
+        }
+      },
+      "id": "1",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:3000/api/rag/jurisprudence/search",
+        "method": "POST",
+        "body": {
+          "body": [
+            { "name": "query", "value": "={{$json.query}}" },
+            { "name": "top_k", "value": "10" },
+            { "name": "jurisdiction", "value": "FR-CH" }
+          ]
+        }
+      },
+      "id": "2",
+      "name": "RAG Search Jurisprudence",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [420, 300]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "prompt": "Tu es un assistant juridique. Analyse les résultats de recherche jurisprudentielle suivants par rapport à la question posée.\n\nQuestion: {{$json.query}}\n\nRésultats de recherche:\n{{JSON.stringify($json.results)}}\n\nProduis un rapport structuré en français incluant:\n1. Synthèse des jurisprudences pertinentes\n2. Articles de loi applicables\n3. Convergences et divergences entre décisions\n4. Analyse préliminaire (SANS conseil juridique définitif)\n5. Recommandation: 'Consultez votre avocat pour une opinion définitive'\n\nDISCLAIMER: Ceci est une analyse préliminaire, consultez votre avocat.",
+        "temperature": 0.1,
+        "maxTokens": 3000
+      },
+      "id": "3",
+      "name": "LLM Analyse Juridique",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [640, 300]
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/rapports/juridiques/{{new Date().toISOString().split('T')[0]}}-recherche.pdf",
+        "content": "={{$json.analyse}}"
+      },
+      "id": "4",
+      "name": "Generer Rapport",
+      "type": "n8n-nodes-base.writeBinaryFile",
+      "typeVersion": 1,
+      "position": [860, 300]
+    },
+    {
+      "parameters": {
+        "fromEmail": "agent@cabinet-avocat.ch",
+        "toEmail": "avocat@cabinet-avocat.ch",
+        "subject": "=Rapport de recherche jurisprudentielle - {{$json.query}}",
+        "text": "=Rapport de recherche jurisprudentielle joint.\n\nQuestion: {{$json.query}}\n\nDISCLAIMER: Ceci est une analyse préliminaire, consultez votre avocat pour une opinion définitive."
+      },
+      "id": "5",
+      "name": "Email Rapport",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [1080, 300]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [{ "node": "RAG Search Jurisprudence", "type": "main", "index": 0 }]
+      ]
+    },
+    "RAG Search Jurisprudence": {
+      "main": [
+        [{ "node": "LLM Analyse Juridique", "type": "main", "index": 0 }]
+      ]
+    },
+    "LLM Analyse Juridique": {
+      "main": [
+        [{ "node": "Generer Rapport", "type": "main", "index": 0 }]
+      ]
+    },
+    "Generer Rapport": {
+      "main": [
+        [{ "node": "Email Rapport", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "a1b2c3d4-0002-4000-8000-000000000002",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "cabinet-avocat"
+  },
+  "tags": [
+    { "name": "cabinet-avocat" },
+    { "name": "recherche-jurisprudence" },
+    { "name": "rag" }
+  ]
+}

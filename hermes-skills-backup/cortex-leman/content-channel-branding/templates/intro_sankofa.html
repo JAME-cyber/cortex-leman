@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<!--
+  SANKOFA — Animated Brand Intro Template (9:16, 1080x1920)
+  Reproduces the pattern from L'Effet Composé (capture_intro_vertical.py).
+
+  HOW TO USE:
+  1. Copy this template to <project>/CHANNEL/branding/intro_<channel>.html
+  2. Replace palette colors, logo SVG path, channel name, tagline
+  3. Capture frame-by-frame via Playwright (see scripts/capture_brand_intro.py)
+  4. Encode to MP4 + mux with stinger audio
+
+  ANIMATION TIMELINE (5.0s total):
+  - 0.0-1.5s: Particles drift in + outer ring draws itself (strokeDashoffset)
+  - 0.8-2.0s: Logo fades in + scales (0.85 → 1.0)
+  - 2.0-2.6s: Egg pulse (the "retrieved wisdom" moment)
+  - 2.4-3.2s: Channel name fades in (metallic gradient)
+  - 3.0-3.8s: Shine sweep crosses the text
+  - 3.4-4.0s: Divider line extends
+  - 3.8-4.5s: Tagline fades in
+  - 4.2-4.8s: Subtitle fades in
+-->
+<html lang="fr"><head><meta charset="utf-8">
+<title>Brand Intro 9:16</title>
+<style>html,body{margin:0;padding:0;background:#1A1A1A;overflow:hidden}svg{display:block}</style></head>
+<body>
+<svg width="1080" height="1920" viewBox="0 0 1080 1920" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Gold glow filters -->
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glowStrong" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="12" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glowText" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+
+    <!-- Metallic gradient (CUSTOMIZE: replace with brand primary color) -->
+    <linearGradient id="amberMetal" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFF0D0"/>
+      <stop offset="25%" stop-color="#E8A33D"/>
+      <stop offset="50%" stop-color="#D4892B"/>
+      <stop offset="75%" stop-color="#B5522E"/>
+      <stop offset="100%" stop-color="#D4892B"/>
+    </linearGradient>
+
+    <!-- Shine sweep -->
+    <linearGradient id="shineSweep" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0"/>
+      <stop offset="45%" stop-color="#FFFFFF" stop-opacity="0"/>
+      <stop offset="50%" stop-color="#FFFFFF" stop-opacity="0.9"/>
+      <stop offset="55%" stop-color="#FFFFFF" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+
+    <clipPath id="textClip">
+      <text x="540" y="1280" text-anchor="middle" font-family="'Arial Black', 'Helvetica Neue', sans-serif" font-size="96" font-weight="900" letter-spacing="6">CHANNEL_NAME</text>
+    </clipPath>
+
+    <radialGradient id="ambient" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#E8A33D" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#1A1A1A" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1080" height="1920" fill="#1A1A1A"/>
+  <rect width="1080" height="1920" fill="url(#ambient)"/>
+
+  <!-- Particles -->
+  <g id="particles" opacity="0.4">
+    <circle cx="180" cy="400" r="2" fill="#E8A33D" opacity="0"/>
+    <circle cx="870" cy="520" r="1.5" fill="#E8A33D" opacity="0"/>
+    <circle cx="250" cy="1100" r="2" fill="#E8A33D" opacity="0"/>
+    <circle cx="820" cy="950" r="1" fill="#F4E8D0" opacity="0"/>
+    <circle cx="150" cy="1500" r="1.5" fill="#E8A33D" opacity="0"/>
+    <circle cx="900" cy="1400" r="2" fill="#E8A33D" opacity="0"/>
+  </g>
+
+  <!-- LOGO PLACEHOLDER: replace with your brand logo SVG -->
+  <g id="logo" transform="translate(540, 700)" opacity="0">
+    <circle id="outerRing" cx="0" cy="0" r="240" fill="none" stroke="#E8A33D" stroke-width="4" filter="url(#glow)"/>
+    <circle id="innerRing" cx="0" cy="0" r="225" fill="none" stroke="#B5522E" stroke-width="1.5" opacity="0"/>
+    <!-- INSERT YOUR LOGO SVG HERE (scaled to fit inside ring r=240) -->
+  </g>
+
+  <!-- Channel name -->
+  <g id="channelName" opacity="0">
+    <text x="540" y="1280" text-anchor="middle"
+          font-family="'Arial Black', 'Helvetica Neue', sans-serif"
+          font-size="96" font-weight="900" letter-spacing="6"
+          fill="url(#amberMetal)" filter="url(#glowText)">CHANNEL_NAME</text>
+    <g clip-path="url(#textClip)">
+      <rect id="shineRect" x="-500" y="1200" width="250" height="120" fill="url(#shineSweep)"/>
+    </g>
+  </g>
+
+  <line id="divider" x1="540" y1="1350" x2="540" y2="1350" stroke="#B5522E" stroke-width="2" opacity="0" filter="url(#glow)"/>
+
+  <text id="tagline" x="540" y="1420" text-anchor="middle"
+        font-family="'Helvetica Neue', 'Arial', sans-serif"
+        font-size="32" letter-spacing="4" font-weight="300"
+        fill="#F4E8D0" opacity="0">YOUR TAGLINE HERE</text>
+
+  <text id="subtitle" x="540" y="1470" text-anchor="middle"
+        font-family="'Helvetica Neue', 'Arial', sans-serif"
+        font-size="18" letter-spacing="3"
+        fill="#E8A33D" opacity="0">YOUR SUBTITLE HERE</text>
+</svg>
+
+<script>
+const DURATION = 5.0;
+
+const logo = document.getElementById('logo');
+const outerRing = document.getElementById('outerRing');
+const innerRing = document.getElementById('innerRing');
+const channelName = document.getElementById('channelName');
+const divider = document.getElementById('divider');
+const tagline = document.getElementById('tagline');
+const subtitle = document.getElementById('subtitle');
+const shineRect = document.getElementById('shineRect');
+const particles = document.getElementById('particles');
+
+const ringCircumference = 2 * Math.PI * 240;
+outerRing.style.strokeDasharray = ringCircumference;
+outerRing.style.strokeDashoffset = ringCircumference;
+innerRing.style.strokeDasharray = 2 * Math.PI * 225;
+innerRing.style.strokeDashoffset = 2 * Math.PI * 225;
+
+function easeOutCubic(x){ return 1 - Math.pow(1-x, 3); }
+
+const particleList = particles.querySelectorAll('circle');
+
+window.render = function(t) {
+  // 1. Particles (0 → 1.5s)
+  particleList.forEach(function(p, i) {
+    const delay = i * 0.1;
+    const localT = Math.min(Math.max((t - delay) / 0.8, 0), 1);
+    p.setAttribute('opacity', localT * 0.4);
+  });
+
+  // 2. Ring draws (0.3 → 1.8s)
+  const ringT = Math.min(Math.max((t - 0.3) / 1.5, 0), 1);
+  const ringE = easeOutCubic(ringT);
+  outerRing.style.strokeDashoffset = ringCircumference * (1 - ringE);
+  innerRing.style.strokeDashoffset = 2 * Math.PI * 225 * (1 - ringE);
+
+  // 3. Logo fade + scale (0.8 → 2.0s)
+  const logoT = Math.min(Math.max((t - 0.8) / 1.2, 0), 1);
+  const logoE = easeOutCubic(logoT);
+  logo.style.opacity = logoE;
+  const scale = 0.85 + 0.15 * logoE;
+  logo.setAttribute('transform', 'translate(540, 700) scale(' + scale.toFixed(3) + ')');
+
+  // 4. Channel name (2.4 → 3.2s)
+  const nameT = Math.min(Math.max((t - 2.4) / 0.8, 0), 1);
+  channelName.style.opacity = easeOutCubic(nameT);
+
+  // 5. Shine sweep (3.0 → 3.8s)
+  const sweepT = Math.min(Math.max((t - 3.0) / 0.8, 0), 1);
+  if (sweepT > 0 && sweepT < 1) shineRect.setAttribute('x', -500 + sweepT * 2080);
+
+  // 6. Divider (3.4 → 4.0s)
+  const divT = Math.min(Math.max((t - 3.4) / 0.6, 0), 1);
+  const halfLen = 120 * easeOutCubic(divT);
+  divider.setAttribute('x1', 540 - halfLen);
+  divider.setAttribute('x2', 540 + halfLen);
+  divider.style.opacity = divT * 0.7;
+
+  // 7. Tagline (3.8 → 4.5s)
+  tagline.style.opacity = Math.min(Math.max((t - 3.8) / 0.7, 0), 1) * 0.95;
+
+  // 8. Subtitle (4.2 → 4.8s)
+  subtitle.style.opacity = Math.min(Math.max((t - 4.2) / 0.6, 0), 1) * 0.8;
+};
+
+window.DURATION = DURATION;
+window.render(0);
+</script>
+</body></html>

@@ -1,0 +1,140 @@
+{
+  "name": "clinique-sante-rappels",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "cronExpression", "expression": "0 18 * * *" }]
+        }
+      },
+      "id": "1",
+      "name": "Schedule Daily 18h",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:3000/api/rendez-vous",
+        "method": "GET",
+        "queryParameters": {
+          "parameters": [
+            { "name": "date", "value": "={{new Date(Date.now() + 86400000).toISOString().split('T')[0]}}" },
+            { "name": "statut", "value": "confirme" }
+          ]
+        }
+      },
+      "id": "2",
+      "name": "Check RDV J+1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [420, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            { "value1": "={{$json.rdv.length}}", "operation": "largerThan", "value2": 0 }
+          ]
+        }
+      },
+      "id": "3",
+      "name": "RDV Existent",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [640, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:3000/api/sms/send",
+        "method": "POST",
+        "body": {
+          "body": [
+            { "name": "to", "value": "={{$json.patient_phone}}" },
+            { "name": "message", "value": "=Rappel: Vous avez un rendez-vous demain à {{$json.heure}} à la clinique. Merci de confirmer ou d'annuler au plus tôt." }
+          ]
+        }
+      },
+      "id": "4",
+      "name": "SMS Rappel Patient",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [860, 200]
+    },
+    {
+      "parameters": {
+        "fromEmail": "rappels@clinique.ch",
+        "toEmail": "={{$json.patient_email}}",
+        "subject": "=Rappel rendez-vous - {{$json.date_rdv}}",
+        "text": "=Bonjour,\n\nNous vous rappelons votre rendez-vous demain ({{$json.date_rdv}}) à {{$json.heure}}.\n\nEn cas d'annulation, merci de nous prévenir au minimum 24h à l'avance.\n\nCordialement,\n[CLINIQUE]\n\nCeci est un message automatique. Pour toute question médicale, consultez votre médecin."
+      },
+      "id": "5",
+      "name": "Email Rappel Patient",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [860, 400]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            { "name": "log_action", "value": "=rappel_rdv_envoye" },
+            { "name": "log_date", "value": "={{new Date().toISOString()}}" },
+            { "name": "log_patient_id", "value": "={{$json.patient_id}}" },
+            { "name": "log_canal", "value": "=sms+email" }
+          ]
+        }
+      },
+      "id": "6",
+      "name": "Log Rappel",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [1080, 300]
+    }
+  ],
+  "connections": {
+    "Schedule Daily 18h": {
+      "main": [
+        [{ "node": "Check RDV J+1", "type": "main", "index": 0 }]
+      ]
+    },
+    "Check RDV J+1": {
+      "main": [
+        [{ "node": "RDV Existent", "type": "main", "index": 0 }]
+      ]
+    },
+    "RDV Existent": {
+      "main": [
+        [
+          { "node": "SMS Rappel Patient", "type": "main", "index": 0 },
+          { "node": "Email Rappel Patient", "type": "main", "index": 0 }
+        ],
+        []
+      ]
+    },
+    "SMS Rappel Patient": {
+      "main": [
+        [{ "node": "Log Rappel", "type": "main", "index": 0 }]
+      ]
+    },
+    "Email Rappel Patient": {
+      "main": [
+        [{ "node": "Log Rappel", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "a1b2c3d4-0003-4000-8000-000000000001",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "clinique-sante"
+  },
+  "tags": [
+    { "name": "clinique-sante" },
+    { "name": "rappel-rdv" },
+    { "name": "schedule" }
+  ]
+}

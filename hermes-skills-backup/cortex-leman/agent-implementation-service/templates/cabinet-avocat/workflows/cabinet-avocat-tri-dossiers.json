@@ -1,0 +1,174 @@
+{
+  "name": "cabinet-avocat-tri-dossiers",
+  "nodes": [
+    {
+      "parameters": {
+        "host": "imap.cabinet-avocat.ch",
+        "port": 993,
+        "credentials": "imap_credentials_encrypted",
+        "mailbox": "INBOX",
+        "filter": "UNSEEN"
+      },
+      "id": "1",
+      "name": "Email Entrant",
+      "type": "n8n-nodes-base.emailTrigger",
+      "typeVersion": 1,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "getText",
+        "returnAll": false
+      },
+      "id": "2",
+      "name": "Extraire Contenu",
+      "type": "n8n-nodes-base.email",
+      "typeVersion": 2,
+      "position": [420, 300]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "prompt": "Identifie le dossier/client auquel ce courrier se rapporte, en te basant sur le contenu.\nRéponds en JSON: {\"dossier\": \"nom_dossier\", \"client\": \"nom_client\", \"confidentialite\": \"oui/non\"}\n\nIMPORTANT: Ne jamais révéler le contenu du courrier. Identifier uniquement le dossier.\n\nSujet: {{$json.subject}}\nExpéditeur: {{$json.from}}",
+        "temperature": 0.1,
+        "maxTokens": 200,
+        "options": {
+          "responseFormat": "json_object"
+        }
+      },
+      "id": "3",
+      "name": "Classification LLM",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [640, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$json.confidentialite}}",
+              "operation": "equals",
+              "value2": "oui"
+            }
+          ]
+        }
+      },
+      "id": "4",
+      "name": "Confidentiel?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [860, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            { "name": "dossier_path", "value": "=/dossiers/{{JSON.parse($json.message.content).dossier}}/confidentiel/" },
+            { "name": "client", "value": "={{JSON.parse($json.message.content).client}}" },
+            { "name": "niveau_isolation", "value": "secret_professionnel" }
+          ]
+        }
+      },
+      "id": "5",
+      "name": "Isolation Confidentiel",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [1100, 200]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            { "name": "dossier_path", "value": "=/dossiers/{{JSON.parse($json.message.content).dossier}}/" },
+            { "name": "client", "value": "={{JSON.parse($json.message.content).client}}" },
+            { "name": "niveau_isolation", "value": "standard" }
+          ]
+        }
+      },
+      "id": "6",
+      "name": "Isolation Standard",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [1100, 400]
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "={{$json.dossier_path}}{{new Date().toISOString().split('T')[0]}}.eml.aes256",
+        "content": "={{JSON.stringify($json)}}"
+      },
+      "id": "7",
+      "name": "Archiver Dossier",
+      "type": "n8n-nodes-base.writeBinaryFile",
+      "typeVersion": 1,
+      "position": [1320, 300]
+    },
+    {
+      "parameters": {
+        "fromEmail": "agent@cabinet-avocat.ch",
+        "toEmail": "avocat@cabinet-avocat.ch",
+        "subject": "=Nouveau courrier - Dossier: {{$json.dossier}} - Client: {{$json.client}}",
+        "text": "=Un nouveau courrier a été reçu et classé.\n\nDossier: {{$json.dossier}}\nClient: {{$json.client}}\nNiveau de confidentialité: {{$json.niveau_isolation}}\n\nIMPORTANT: Le contenu du courrier est protégé par le secret professionnel. Accès limité au dossier concerné uniquement."
+      },
+      "id": "8",
+      "name": "Notification Avocat",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [1540, 300]
+    }
+  ],
+  "connections": {
+    "Email Entrant": {
+      "main": [
+        [{ "node": "Extraire Contenu", "type": "main", "index": 0 }]
+      ]
+    },
+    "Extraire Contenu": {
+      "main": [
+        [{ "node": "Classification LLM", "type": "main", "index": 0 }]
+      ]
+    },
+    "Classification LLM": {
+      "main": [
+        [{ "node": "Confidentiel?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Confidentiel?": {
+      "main": [
+        [{ "node": "Isolation Confidentiel", "type": "main", "index": 0 }],
+        [{ "node": "Isolation Standard", "type": "main", "index": 0 }]
+      ]
+    },
+    "Isolation Confidentiel": {
+      "main": [
+        [{ "node": "Archiver Dossier", "type": "main", "index": 0 }]
+      ]
+    },
+    "Isolation Standard": {
+      "main": [
+        [{ "node": "Archiver Dossier", "type": "main", "index": 0 }]
+      ]
+    },
+    "Archiver Dossier": {
+      "main": [
+        [{ "node": "Notification Avocat", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "a1b2c3d4-0002-4000-8000-000000000001",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "cabinet-avocat"
+  },
+  "tags": [
+    { "name": "cabinet-avocat" },
+    { "name": "tri-dossiers" },
+    { "name": "secret-professionnel" }
+  ]
+}

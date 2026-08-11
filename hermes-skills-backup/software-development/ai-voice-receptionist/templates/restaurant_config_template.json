@@ -1,0 +1,37 @@
+{
+  "restaurant_name": "{{RESTAURANT_NAME}}",
+  "phone": "{{PHONE}}",
+  "address": "{{ADDRESS}}",
+  "hours": {
+    "lundi": "{{LUNDI_HOURS}}",
+    "mardi": "{{MARDI_HOURS}}",
+    "mercredi": "{{MERCREDI_HOURS}}",
+    "jeudi": "{{JEUDI_HOURS}}",
+    "vendredi": "{{VENDREDI_HOURS}}",
+    "samedi": "{{SAMEDI_HOURS}}",
+    "dimanche": "{{DIMANCHE_HOURS}}"
+  },
+  "delivery": {
+    "enabled": {{DELIVERY_ENABLED}},
+    "zones": {{DELIVERY_ZONES}},
+    "min_order": {{DELIVERY_MIN}},
+    "delivery_fee": {{DELIVERY_FEE}},
+    "estimated_time": "{{DELIVERY_TIME}}"
+  },
+  "takeaway": {{TAKEAWAY}},
+  "reservation": {
+    "enabled": {{RESA_ENABLED}},
+    "max_guests": {{RESA_MAX}},
+    "note": "{{RESA_NOTE}}"
+  },
+  "menu_highlights": {{MENU_HIGHLIGHTS}},
+  "payment_methods": {{PAYMENT_METHODS}},
+  "transfer_phone": "{{TRANSFER_PHONE}}",
+  "webhook_url": "{{WEBHOOK_URL}}",
+  "language": "fr",
+  "tts_voice": "fr-FR-DeniseNeural",
+  "personality": {
+    "name": "{{AGENT_NAME}}",
+    "tone": "chaleureuse, efficace, naturelle"
+  }
+}

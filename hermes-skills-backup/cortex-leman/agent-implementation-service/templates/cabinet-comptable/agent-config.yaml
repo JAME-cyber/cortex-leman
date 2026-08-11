@@ -1,0 +1,336 @@
+# ============================================================
+# CORTEX LEMAN AGENT SQUAD TEMPLATE v4.0
+# Vertical : Cabinet Comptable
+# Modèle  : Agent Squad (3 spécialistes + orchestrateur)
+# Risque  : Limited (AI Act)
+# Residency : UE acceptable (données financières, pas santé/secret)
+# ============================================================
+
+# ----------------------------------------------------------
+# SQUAD : 3 agents spécialisés
+# ----------------------------------------------------------
+squad:
+  name: "cabinet-comptable"
+  vertical: "cabinet-comptable"
+  version: "4.0.0"
+
+  agents:
+    # --- Agent 1 : Tri & Routage ---
+    - id: "tri-assist"
+      role: "Tri & Routage"
+      system_prompt: |
+        Tu es l'agent de tri du cabinet comptable. Tu classifies les documents entrants,
+        identifies le type (facture, déclaration, bilan, correspondance), et routes vers
+        l'agent compétent. Tu ne donnes JAMAIS de conseil fiscal définitif.
+        RÈGLES STRICTES :
+        - Classifier le document par type et période fiscale
+        - Ne jamais accéder aux dossiers d'un autre client
+        - Ne jamais stocker de numéros de compte bancaire
+        - Si classification incertaine → orienter vers le comptable
+        - Langue : français
+      autonomy_level: "low"
+      data_access:
+        - "documents_entrants"
+        - "metadata_documents"
+        - "referentiel_fiscal_fr_ch"
+      data_restrictions:
+        - "jamais_acces_dossiers_fermes"
+        - "jamais_donnees_client_croisees"
+        - "anonymisation_obligatoire_logs"
+        - "pas_export_hors_ue_ch"
+      guardrails:
+        human_decision_required:
+          - "classification_fiscale_definitive"
+          - "transfert_dossier_inter_client"
+        max_requests_per_hour: 100
+        session_timeout_minutes: 30
+        content_filter: true
+        state_verification:
+          enabled: true
+          methods:
+            - "checksum_fichier_attendu"
+            - "log_confirmation_action"
+          alert_on_mismatch: true
+
+    # --- Agent 2 : Analyse & Synthèse ---
+    - id: "synthese-assist"
+      role: "Analyse & Synthèse"
+      system_prompt: |
+        Tu es l'agent de synthèse du cabinet comptable. Tu produis les résumés mensuels,
+        les rapprochements bancaires et les alertes d'échéances fiscales FR-CH.
+        Tu ne donnes JAMAIS de conseil fiscal définitif.
+        RÈGLES STRICTES :
+        - Synthétiser les opérations du mois avec références légales
+        - Signaler les échéances fiscales imminentes
+        - Ne jamais proposer d'optimisation fiscale agressive
+        - Toujours ajouter : « Ceci est une indication, consultez votre expert-comptable »
+        - Langue : français
+      autonomy_level: "low"
+      data_access:
+        - "ecritures_comptables"
+        - "echeances_fiscales"
+        - "referentiel_fiscal_fr_ch"
+      data_restrictions:
+        - "jamais_conseil_fiscal_definitif"
+        - "jamais_montage_offshore"
+        - "anonymisation_obligatoire_logs"
+        - "retention_logs_max_30_jours"
+      guardrails:
+        human_decision_required:
+          - "validation_synthese_mensuelle"
+          - "declaration_fiscale"
+        max_requests_per_hour: 80
+        session_timeout_minutes: 30
+        content_filter: true
+        state_verification:
+          enabled: true
+          methods:
+            - "checksum_fichier_attendu"
+            - "log_confirmation_action"
+            - "cross_check_synthese_par_tri_assist"
+          alert_on_mismatch: true
+
+    # --- Agent 3 : Action & Suivi ---
+    - id: "rappel-assist"
+      role: "Action & Suivi"
+      system_prompt: |
+        Tu es l'agent de relance du cabinet comptable. Tu gères les rappels d'échéances
+        fiscales, les relances clients et le suivi des deadlines. Tu ne donnes JAMAIS
+        de conseil fiscal définitif et ne décides JAMAIS de relance sans validation humaine.
+        RÈGLES STRICTES :
+        - Préparer les relances clients pour validation du comptable
+        - Surveiller les échéances fiscales (TVA, impôt, BIC)
+        - Ne jamais envoyer de relance sans approbation humaine
+        - Anonymiser toute PII dans les logs
+        - Langue : français
+      autonomy_level: "low"
+      data_access:
+        - "echeances_fiscales"
+        - "relances_clients"
+        - "calendrier_cabinet"
+      data_restrictions:
+        - "jamais_envoi_relance_sans_validation"
+        - "jamais_donnees_client_croisees"
+        - "anonymisation_obligatoire_logs"
+        - "retention_logs_max_30_jours"
+      guardrails:
+        human_decision_required:
+          - "envoi_relance_client"
+          - "modification_echeance"
+        max_requests_per_hour: 60
+        session_timeout_minutes: 30
+        content_filter: true
+        state_verification:
+          enabled: true
+          methods:
+            - "log_confirmation_envoi"
+            - "validation_supervision_humaine"
+          alert_on_mismatch: true
+
+# ----------------------------------------------------------
+# ORCHESTRATION
+# ----------------------------------------------------------
+orchestration:
+  routing: "contextual"          # Par sujet/contexte fiscal
+  isolation: "strict"            # Jamais cross-contexte client
+  fallback: "human"             # Toujours fallback humain
+  audit_trail: true              # Traces complètes Art. 30 RGPD
+
+# ----------------------------------------------------------
+# INFRASTRUCTURE : 7 règles K8s-compatibles
+# ----------------------------------------------------------
+infrastructure:
+  current: "docker-compose"
+  k8s_compatible: true
+  migration_path: "k3s"
+  migration_trigger: "8+ clients simultanés ou 5+ agents par client"
+
+  # Règle 1 : Un container = un agent
+  containers:
+    tri-assist:
+      image: "cortex-leman/agent:${AGENT_VERSION}"
+    synthese-assist:
+      image: "cortex-leman/agent:${AGENT_VERSION}"
+    rappel-assist:
+      image: "cortex-leman/agent:${AGENT_VERSION}"
+    orchestrator:
+      image: "cortex-leman/orchestrator:${AGENT_VERSION}"
+    postgres:
+      image: "postgres:16"
+
+  # Règle 2 : Configuration via environnement, pas hardcoded
+  environment:
+    - AGENT_ROLE=${AGENT_ROLE}
+    - AGENT_SQUAD=${SQUAD_NAME}
+    - LLM_PROVIDER=${LLM_PROVIDER}
+    - LLM_MODEL=${LLM_MODEL}
+    - DATA_RESIDENCY=${DATA_RESIDENCY}
+    - LOG_LEVEL=${LOG_LEVEL}
+    - GUARDRAILS_CONFIG=/config/guardrails.yaml
+
+  # Règle 3 : Health checks obligatoires
+  healthcheck:
+    test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+    interval: "30s"
+    timeout: "10s"
+    retries: 3
+    start_period: "10s"
+
+  # Règle 4 : Resource limits par container
+  resources:
+    limits:
+      cpus: "1.0"
+      memory: "512M"
+    reservations:
+      cpus: "0.25"
+      memory: "128M"
+
+  # Règle 5 : Réseau isolé par client
+  network:
+    method: "network_per_client"
+    driver: "bridge"
+    internal: true                 # Pas d'accès externe sauf via Traefik
+    documented: true
+    auditable: true
+
+  # Règle 6 : Secrets séparés du code
+  secrets:
+    method: "docker_secrets"
+    never_in_code: true
+    never_in_git: true
+    items:
+      - llm_api_key
+      - db_password
+      - smtp_credentials
+
+  # Règle 7 : Logs structurés JSON
+  logging:
+    format: "structured_json"
+    fields:
+      - "ts"
+      - "agent"
+      - "squad"
+      - "client"
+      - "action"
+      - "result"
+      - "risk"
+      - "latency_ms"
+      - "guardrail_triggered"
+    driver: "json-file"
+    max_size: "10m"
+    max_file: 3
+    retention_days: 90
+
+  # Data residency
+  data_residency:
+    vps_location: "EU"             # UE acceptable pour comptable
+    provider: ""                   # À spécifier par client
+    documented: true
+    verifiable: true
+
+  # Backup
+  backup:
+    method: "script_cron"
+    frequency: "daily"
+    tested: false                  # Tester AVANT premier client
+    offsite: false                 # true avec k3s + Velero
+
+# ----------------------------------------------------------
+# MODÈLE (model-agnostic)
+# ----------------------------------------------------------
+model:
+  provider: "${LLM_PROVIDER}"     # openrouter, ollama, local — swap sans toucher les prompts
+  name: "${LLM_MODEL}"            # anthropic/claude-sonnet-4, gpt-4o, glm-4 — interchangeable
+  temperature: 0.2                # Faible pour fiabilité comptable
+  max_tokens: 2048
+  embedding_model: "${EMBEDDING_MODEL}"
+  data_residency: "${DATA_RESIDENCY}"
+
+# ----------------------------------------------------------
+# BASE DE CONNAISSANCES (RAG)
+# ----------------------------------------------------------
+knowledge_base:
+  sources:
+    - type: "documents"
+      path: "/data/client-docs/"
+      formats: ["pdf", "xlsx", "csv"]
+    - type: "fiscal"
+      description: "Documentation fiscale FR-CH"
+      references:
+        - "Code Général des Impôts (FR)"
+        - "LIFI (Suisse)"
+        - "TVA FR/CH cross-border"
+        - "Droit fiscal international FR-CH"
+  chunk_size: 512
+  overlap: 64
+  embedding_model: "${EMBEDDING_MODEL}"
+
+# ----------------------------------------------------------
+# INTÉGRATIONS
+# ----------------------------------------------------------
+integrations:
+  email:
+    enabled: true
+    provider: "imap"
+    actions: ["classify", "summarize", "flag_urgent"]
+  crm:
+    enabled: false
+    provider: null
+  documents:
+    enabled: true
+    storage: "local_encrypted"
+    ocr: true
+  n8n:
+    enabled: true
+    workflows:
+      - name: "tri-documents"
+        description: "Classer les documents entrants par type"
+        trigger: "email_receipt"
+        template: "cabinet-comptable-tri-docs.json"
+      - name: "rappel-echeances"
+        description: "Rappeler les échéances fiscales"
+        trigger: "schedule_daily"
+        template: "cabinet-comptable-rappels.json"
+      - name: "synthese-mensuelle"
+        description: "Générer une synthèse mensuelle des opérations"
+        trigger: "schedule_monthly"
+        template: "cabinet-comptable-synthese.json"
+
+# ----------------------------------------------------------
+# CONFORMITÉ RGPD-IA
+# ----------------------------------------------------------
+compliance:
+  ai_act_risk_level: "limited"    # Limited — données financières, pas santé/secret
+  legal_basis: "consent"
+  data_controller: "[CABINET NAME]"
+  state_verification:
+    enabled: true
+    description: "L'agent ne peut pas rapporter complétion sans preuve vérifiable (arXiv:2602.20021)"
+    methods:
+      - "checksum_fichier_attendu"
+      - "log_confirmation_action"
+      - "cross_check_par_agent_pair"
+    alert_on_mismatch: true
+  register_entry: true            # Art. 30 RGPD — toujours
+  human_oversight: true           # Toujours true par défaut
+  art22_compliant: true           # Pas de décision automatisée sans consentement
+
+# ----------------------------------------------------------
+# MONITORING
+# ----------------------------------------------------------
+monitoring:
+  log_all_interactions: true
+  alert_on:
+    - "données sensibles détectées dans output"
+    - "requête hors périmètre fiscal"
+    - "tentative d'extraction de données client"
+    - "guardrail déclenché"
+  metrics:
+    - name: "requests_per_hour"
+      threshold: 100
+      action: "throttle"
+    - name: "latency_p95_ms"
+      threshold: 2000
+      action: "alert"
+  weekly_report: true
+  monthly_compliance_check: true

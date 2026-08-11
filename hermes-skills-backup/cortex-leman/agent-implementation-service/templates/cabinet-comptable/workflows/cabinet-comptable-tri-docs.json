@@ -1,0 +1,261 @@
+{
+  "name": "cabinet-comptable-tri-docs",
+  "nodes": [
+    {
+      "parameters": {
+        "host": "imap.example.com",
+        "port": 993,
+        "credentials": "imap_credentials",
+        "mailbox": "INBOX",
+        "filter": "UNSEEN"
+      },
+      "id": "1",
+      "name": "Email Entrant",
+      "type": "n8n-nodes-base.emailTrigger",
+      "typeVersion": 1,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "getText",
+        "returnAll": false
+      },
+      "id": "2",
+      "name": "Extraire Contenu",
+      "type": "n8n-nodes-base.email",
+      "typeVersion": 2,
+      "position": [420, 300]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "prompt": "Classifie ce document comptable en une des catégories suivantes: facture, bilan, déclaration, courrier. Réponds UNIQUEMENT avec la catégorie, rien d'autre.\n\nSujet: {{$json.subject}}\nCorps: {{$json.text}}",
+        "temperature": 0.1,
+        "maxTokens": 50
+      },
+      "id": "3",
+      "name": "Classification LLM",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [640, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$json.message.content}}",
+              "operation": "equals",
+              "value2": "facture"
+            }
+          ]
+        }
+      },
+      "id": "4",
+      "name": "Route Facture",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [860, 200]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$json.message.content}}",
+              "operation": "equals",
+              "value2": "bilan"
+            }
+          ]
+        }
+      },
+      "id": "5",
+      "name": "Route Bilan",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [860, 400]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$json.message.content}}",
+              "operation": "equals",
+              "value2": "declaration"
+            }
+          ]
+        }
+      },
+      "id": "6",
+      "name": "Route Declaration",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [860, 600]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            { "name": "dossier", "value": "=/dossiers/factures/{{$json.from}}" },
+            { "name": "categorie", "value": "=facture" }
+          ]
+        }
+      },
+      "id": "7",
+      "name": "Set Dossier Facture",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [1100, 150]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            { "name": "dossier", "value": "=/dossiers/bilans/{{$json.from}}" },
+            { "name": "categorie", "value": "=bilan" }
+          ]
+        }
+      },
+      "id": "8",
+      "name": "Set Dossier Bilan",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [1100, 350]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            { "name": "dossier", "value": "=/dossiers/declarations/{{$json.from}}" },
+            { "name": "categorie", "value": "=declaration" }
+          ]
+        }
+      },
+      "id": "9",
+      "name": "Set Dossier Declaration",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [1100, 550]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            { "name": "dossier", "value": "=/dossiers/courriers/{{$json.from}}" },
+            { "name": "categorie", "value": "=courrier" }
+          ]
+        }
+      },
+      "id": "10",
+      "name": "Set Dossier Courrier",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [1100, 750]
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "={{$json.dossier}}/{{new Date().toISOString().split('T')[0]}}.eml",
+        "content": "={{JSON.stringify($json)}}"
+      },
+      "id": "11",
+      "name": "Archiver Document",
+      "type": "n8n-nodes-base.writeBinaryFile",
+      "typeVersion": 1,
+      "position": [1340, 400]
+    },
+    {
+      "parameters": {
+        "fromEmail": "agent@cabient-comptable.ch",
+        "toEmail": "comptable@cabient-comptable.ch",
+        "subject": "=Nouveau document classé: {{$json.categorie}}",
+        "text": "=Un nouveau document de type {{$json.categorie}} a été reçu et classé dans {{$json.dossier}}.\n\nExpéditeur: {{$json.from}}\nSujet original: {{$json.subject}}"
+      },
+      "id": "12",
+      "name": "Notification Comptable",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [1560, 400]
+    }
+  ],
+  "connections": {
+    "Email Entrant": {
+      "main": [
+        [{ "node": "Extraire Contenu", "type": "main", "index": 0 }]
+      ]
+    },
+    "Extraire Contenu": {
+      "main": [
+        [{ "node": "Classification LLM", "type": "main", "index": 0 }]
+      ]
+    },
+    "Classification LLM": {
+      "main": [
+        [
+          { "node": "Route Facture", "type": "main", "index": 0 },
+          { "node": "Route Bilan", "type": "main", "index": 0 },
+          { "node": "Route Declaration", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Route Facture": {
+      "main": [
+        [{ "node": "Set Dossier Facture", "type": "main", "index": 0 }],
+        [{ "node": "Set Dossier Courrier", "type": "main", "index": 0 }]
+      ]
+    },
+    "Route Bilan": {
+      "main": [
+        [{ "node": "Set Dossier Bilan", "type": "main", "index": 0 }],
+        [{ "node": "Route Facture", "type": "main", "index": 1 }]
+      ]
+    },
+    "Route Declaration": {
+      "main": [
+        [{ "node": "Set Dossier Declaration", "type": "main", "index": 0 }],
+        [{ "node": "Route Bilan", "type": "main", "index": 1 }]
+      ]
+    },
+    "Set Dossier Facture": {
+      "main": [
+        [{ "node": "Archiver Document", "type": "main", "index": 0 }]
+      ]
+    },
+    "Set Dossier Bilan": {
+      "main": [
+        [{ "node": "Archiver Document", "type": "main", "index": 0 }]
+      ]
+    },
+    "Set Dossier Declaration": {
+      "main": [
+        [{ "node": "Archiver Document", "type": "main", "index": 0 }]
+      ]
+    },
+    "Set Dossier Courrier": {
+      "main": [
+        [{ "node": "Archiver Document", "type": "main", "index": 0 }]
+      ]
+    },
+    "Archiver Document": {
+      "main": [
+        [{ "node": "Notification Comptable", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "a1b2c3d4-0001-4000-8000-000000000001",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "cabinet-comptable"
+  },
+  "tags": [
+    { "name": "cabinet-comptable" },
+    { "name": "tri-documents" },
+    { "name": "classification" }
+  ]
+}

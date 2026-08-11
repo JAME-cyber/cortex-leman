@@ -1,0 +1,404 @@
+# ============================================================
+# SOCIALPULSE CAMPAIGN - HAUTE-SAVOIE 74 - AGENTS IA BTP/SERVICES
+# Focus: Speed-to-lead + Quoting agents pour PME du 74
+# Anti-Gartner: agents verticaux, bornés, conformes, mesurés
+# ============================================================
+
+campaign:
+  name: "haute-savoie-74-agents-ia"
+  label: "Cortex Leman - Agents IA Haute-Savoie"
+  client: "Cortex Leman"
+  vertical: "agents-ia-btp-services"
+  version: "4.0"
+  created: "2026-07-01"
+  status: "active"
+
+# ----------------------------------------------------------
+# CIBLE - HAUTE-SAVOIE (74)
+# ----------------------------------------------------------
+target:
+  description: "PME BTP et services en Haute-Savoie utilisant ou pouvant bénéficier d'agents IA"
+  employee_range: [5, 200]
+  regions:
+    - "Annecy"
+    - "Annemasse"
+    - "Thonon-les-Bains"
+    - "Cluses"
+    - "Sallanches"
+    - "Rumilly"
+    - "La Roche-sur-Foron"
+    - "Saint-Julien-en-Genevois"
+    - "Gaillard"
+    - "Chamonix"
+    - "Megève"
+    - "Morzine"
+    - "Scionzier"
+    - "Marnaz"
+    - "Bonneville"
+    - "Seynod"
+    - "Cran-Gevrier"
+    - "Seyssel"
+  countries: ["FR"]
+  languages: ["fr"]
+  
+  sectors:
+    - name: "Plombier / Chauffagiste / CVC / PAC"
+      weight: 100
+      search_queries:
+        - "\"plombier chauffagiste\" + Annecy"
+        - "\"installateur PAC\" + Haute-Savoie"
+        - "\"chauffagiste\" + Annemasse"
+        - "\"CVC\" + Cluses"
+        - "\"plomberie\" + Thonon"
+        - "\"rénovation chauffage\" + 74"
+    
+    - name: "Électricien / Solaire / Domotique"
+      weight: 95
+      search_queries:
+        - "\"électricien\" + Annecy"
+        - "\"installateur solaire\" + Haute-Savoie"
+        - "\"domotique\" + Annemasse"
+        - "\"photovoltaïque\" + 74"
+    
+    - name: "Rénovation énergétique / Isolation"
+      weight: 90
+      search_queries:
+        - "\"rénovation énergétique\" + Annecy"
+        - "\"isolation\" + Haute-Savoie"
+        - "\"rénovation maison\" + 74"
+    
+    - name: "Garage automobile / Carrosserie"
+      weight: 85
+      search_queries:
+        - "\"garage automobile\" + Annecy"
+        - "\"carrossier\" + Annemasse"
+        - "\"mécanicien\" + Cluses"
+        - "\"garage auto\" + Haute-Savoie"
+    
+    - name: "Paysagiste / Pisciniste"
+      weight: 80
+      search_queries:
+        - "\"paysagiste\" + Annecy"
+        - "\"pisciniste\" + Haute-Savoie"
+        - "\"construction piscine\" + 74"
+        - "\"élagage\" + Annemasse"
+    
+    - name: "Immobilier / Syndic"
+      weight: 80
+      search_queries:
+        - "\"agence immobilière\" + Annecy"
+        - "\"syndic copropriété\" + Haute-Savoie"
+        - "\"gestion immobilière\" + Annemasse"
+    
+    - name: "Services à domicile / Nettoyage"
+      weight: 75
+      search_queries:
+        - "\"services à domicile\" + Annecy"
+        - "\"nettoyage\" + Haute-Savoie"
+        - "\"aide à domicile\" + 74"
+    
+    - name: "Hôtellerie / Restauration"
+      weight: 75
+      search_queries:
+        - "\"hôtel\" + Chamonix"
+        - "\"restaurant\" + Annecy"
+        - "\"hébergement\" + Megève"
+        - "\"gîte\" + Morzine"
+
+# ----------------------------------------------------------
+# SCORING LEAD (0-100) - DÉTERMINISTE
+# ----------------------------------------------------------
+scoring:
+  threshold: 55
+  
+  gel_on_below_threshold: true
+  arbitrage_required_on_gel: true
+  
+  criteria:
+    employee_count:
+      weight: 0.25
+      brackets:
+        - [1, 9, 80]       # TPE = sweet spot
+        - [10, 49, 100]    # PME = cible idéale
+        - [50, 200, 70]    # PME+ = bon
+        - [201, 9999, 30]  # Grand = moins adapté
+    
+    sector:
+      weight: 0.35
+      mapping:
+        "Plombier / Chauffagiste / CVC / PAC": 100
+        "Électricien / Solaire / Domotique": 95
+        "Rénovation énergétique / Isolation": 90
+        "Garage automobile / Carrosserie": 85
+        "Paysagiste / Pisciniste": 80
+        "Immobilier / Syndic": 80
+        "Services à domicile / Nettoyage": 75
+        "Hôtellerie / Restauration": 75
+        "default": 30
+    
+    risk_indicator:
+      weight: 0.25
+      label: "Besoin agent IA"
+      detection:
+        high: "Chatbot/IA détecté OU site avec formulaire devis → candidat quoting agent"
+        medium: "Site dynamique, signaux d'activité commerciale → candidat speed-to-lead"
+        low: "Pas de site ou site vitrine basique → opportunité digitalisation"
+      mapping:
+        "high": 100
+        "medium": 70
+        "low": 40
+    
+    location:
+      weight: 0.15
+      mapping:
+        "Annecy": 100
+        "Annemasse": 95
+        "Saint-Julien-en-Genevois": 90
+        "Gaillard": 90
+        "Thonon-les-Bains": 85
+        "Cluses": 80
+        "Sallanches": 80
+        "Chamonix": 85
+        "Megève": 90
+        "Morzine": 85
+        "Rumilly": 75
+        "Haute-Savoie": 70
+        "autre 74": 60
+        "autre FR": 20
+
+# ----------------------------------------------------------
+# MÉDIATEUR DÉTERMINISTE (v4)
+# ----------------------------------------------------------
+mediateur:
+  enabled: true
+  rules:
+    discovery:
+      - description: "Base légale RGPD requise"
+        condition: "discovery.source.legal_basis == 'interet_legitime'"
+        on_violation: "gel"
+      - description: "Max results par source"
+        condition: "discovery.results_count <= campaign.discovery.max_results"
+        on_violation: "gel"
+      - description: "Région Haute-Savoie uniquement"
+        condition: "discovery.region.country == 'FR' AND discovery.region.dept == '74'"
+        on_violation: "gel"
+    enrichment:
+      - description: "Pas de PII dans les outputs"
+        condition: "enrichment.pii_detected == false"
+        on_violation: "gel"
+      - description: "Max 5 data points par lead"
+        condition: "enrichment.data_points <= 5"
+        on_violation: "gel"
+      - description: "Consentement B2B vérifié"
+        condition: "enrichment.consent_status == 'not_required_b2b'"
+        on_violation: "gel"
+    qualification:
+      - description: "Score minimum requis"
+        condition: "lead.score >= campaign.scoring.threshold"
+        on_violation: "gel"
+      - description: "Lead pas opted-out"
+        condition: "lead.opt_out == false"
+        on_violation: "reject"
+    personalization:
+      - description: "Max mots email"
+        condition: "personalization.email.word_count <= 200"
+        on_violation: "regenerate"
+      - description: "Mention opt-out obligatoire"
+        condition: "personalization.opt_out_mention == true"
+        on_violation: "gel"
+      - description: "Budget batch pas dépassé"
+        condition: "personalization.budget_used <= campaign.budget.max_per_batch_usd"
+        on_violation: "gel"
+  gel_on_violation: true
+  require_arbitrage_on_gel: true
+  log_all_decisions: true
+
+# ----------------------------------------------------------
+# JOURNAL WORM (v4)
+# ----------------------------------------------------------
+journal:
+  enabled: true
+  hash_algorithm: "sha256"
+  storage: "local"
+  directory: "~/socialpulse-output/haute-savoie-74/journaux"
+  retention_days: 365
+  verifiable: true
+
+# ----------------------------------------------------------
+# GUARDRAILS LLM (v4)
+# ----------------------------------------------------------
+guardrails:
+  pii_detection:
+    enabled: true
+    patterns: ["email", "phone", "iban", "siret"]
+    action_on_detection: "mask_and_log"
+  topic_control:
+    enabled: true
+    allowed_topics: ["agents IA", "automatisation", "devis", "leads", "RGPD", "conformité", "productivité"]
+    forbidden_topics: ["politique", "religion", "concurrence directe"]
+    action_on_violation: "regenerate"
+  output_safety:
+    enabled: true
+    checks: ["no_defamation", "no_false_claims", "no_unverified_stats"]
+    action_on_violation: "regenerate"
+  max_retry_on_violation: 2
+  fallback_on_max_retry: "template_email"
+
+# ----------------------------------------------------------
+# SERMENT SOCIALPULSE (v4)
+# ----------------------------------------------------------
+serment:
+  enabled: true
+  version: "1.0"
+
+# ----------------------------------------------------------
+# DISCOVERY
+# ----------------------------------------------------------
+discovery:
+  google_maps:
+    enabled: true
+    actor: "ittechinnovators/google-maps-business-scraper"
+    cost_per_result: 0.05
+    max_results_per_query: 20
+  
+  europages:
+    enabled: true
+    actor: "saswave/europages-scraper"
+    cost_per_result: 0.013
+    max_results: 30
+  
+  pagesjaunes:
+    enabled: true
+    actor: "ittechinnovators/google-maps-business-scraper"
+    cost_per_result: 0.05
+    max_results_per_query: 15
+  
+  scrapling:
+    enabled: true
+    use_cases:
+      - name: "directory_crawl"
+        description: "Crawler PagesJaunes et annuaires locaux 74"
+        fetcher: "StealthyFetcher"
+        css_selectors:
+          business_name: "h2.business-name, .listing-title, .denomination"
+          address: ".address, .location, .adresse"
+          phone: ".phone, a[href^='tel:'], .numero"
+          website: "a.website-link, a[href*='http']"
+        output: "json"
+        max_pages: 15
+        anti_bot: true
+        solve_cloudflare: true
+      
+      - name: "site_analysis"
+        description: "Analyser site lead pour signaux IA/RGPD/formulaires"
+        fetcher: "Fetcher"
+        css_selectors:
+          chatbot: "[class*='chat'], [id*='chat'], iframe[src*='chat']"
+          rgpd_banner: "[class*='cookie'], [id*='cookie'], [class*='consent']"
+          contact_form: "form[action*='contact'], form[class*='contact']"
+          quote_form: "form[action*='devis'], [class*='devis'], [class*='quote']"
+          ai_signals: "[class*='ai'], [class*='gpt'], [class*='assistant']"
+        output: "json"
+
+# ----------------------------------------------------------
+# ENRICHMENT
+# ----------------------------------------------------------
+enrichment:
+  company_contact:
+    enabled: true
+    actor: "alizarin_refrigerator-owner/company-contact-enricher"
+    cost_per_contact: 0.02
+    title_filter: ["Gérant", "Patron", "Directeur", "Fondateur", "Associé", "Responsable", "Chef d'entreprise"]
+  
+  email_fallback:
+    enabled: true
+    actor: "pro100ch/extract-emails"
+    cost_per_result: 0.001
+
+# ----------------------------------------------------------
+# PERSONNALISATION
+# ----------------------------------------------------------
+personalization:
+  email:
+    enabled: true
+    provider: "openrouter"
+    model: "anthropic/claude-sonnet-4"
+    max_words: 200
+    system_prompt: |
+      Tu es un expert en prospection B2B pour Cortex Leman, intégrateur d'agents IA conformes 
+      pour PME en Haute-Savoie. Ton ton est professionnel, pragmatique, sans jargon. 
+      Tu parles de résultats concrets (temps gagné, leads récupérés, devis accélérés).
+      Maximum 200 mots. Jamais de buzzwords IA. Toujours ancrer dans le métier du prospect.
+    user_prompt_template: |
+      Génère un email d'approche personnalisé pour:
+      - Entreprise: {company_name} ({industry}, {employee_count} employés)
+      - Contact: {contact_name}, {contact_title}
+      - Ville: {location} (Haute-Savoie)
+      - Signal détecté: {risk_indicator}
+      - Observation: {specific_observation}
+      
+      Structure:
+      1. Accroche métier (ex: "Vous recevez X appels/jour mais vous ne pouvez pas rappeler dans la minute")
+      2. Problème concret pour leur métier (leads perdus, devis lents, etc.)
+      3. Proposition: démo gratuite 15min d'un agent IA pour leur activité
+      4. CTA: lien vers landing page
+    
+    subject_template: "Gagnez 5h/semaine sur vos devis - {company_name}"
+    from_name: "Cortex Leman"
+    from_email: "contact@cortex-leman.ch"
+    landing_page_url: "https://jame-cyber.github.io/cortex-leman/"
+  
+  infographic:
+    enabled: false  # Désactivé pour ce premier batch (coût)
+  
+  linkedin_post:
+    enabled: false  # Désactivé pour ce premier batch
+
+# ----------------------------------------------------------
+# OUTPUT
+# ----------------------------------------------------------
+output:
+  format: "json"
+  directory: "~/socialpulse-output/haute-savoie-74-agents-ia"
+  lead_card_fields:
+    - company_name
+    - industry
+    - employee_count
+    - location
+    - website
+    - phone
+    - score
+    - contact.name
+    - contact.title
+    - contact.email
+    - risk_indicator
+    - specific_observation
+    - personalization.email
+  retention_days: 30
+
+# ----------------------------------------------------------
+# SCHEDULING
+# ----------------------------------------------------------
+schedule:
+  enabled: false
+  cron: "0 10 * * 1,3,5"
+  batch_size: 25
+  deliver_to: "telegram"
+
+# ----------------------------------------------------------
+# BUDGET
+# ----------------------------------------------------------
+budget:
+  max_per_batch_usd: 15
+  max_monthly_usd: 80
+  alert_threshold_pct: 80
+
+# ----------------------------------------------------------
+# RGPD COMPLIANCE
+# ----------------------------------------------------------
+compliance:
+  legal_basis: "intérêt légitime (prospection B2B, Art. 6(1)(f) RGPD)"
+  data_retention_days: 30
+  opt_out_mention: true
+  no_sensitive_data: true
+  register_entry: false

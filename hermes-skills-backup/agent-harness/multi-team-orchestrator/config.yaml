@@ -1,0 +1,2 @@
+entrypoint: /workflow
+script: ~/.hermes/agent-harness/scripts/run-workflow.sh

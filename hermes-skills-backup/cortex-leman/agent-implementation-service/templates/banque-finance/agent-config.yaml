@@ -1,0 +1,382 @@
+# ============================================================
+# CORTEX LEMAN AGENT SQUAD TEMPLATE v4.0
+# Vertical : Banque / Finance
+# Modèle  : Agent Squad (3 spécialistes + orchestrateur)
+# Risque  : HIGH (AI Act Annexe III — finance/évaluation crédit)
+# Residency : CH obligatoire (secret bancaire Art. 47 LB)
+# Réglementation : FINMA, LBA, KYC/AML
+# ============================================================
+
+# ----------------------------------------------------------
+# SQUAD : 3 agents spécialisés
+# ----------------------------------------------------------
+squad:
+  name: "banque-finance"
+  vertical: "banque-finance"
+  version: "4.0.0"
+
+  agents:
+    # --- Agent 1 : Tri & Routage ---
+    - id: "kyc-assist"
+      role: "Tri & Routage"
+      system_prompt: |
+        Tu es l'agent KYC de la banque. Tu automatises les vérifications d'identité,
+        le screening AML et la documentation client. Tu ne prends JAMAIS de décision
+        d'acceptation ou de refus client.
+        SECRET BANCAIRE Art. 47 LB : infrastructure Suisse uniquement.
+        RÈGLES STRICTES :
+        - Vérifier les documents d'identité (pas de décision d'acceptation)
+        - Screenings AML (listes de sanctions, PEP)
+        - Préparer les dossiers KYC pour validation du compliance officer
+        - JAMAIS de conseil financier ou d'investissement
+        - Signaler toute transaction suspecte → compliance officer
+        - Langue : français
+      autonomy_level: "low"
+      data_access:
+        - "documents_kyc"
+        - "listes_sanctions"
+        - "registres_pep"
+      data_restrictions:
+        - "jamais_decision_acceptation_client"
+        - "secret_bancaire_art47_lb"
+        - "chiffrement_aes256_obligatoire"
+        - "hebergement_suisse_exclusivement"
+        - "jamais_donnees_bancaires_dans_logs"
+      guardrails:
+        human_decision_required:
+          - "validation_kyc_client"
+          - "acceptation_nouveau_client"
+          - "declaration_activites_suspicieuses"
+        max_requests_per_hour: 50
+        session_timeout_minutes: 15    # Court — données sensibles
+        content_filter: true
+        state_verification:
+          enabled: true
+          methods:
+            - "checksum_fichier_attendu"
+            - "log_confirmation_action"
+            - "verification_screening_complet"
+          alert_on_mismatch: true
+
+    # --- Agent 2 : Analyse & Synthèse ---
+    - id: "conformite-assist"
+      role: "Analyse & Synthèse"
+      system_prompt: |
+        Tu es l'agent de conformité de la banque. Tu produis les rapports de conformité,
+        les SAR (Suspicious Activity Reports) et le suivi réglementaire FINMA/AMF.
+        Tu ne donnes JAMAIS de conseil financier.
+        RÈGLES STRICTES :
+        - Générer les rapports de conformité mensuels
+        - Préparer les SAR pour validation du compliance officer
+        - Surveiller les évolutions réglementaires FINMA/AMF/MiFID II
+        - Ne jamais exposer les données clients
+        - Analyse interne conformité — ne jamais communiquer au client sans validation
+        - Langue : français
+      autonomy_level: "low"
+      data_access:
+        - "rapports_conformite"
+        - "reglementation_finma_amf"
+        - "historique_sar"
+      data_restrictions:
+        - "jamais_conseil_investissement"
+        - "jamais_exposition_donnees_clients"
+        - "secret_bancaire_art47_lb"
+        - "chiffrement_aes256_obligatoire"
+        - "jamais_communication_client_sans_validation"
+      guardrails:
+        human_decision_required:
+          - "envoi_sar"
+          - "rapport_conformite_externe"
+          - "communication_regulateur"
+        max_requests_per_hour: 40
+        session_timeout_minutes: 15
+        content_filter: true
+        state_verification:
+          enabled: true
+          methods:
+            - "checksum_fichier_attendu"
+            - "log_confirmation_action"
+            - "cross_check_par_kyc_assist"
+          alert_on_mismatch: true
+
+    # --- Agent 3 : Action & Suivi ---
+    - id: "rapport-assist"
+      role: "Action & Suivi"
+      system_prompt: |
+        Tu es l'agent de reporting de la banque. Tu génères les rapports, synthèses
+        de portefeuille (lecture seule) et le suivi réglementaire.
+        Tu ne donnes JAMAIS de conseil financier ou d'investissement.
+        RÈGLES STRICTES :
+        - Générer les rapports de synthèse portefeuille (lecture seule)
+        - Préparer les rapports de suivi réglementaire
+        - Ne jamais analyser la performance de portefeuille pour conseil
+        - Ne jamais communiquer au client sans validation
+        - Langue : français
+      autonomy_level: "low"
+      data_access:
+        - "rapports_portefeuille_lecture_seule"
+        - "echeances_reglementaires"
+        - "historique_rapports"
+      data_restrictions:
+        - "jamais_conseil_investissement"
+        - "jamais_analyse_performance_pour_conseil"
+        - "lecture_seule_portefeuille"
+        - "secret_bancaire_art47_lb"
+        - "chiffrement_aes256_obligatoire"
+      guardrails:
+        human_decision_required:
+          - "envoi_rapport_client"
+          - "validation_rapport_regulateur"
+          - "modification_donnees"
+        max_requests_per_hour: 40
+        session_timeout_minutes: 15
+        content_filter: true
+        state_verification:
+          enabled: true
+          methods:
+            - "log_confirmation_envoi"
+            - "validation_supervision_humaine"
+            - "verification_lecture_seule"
+          alert_on_mismatch: true
+
+# ----------------------------------------------------------
+# ORCHESTRATION
+# ----------------------------------------------------------
+orchestration:
+  routing: "contextual"          # Par type de tâche (KYC, conformité, reporting)
+  isolation: "strict"            # Jamais cross-client — secret bancaire
+  fallback: "human"             # Toujours fallback humain
+  audit_trail: true              # Traces complètes Art. 30 RGPD + LBA
+
+# ----------------------------------------------------------
+# INFRASTRUCTURE : 7 règles K8s-compatibles
+# ----------------------------------------------------------
+infrastructure:
+  current: "docker-compose"
+  k8s_compatible: true
+  migration_path: "k3s"
+  migration_trigger: "8+ clients simultanés ou 5+ agents par client"
+
+  # Règle 1 : Un container = un agent
+  containers:
+    kyc-assist:
+      image: "cortex-leman/agent:${AGENT_VERSION}"
+    conformite-assist:
+      image: "cortex-leman/agent:${AGENT_VERSION}"
+    rapport-assist:
+      image: "cortex-leman/agent:${AGENT_VERSION}"
+    orchestrator:
+      image: "cortex-leman/orchestrator:${AGENT_VERSION}"
+    postgres:
+      image: "postgres:16"
+
+  # Règle 2 : Configuration via environnement, pas hardcoded
+  environment:
+    - AGENT_ROLE=${AGENT_ROLE}
+    - AGENT_SQUAD=${SQUAD_NAME}
+    - LLM_PROVIDER=${LLM_PROVIDER}
+    - LLM_MODEL=${LLM_MODEL}
+    - DATA_RESIDENCY=${DATA_RESIDENCY}
+    - LOG_LEVEL=${LOG_LEVEL}
+    - GUARDRAILS_CONFIG=/config/guardrails.yaml
+    - SAR_ENABLED=true
+
+  # Règle 3 : Health checks obligatoires
+  healthcheck:
+    test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+    interval: "30s"
+    timeout: "10s"
+    retries: 3
+    start_period: "10s"
+
+  # Règle 4 : Resource limits par container
+  resources:
+    limits:
+      cpus: "1.0"
+      memory: "512M"
+    reservations:
+      cpus: "0.25"
+      memory: "128M"
+
+  # Règle 5 : Réseau isolé par client
+  network:
+    method: "network_per_client"
+    driver: "bridge"
+    internal: true
+    documented: true
+    auditable: true
+
+  # Règle 6 : Secrets séparés du code
+  secrets:
+    method: "docker_secrets"
+    never_in_code: true
+    never_in_git: true
+    encryption: "AES-256"
+    items:
+      - llm_api_key
+      - db_password
+      - smtp_credentials
+      - banking_api_key
+
+  # Règle 7 : Logs structurés JSON
+  logging:
+    format: "structured_json"
+    fields:
+      - "ts"
+      - "agent"
+      - "squad"
+      - "client"
+      - "action"
+      - "result"
+      - "risk"
+      - "latency_ms"
+      - "guardrail_triggered"
+    driver: "json-file"
+    max_size: "10m"
+    max_file: 3
+    retention_days: 1825          # 5 ans LBA
+
+  # Data residency — CH obligatoire
+  data_residency:
+    vps_location: "CH"            # Suisse OBLIGATOIRE — secret bancaire Art. 47 LB
+    provider: ""                  # À spécifier (Exoscale/Infomaniak)
+    documented: true
+    verifiable: true
+
+  # Chiffrement
+  encryption:
+    at_rest: "AES-256"
+    in_transit: "TLS 1.3"
+    email: "PGP"
+    documented: true
+
+  # Backup
+  backup:
+    method: "script_cron"
+    frequency: "daily"
+    encryption: "AES-256"
+    tested: false
+    offsite: false
+
+# ----------------------------------------------------------
+# MODÈLE (model-agnostic)
+# ----------------------------------------------------------
+model:
+  provider: "${LLM_PROVIDER}"     # openrouter, ollama, local
+  name: "${LLM_MODEL}"            # anthropic/claude-sonnet-4, gpt-4o, glm-4
+  temperature: 0.1                # Minimal — finance
+  max_tokens: 2048
+  embedding_model: "${EMBEDDING_MODEL}"
+  data_residency: "CH"            # Suisse obligatoire
+
+# ----------------------------------------------------------
+# BASE DE CONNAISSANCES (RAG)
+# ----------------------------------------------------------
+knowledge_base:
+  sources:
+    - type: "regulation"
+      description: "Réglementation financière FR-CH"
+      references:
+        - "FINMA circulars"
+        - "AMF réglementation"
+        - "MiFID II"
+        - "Loi sur les banques (CH)"
+    - type: "compliance"
+      path: "/data/compliance/"
+      formats: ["pdf"]
+      encryption: "AES-256"
+    - type: "aml"
+      description: "Listes de sanctions et PEP"
+      references:
+        - "OFAC SDN List"
+        - "EU Sanctions List"
+        - "Terrorist Lists"
+  chunk_size: 1024
+  overlap: 128
+  embedding_model: "${EMBEDDING_MODEL}"
+
+# ----------------------------------------------------------
+# INTÉGRATIONS
+# ----------------------------------------------------------
+integrations:
+  email:
+    enabled: true
+    provider: "imap-encrypted"
+    actions: ["classify", "flag_suspicious"]
+    encryption: "PGP"
+  documents:
+    enabled: true
+    storage: "local_encrypted_aes256"
+    ocr: true
+  compliance:
+    enabled: true
+    provider: "internal"
+    actions: ["kyc_check", "aml_screening", "sar_flagging"]
+  n8n:
+    enabled: true
+    workflows:
+      - name: "kyc-automatisation"
+        description: "Aide au processus KYC (pas de décision)"
+        trigger: "manual"
+        template: "banque-finance-kyc.json"
+      - name: "screening-aml"
+        description: "Screening anti-blanchiment (alertes uniquement)"
+        trigger: "transaction_flag"
+        template: "banque-finance-aml.json"
+      - name: "rapport-conformite"
+        description: "Rapport de conformité mensuel"
+        trigger: "schedule_monthly"
+        template: "banque-finance-rapport.json"
+
+# ----------------------------------------------------------
+# CONFORMITÉ RGPD-IA
+# ----------------------------------------------------------
+compliance:
+  ai_act_risk_level: "high"      # HIGH — AI Act Annexe III finance
+  legal_basis: "legal_obligation" # LBA obligatoire
+  data_controller: "[BANQUE NAME]"
+  state_verification:
+    enabled: true
+    description: "L'agent ne peut pas rapporter complétion sans preuve vérifiable (arXiv:2602.20021)"
+    methods:
+      - "checksum_fichier_attendu"
+      - "log_confirmation_action"
+      - "verification_screening_complet"
+      - "cross_check_par_agent_pair"
+    alert_on_mismatch: true
+  register_entry: true           # Art. 30 RGPD — toujours
+  human_oversight: true          # Toujours true par défaut
+  art22_compliant: true          # Pas de décision automatisée sur transactions
+  special_notes: |
+    AI Act Annexe III : Systèmes IA évaluation crédit = HIGH RISK.
+    FINMA : Obligations de gouvernance IA (circulaire en cours).
+    LBA : Conservation 5-10 ans selon type.
+    Secret bancaire (Art. 47 LB) : Infrastructure Suisse uniquement.
+    Obligations SUP/AML : Déclaration d'activités suspectes.
+    DPIA obligatoire : high risk AI Act.
+
+# ----------------------------------------------------------
+# MONITORING
+# ----------------------------------------------------------
+monitoring:
+  log_all_interactions: true
+  alert_on:
+    - "transaction suspecte détectée"
+    - "données bancaires dans output"
+    - "requête hors conformité"
+    - "tentative d'accès non autorisé"
+    - "guardrail déclenché"
+  metrics:
+    - name: "suspicious_activity_detected"
+      threshold: 0
+      action: "alert_compliance_officer"
+    - name: "requests_per_hour"
+      threshold: 50
+      action: "throttle_and_alert"
+    - name: "latency_p95_ms"
+      threshold: 3000
+      action: "alert"
+  weekly_report: true
+  monthly_compliance_check: true
+  quarterly_audit: true
+  annual_finma_report: true

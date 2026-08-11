@@ -1,0 +1,153 @@
+{
+  "name": "banque-finance-kyc",
+  "nodes": [
+    {
+      "parameters": {
+        "fields": {
+          "values": [
+            { "name": "client_id", "display": true }
+          ]
+        }
+      },
+      "id": "1",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:3000/api/kyc/collecte-docs",
+        "method": "GET",
+        "queryParameters": {
+          "parameters": [
+            { "name": "client_id", "value": "={{$json.client_id}}" }
+          ]
+        }
+      },
+      "id": "2",
+      "name": "Collecte Docs Client",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [420, 300]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "prompt": "Tu es un assistant conformité KYC pour une banque suisse. Extrait les données structurées des documents client suivants.\n\nDocuments: {{JSON.stringify($json.documents)}}\n\nExtrait en JSON:\n- identite: nom, prénom, date_naissance, nationalité\n- adresse: rue, ville, pays\n- statut: personne_physique / personne_morale\n- documents_recus: liste avec statut (complet/incomplet/manquant)\n\nIMPORTANT:\n- Tu es un assistant, pas un décideur\n- Signale tout document manquant\n- Ne jamais exposer les données hors du contexte KYC\n- Secret bancaire (Art. 47 LB): données confidentielles\n\nDISCLAIMER: Analyse interne conformité. Ne pas communiquer au client sans validation.",
+        "temperature": 0.1,
+        "maxTokens": 2000,
+        "options": {
+          "responseFormat": "json_object"
+        }
+      },
+      "id": "3",
+      "name": "LLM Extraction Données",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [640, 300]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "prompt": "Vérifie la conformité KYC des données extraites selon les normes FINMA et LBA.\n\nDonnées client: {{JSON.stringify($json.donnees_extraites)}}\n\nVérifie:\n1. Documents d'identité conformes (passport/C-ID)\n2. Preuve d'adresse (< 3 mois)\n3. Déclaration d'origine des fonds\n4. Statut PEP (Personne Politiquement Exposée)\n5. Sanctions screen (ONU, UE, CH)\n6. Articles of incorporation si PM\n\nSignale TOUTE anomalie. Score de conformité: 0-100.\n\nRéponds en JSON: {\"conforme\": bool, \"score\": number, \"anomalies\": [...], \"action_requise\": [...]}",
+        "temperature": 0.1,
+        "maxTokens": 1500,
+        "options": {
+          "responseFormat": "json_object"
+        }
+      },
+      "id": "4",
+      "name": "LLM Verification Conformité",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [860, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            { "value1": "={{JSON.parse($json.message.content).conforme}}", "value2": false }
+          ]
+        }
+      },
+      "id": "5",
+      "name": "Anomalie Détectée?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1080, 300]
+    },
+    {
+      "parameters": {
+        "fromEmail": "compliance@banque.ch",
+        "toEmail": "compliance-officer@banque.ch",
+        "subject": "=⚠️ ALERTE KYC - Anomalie détectée - Client {{$json.client_id}}",
+        "text": "=ALERTE CONFORMITÉ KYC\n\nClient: {{$json.client_id}}\nScore conformité: {{JSON.parse($json.donnees_extraites).score}}/100\n\nAnomalies:\n{{JSON.stringify(JSON.parse($json.donnees_extraites).anomalies)}}\n\nActions requises:\n{{JSON.stringify(JSON.parse($json.donnees_extraites).action_requise)}}\n\n⚠️ VALIDATION HUMAINE REQUISE\n\nDISCLAIMER: Analyse interne conformité. Ne pas communiquer au client sans validation."
+      },
+      "id": "6",
+      "name": "Alert Anomalie",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [1300, 200]
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/compliance/kyc/{{new Date().toISOString().split('T')[0]}}-{{$json.client_id}}-rapport.json",
+        "content": "={{JSON.stringify($json)}}"
+      },
+      "id": "7",
+      "name": "Rapport Compliance",
+      "type": "n8n-nodes-base.writeBinaryFile",
+      "typeVersion": 1,
+      "position": [1520, 300]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [{ "node": "Collecte Docs Client", "type": "main", "index": 0 }]
+      ]
+    },
+    "Collecte Docs Client": {
+      "main": [
+        [{ "node": "LLM Extraction Données", "type": "main", "index": 0 }]
+      ]
+    },
+    "LLM Extraction Données": {
+      "main": [
+        [{ "node": "LLM Verification Conformité", "type": "main", "index": 0 }]
+      ]
+    },
+    "LLM Verification Conformité": {
+      "main": [
+        [{ "node": "Anomalie Détectée?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Anomalie Détectée?": {
+      "main": [
+        [{ "node": "Alert Anomalie", "type": "main", "index": 0 }],
+        [{ "node": "Rapport Compliance", "type": "main", "index": 0 }]
+      ]
+    },
+    "Alert Anomalie": {
+      "main": [
+        [{ "node": "Rapport Compliance", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "a1b2c3d4-0004-4000-8000-000000000001",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "banque-finance"
+  },
+  "tags": [
+    { "name": "banque-finance" },
+    { "name": "kyc" },
+    { "name": "compliance" }
+  ]
+}

@@ -1,0 +1,382 @@
+# ============================================================
+# CORTEX LEMAN AGENT SQUAD TEMPLATE v4.0
+# Vertical : Clinique / Santé
+# Modèle  : Agent Squad (3 spécialistes + orchestrateur)
+# Risque  : HIGH (AI Act Annexe III — données de santé)
+# Residency : CH obligatoire (Art. 9 RGPD + LPM)
+# BLOCAGE  : Dossiers médicaux INACCESSIBLES par les agents
+# ============================================================
+
+# ----------------------------------------------------------
+# SQUAD : 3 agents spécialisés
+# ----------------------------------------------------------
+squad:
+  name: "clinique-sante"
+  vertical: "clinique-sante"
+  version: "4.0.0"
+
+  agents:
+    # --- Agent 1 : Tri & Routage ---
+    - id: "admin-assist"
+      role: "Tri & Routage"
+      system_prompt: |
+        Tu es l'agent administratif de la clinique. Tu gères les rappels de rendez-vous,
+        le suivi administratif et la gestion des plannings.
+        BLOCAGE ABSOLU : tu n'accèdes JAMAIS aux dossiers médicaux.
+        RÈGLES STRICTES :
+        - Gérer les rappels de rendez-vous (SMS/email)
+        - Organiser les plannings de consultation
+        - Ne JAMAIS poser de diagnostic ou recommandation médicale
+        - Données de santé = catégorie la plus protégée (Art. 9 RGPD + LPM)
+        - Si question médicale détectée → « Veuillez consulter votre médecin »
+        - Langue : français
+      autonomy_level: "low"
+      data_access:
+        - "plannings_consultations"
+        - "donnees_administratives"
+        - "calendrier_clinique"
+      data_restrictions:
+        - "blocage_total_dossiers_medicaux"
+        - "jamais_diagnostic_ou_conseil_medical"
+        - "chiffrement_aes256_obligatoire"
+        - "hebergement_suisse_exclusivement"
+        - "jamais_donnees_sante_dans_logs"
+      guardrails:
+        human_decision_required:
+          - "annulation_rdv_urgent"
+          - "modification_planning_medecin"
+          - "communication_patient"
+        max_requests_per_hour: 50
+        session_timeout_minutes: 15    # Court — données sensibles
+        content_filter: true
+        state_verification:
+          enabled: true
+          methods:
+            - "checksum_fichier_attendu"
+            - "log_confirmation_action"
+            - "verification_aucun_acces_medical"
+          alert_on_mismatch: true
+
+    # --- Agent 2 : Analyse & Synthèse ---
+    - id: "facturation-assist"
+      role: "Analyse & Synthèse"
+      system_prompt: |
+        Tu es l'agent de facturation de la clinique. Tu aides à la facturation Tarmed,
+        aux relances et aux rapprochements. Tu n'accèdes JAMAIS aux données médicales.
+        BLOCAGE ABSOLU : dossiers médicaux inaccessibles.
+        RÈGLES STRICTES :
+        - Aider à la facturation Tarmed (codes, tarifs)
+        - Gérer les relances de factures
+        - Ne jamais interpréter des résultats médicaux
+        - Ne jamais accéder au contenu des dossiers médicaux
+        - Toujours ajouter : « Information administrative. Pour toute question médicale, consultez votre médecin. »
+        - Langue : français
+      autonomy_level: "low"
+      data_access:
+        - "factures_tarmed"
+        - "codes_tarmed"
+        - "donnees_facturation"
+      data_restrictions:
+        - "blocage_total_dossiers_medicaux"
+        - "jamais_acces_contenu_medical"
+        - "jamais_interpretation_resultats"
+        - "chiffrement_aes256_obligatoire"
+        - "anonymisation_pii_obligatoire"
+      guardrails:
+        human_decision_required:
+          - "validation_facture_tarmed"
+          - "relance_patient"
+          - "rapprochement_assurance"
+        max_requests_per_hour: 50
+        session_timeout_minutes: 15
+        content_filter: true
+        state_verification:
+          enabled: true
+          methods:
+            - "checksum_fichier_attendu"
+            - "log_confirmation_action"
+            - "cross_check_par_admin_assist"
+          alert_on_mismatch: true
+
+    # --- Agent 3 : Action & Suivi ---
+    - id: "suivi-assist"
+      role: "Action & Suivi"
+      system_prompt: |
+        Tu es l'agent de suivi administratif de la clinique. Tu assures le suivi
+        post-consultation STRICTEMENT administratif (rappels, convocations, documents).
+        BLOCAGE ABSOLU : tu n'accèdes JAMAIS aux données médicales.
+        RÈGLES STRICTES :
+        - Suivi administratif post-consultation uniquement
+        - Rappels de convocations et documents administratifs
+        - Ne JAMAIS faire de suivi médical
+        - Si question médicale → « Veuillez contacter votre médecin »
+        - Langue : français
+      autonomy_level: "low"
+      data_access:
+        - "suivi_administratif"
+        - "convocations"
+        - "documents_administratifs"
+      data_restrictions:
+        - "blocage_total_dossiers_medicaux"
+        - "jamais_suivi_medical"
+        - "chiffrement_aes256_obligatoire"
+        - "hebergement_suisse_exclusivement"
+        - "jamais_donnees_sante_dans_logs"
+      guardrails:
+        human_decision_required:
+          - "envoi_convocation"
+          - "suivi_post_consultation"
+          - "communication_patient"
+        max_requests_per_hour: 40
+        session_timeout_minutes: 15
+        content_filter: true
+        state_verification:
+          enabled: true
+          methods:
+            - "log_confirmation_envoi"
+            - "validation_supervision_humaine"
+            - "verification_aucun_acces_medical"
+          alert_on_mismatch: true
+
+# ----------------------------------------------------------
+# ORCHESTRATION
+# ----------------------------------------------------------
+orchestration:
+  routing: "contextual"          # Par type de tâche (admin, facturation, suivi)
+  isolation: "strict"            # Jamais cross-contexte patient — données santé
+  fallback: "human"             # Toujours fallback humain
+  audit_trail: true              # Traces complètes Art. 30 RGPD + LPM
+
+# ----------------------------------------------------------
+# INFRASTRUCTURE : 7 règles K8s-compatibles
+# ----------------------------------------------------------
+infrastructure:
+  current: "docker-compose"
+  k8s_compatible: true
+  migration_path: "k3s"
+  migration_trigger: "8+ clients simultanés ou 5+ agents par client"
+
+  # Règle 1 : Un container = un agent
+  containers:
+    admin-assist:
+      image: "cortex-leman/agent:${AGENT_VERSION}"
+    facturation-assist:
+      image: "cortex-leman/agent:${AGENT_VERSION}"
+    suivi-assist:
+      image: "cortex-leman/agent:${AGENT_VERSION}"
+    orchestrator:
+      image: "cortex-leman/orchestrator:${AGENT_VERSION}"
+    postgres:
+      image: "postgres:16"
+
+  # Règle 2 : Configuration via environnement, pas hardcoded
+  environment:
+    - AGENT_ROLE=${AGENT_ROLE}
+    - AGENT_SQUAD=${SQUAD_NAME}
+    - LLM_PROVIDER=${LLM_PROVIDER}
+    - LLM_MODEL=${LLM_MODEL}
+    - DATA_RESIDENCY=${DATA_RESIDENCY}
+    - LOG_LEVEL=${LOG_LEVEL}
+    - GUARDRAILS_CONFIG=/config/guardrails.yaml
+    - MEDICAL_RECORDS_ACCESS=DISABLED
+
+  # Règle 3 : Health checks obligatoires
+  healthcheck:
+    test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+    interval: "30s"
+    timeout: "10s"
+    retries: 3
+    start_period: "10s"
+
+  # Règle 4 : Resource limits par container
+  resources:
+    limits:
+      cpus: "1.0"
+      memory: "512M"
+    reservations:
+      cpus: "0.25"
+      memory: "128M"
+
+  # Règle 5 : Réseau isolé par client
+  network:
+    method: "network_per_client"
+    driver: "bridge"
+    internal: true
+    documented: true
+    auditable: true
+
+  # Règle 6 : Secrets séparés du code
+  secrets:
+    method: "docker_secrets"
+    never_in_code: true
+    never_in_git: true
+    encryption: "AES-256"
+    items:
+      - llm_api_key
+      - db_password
+      - smtp_credentials
+      - medical_records_key             # Clé séparée — jamais accessible aux agents
+
+  # Règle 7 : Logs structurés JSON
+  logging:
+    format: "structured_json"
+    fields:
+      - "ts"
+      - "agent"
+      - "squad"
+      - "client"
+      - "action"
+      - "result"
+      - "risk"
+      - "latency_ms"
+      - "guardrail_triggered"
+    driver: "json-file"
+    max_size: "10m"
+    max_file: 3
+    retention_days: 3650          # 10 ans LPM
+
+  # Data residency — CH obligatoire
+  data_residency:
+    vps_location: "CH"            # Suisse OBLIGATOIRE — données santé Art. 9 + LPM
+    provider: ""                  # À spécifier (Exoscale/Infomaniak)
+    documented: true
+    verifiable: true
+
+  # Chiffrement
+  encryption:
+    at_rest: "AES-256"
+    in_transit: "TLS 1.3"
+    email: "PGP"
+    medical_records: "BLOCAGE_TOTAL"
+    documented: true
+
+  # Backup
+  backup:
+    method: "script_cron"
+    frequency: "daily"
+    encryption: "AES-256"
+    tested: false
+    offsite: false
+
+# ----------------------------------------------------------
+# MODÈLE (model-agnostic)
+# ----------------------------------------------------------
+model:
+  provider: "${LLM_PROVIDER}"     # openrouter, ollama, local
+  name: "${LLM_MODEL}"            # anthropic/claude-sonnet-4, gpt-4o, glm-4
+  temperature: 0.1                # Minimal — santé
+  max_tokens: 2048
+  embedding_model: "${EMBEDDING_MODEL}"
+  data_residency: "CH"            # Suisse obligatoire
+
+# ----------------------------------------------------------
+# BASE DE CONNAISSANCES (RAG)
+# ----------------------------------------------------------
+knowledge_base:
+  sources:
+    - type: "medical_admin"
+      description: "Documentation administrative médicale"
+      references:
+        - "Tarmed (tarifs médicaux CH)"
+        - "CPT codes"
+        - "LAMal / Lamal procedures"
+    - type: "protocols"
+      path: "/data/protocols/"
+      formats: ["pdf"]
+      encryption: "AES-256"
+    - type: "legislation"
+      description: "Législation santé FR-CH"
+      references:
+        - "LPM (Loi sur les professions médicales)"
+        - "Art. 9 RGPD"
+        - "Hôpitaux et cliniques CH"
+  chunk_size: 512
+  overlap: 64
+  embedding_model: "${EMBEDDING_MODEL}"
+
+# ----------------------------------------------------------
+# INTÉGRATIONS
+# ----------------------------------------------------------
+integrations:
+  email:
+    enabled: true
+    provider: "imap-encrypted"
+    actions: ["classify", "rappel_rdv", "facturation"]
+    encryption: "PGP"
+  documents:
+    enabled: true
+    storage: "local_encrypted_aes256"
+    medical_records_access: false   # BLOQUÉ
+    administrative_access: true
+    ocr: true
+  calendar:
+    enabled: true
+    provider: "caldav"
+    actions: ["prise_rdv", "rappel", "annulation"]
+  n8n:
+    enabled: true
+    workflows:
+      - name: "rappel-rdv"
+        description: "Rappels de rendez-vous par SMS/email"
+        trigger: "schedule_daily"
+        template: "clinique-sante-rappels.json"
+      - name: "facturation-tarmed"
+        description: "Aide à la facturation Tarmed"
+        trigger: "manual"
+        template: "clinique-sante-facturation.json"
+      - name: "suivi-patient-admin"
+        description: "Suivi administratif (pas médical)"
+        trigger: "manual"
+        template: "clinique-sante-suivi-admin.json"
+
+# ----------------------------------------------------------
+# CONFORMITÉ RGPD-IA
+# ----------------------------------------------------------
+compliance:
+  ai_act_risk_level: "high"      # HIGH — AI Act Annexe III santé
+  legal_basis: "explicit_consent" # Consentement explicite requis
+  data_controller: "[CLINIQUE NAME]"
+  state_verification:
+    enabled: true
+    description: "L'agent ne peut pas rapporter complétion sans preuve vérifiable (arXiv:2602.20021)"
+    methods:
+      - "checksum_fichier_attendu"
+      - "log_confirmation_action"
+      - "verification_aucun_acces_medical"
+      - "cross_check_par_agent_pair"
+    alert_on_mismatch: true
+  register_entry: true           # Art. 30 RGPD — toujours
+  human_oversight: true          # Toujours true par défaut
+  art22_compliant: true          # Pas de décision automatisée sur données santé
+  special_notes: |
+    AI Act Annexe III : Systèmes IA de santé = HIGH RISK.
+    LPM Suisse : Protection des données médicales.
+    BLOCAGE TOTAL des dossiers médicaux — les agents n'y accèdent JAMAIS.
+    DPIA obligatoire : high risk AI Act.
+    Toute infrastructure doit être en Suisse.
+
+# ----------------------------------------------------------
+# MONITORING
+# ----------------------------------------------------------
+monitoring:
+  log_all_interactions: true
+  alert_on:
+    - "tentative d'accès aux dossiers médicaux"
+    - "question médicale détectée"
+    - "données de santé dans output"
+    - "requête hors périmètre administratif"
+    - "guardrail déclenché"
+  metrics:
+    - name: "medical_access_attempts"
+      threshold: 0
+      action: "block_and_alert_immediately"
+    - name: "requests_per_hour"
+      threshold: 50
+      action: "throttle"
+    - name: "latency_p95_ms"
+      threshold: 2000
+      action: "alert"
+  weekly_report: true
+  monthly_compliance_check: true
+  quarterly_audit: true
+  annual_dpia_review: true

@@ -1,0 +1,53 @@
+# Cortex Leman Compliance Generator - Docker Compose Override
+# Ajoute le service compliance-generator au stack Docker existant de Cortex Leman
+
+version: '3.8'
+
+services:
+  # Service de Génération de Conformité
+  compliance-generator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cortex-leman-compliance-generator
+    ports:
+      - "8001:8000"  # Port 8001 pour éviter conflit avec API existante (8000)
+    environment:
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - KIEAI_API_KEY=${KIEAI_API_KEY:-[REDACTED-KIEAI-KEY]}
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+      - API_LOG_LEVEL=INFO
+      - ENABLE_VALIDATION=true
+    env_file:
+      - .env
+    networks:
+      - cortex-leman-network
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Reverse Proxy (Nginx) - Override pour ajouter le nouveau endpoint
+  nginx:
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+    depends_on:
+      - compliance-generator
+
+networks:
+  cortex-leman-network:
+    external: true
+
+# Note: Ce fichier suppose que les services postgres et redis existent déjà dans le stack principal
+# Utilisez: docker-compose -f docker-compose.yml -f docker-compose.override.yml up -d

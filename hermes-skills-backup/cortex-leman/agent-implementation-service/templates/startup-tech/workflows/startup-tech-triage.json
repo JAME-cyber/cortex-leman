@@ -1,0 +1,141 @@
+{
+  "name": "startup-tech-triage",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "/webhook/github-issue",
+        "httpMethod": "POST",
+        "responseMode": "lastNode"
+      },
+      "id": "1",
+      "name": "GitHub Issue Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "prompt": "Classifie ce GitHub issue par sévérité. Réponds UNIQUEMENT avec le niveau de priorité.\n\nNiveaux:\n- P0: Critical - production down, data loss, security breach\n- P1: High - major feature broken, many users affected\n- P2: Medium - feature partially broken, workaround exists\n- P3: Low - minor issue, cosmetic, enhancement request\n\nIssue title: {{$json.body.issue.title}}\nIssue body: {{$json.body.issue.body}}\nLabels existantes: {{JSON.stringify($json.body.issue.labels)}}",
+        "temperature": 0.2,
+        "maxTokens": 50
+      },
+      "id": "2",
+      "name": "LLM Classification P0-P3",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [420, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            { "name": "priority", "value": "={{$json.message.content.trim()}}" },
+            { "name": "issue_number", "value": "={{$json.body.issue.number}}" },
+            { "name": "repo", "value": "={{$json.body.repository.full_name}}" }
+          ]
+        }
+      },
+      "id": "3",
+      "name": "Set Priority",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [640, 300]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.github.com/repos/{{$json.repo}}/issues/{{$json.issue_number}}/labels",
+        "method": "POST",
+        "headers": {
+          "headers": [
+            { "name": "Authorization", "value": "Bearer {{$credentials.githubToken}}" },
+            { "name": "Accept", "value": "application/vnd.github.v3+json" }
+          ]
+        },
+        "body": {
+          "body": [
+            { "name": "labels", "value": "[\"{{$json.priority}}\",\"ai-triaged\"]" }
+          ]
+        }
+      },
+      "id": "4",
+      "name": "Assign Label GitHub",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [860, 300]
+    },
+    {
+      "parameters": {
+        "channel": "#issues",
+        "text": "=🏷️ Issue trié: {{$json.repo}}#{{$json.issue_number}} → **{{$json.priority}}**\nClassification automatique par IA. Vérifiez la priorité.",
+        "credentials": "slack_api"
+      },
+      "id": "5",
+      "name": "Slack Notification",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [1080, 200]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.github.com/repos/{{$json.repo}}/issues/{{$json.issue_number}}/comments",
+        "method": "POST",
+        "headers": {
+          "headers": [
+            { "name": "Authorization", "value": "Bearer {{$credentials.githubToken}}" },
+            { "name": "Accept", "value": "application/vnd.github.v3+json" }
+          ]
+        },
+        "body": {
+          "body": [
+            { "name": "body", "value": "=🤖 **AI Triage**: This issue has been classified as **{{$json.priority}}**.\n\n_This is an automated classification. Please verify the priority is correct._" }
+          ]
+        }
+      },
+      "id": "6",
+      "name": "Auto Comment GitHub",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1080, 400]
+    }
+  ],
+  "connections": {
+    "GitHub Issue Webhook": {
+      "main": [
+        [{ "node": "LLM Classification P0-P3", "type": "main", "index": 0 }]
+      ]
+    },
+    "LLM Classification P0-P3": {
+      "main": [
+        [{ "node": "Set Priority", "type": "main", "index": 0 }]
+      ]
+    },
+    "Set Priority": {
+      "main": [
+        [{ "node": "Assign Label GitHub", "type": "main", "index": 0 }]
+      ]
+    },
+    "Assign Label GitHub": {
+      "main": [
+        [
+          { "node": "Slack Notification", "type": "main", "index": 0 },
+          { "node": "Auto Comment GitHub", "type": "main", "index": 0 }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "a1b2c3d4-0005-4000-8000-000000000001",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "startup-tech"
+  },
+  "tags": [
+    { "name": "startup-tech" },
+    { "name": "triage" },
+    { "name": "github" }
+  ]
+}

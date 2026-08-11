@@ -1,0 +1,114 @@
+{
+  "name": "banque-finance-rapport",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "cronExpression", "expression": "0 10 1 * *" }]
+        }
+      },
+      "id": "1",
+      "name": "Schedule Monthly",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:3000/api/compliance/indicateurs",
+        "method": "GET",
+        "queryParameters": {
+          "parameters": [
+            { "name": "mois", "value": "={{new Date().getMonth() + 1}}" },
+            { "name": "annee", "value": "={{new Date().getFullYear()}}" }
+          ]
+        }
+      },
+      "id": "2",
+      "name": "Collecte Indicateurs Conformité",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [420, 300]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "prompt": "Tu es un analyste conformité pour une banque suisse. Génère un rapport mensuel de conformité basé sur les indicateurs suivants.\n\nIndicateurs: {{JSON.stringify($json.indicateurs)}}\n\nStructure du rapport:\n1. Résumé exécutif\n2. Statistiques KYC (dossiers traités, anomalies, taux conformité)\n3. Statistiques AML (transactions signalées, SAR déposés, faux positifs)\n4. Indicateurs de risque (tendances, zones à vigilance)\n5. Actions correctives en cours\n6. Recommandations\n\nRéférences réglementaires: FINMA, LBA, MiFID II\n\nDISCLAIMER: Rapport interne conformité. Ne pas communiquer hors du département compliance.",
+        "temperature": 0.1,
+        "maxTokens": 3000
+      },
+      "id": "3",
+      "name": "LLM Synthese Conformité",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [640, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:3000/api/pdf/generate",
+        "method": "POST",
+        "body": {
+          "body": [
+            { "name": "content", "value": "={{$json.message.content}}" },
+            { "name": "template", "value": "rapport-conformite-mensuel" },
+            { "name": "title", "value": "=Rapport Conformité - {{$json.mois}}/{{$json.annee}}" }
+          ]
+        }
+      },
+      "id": "4",
+      "name": "Rapport PDF",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [860, 300]
+    },
+    {
+      "parameters": {
+        "fromEmail": "compliance@banque.ch",
+        "toEmail": "compliance-officer@banque.ch",
+        "subject": "=Rapport mensuel conformité - {{$json.mois}}/{{$json.annee}}",
+        "text": "=Veuillez trouver ci-joint le rapport mensuel de conformité.\n\nMois: {{$json.mois}}/{{$json.annee}}\n\nDISCLAIMER: Rapport interne conformité. Ne pas communiquer hors du département compliance.\n\nSecret bancaire (Art. 47 LB): Document confidentiel."
+      },
+      "id": "5",
+      "name": "Email Compliance",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [1080, 300]
+    }
+  ],
+  "connections": {
+    "Schedule Monthly": {
+      "main": [
+        [{ "node": "Collecte Indicateurs Conformité", "type": "main", "index": 0 }]
+      ]
+    },
+    "Collecte Indicateurs Conformité": {
+      "main": [
+        [{ "node": "LLM Synthese Conformité", "type": "main", "index": 0 }]
+      ]
+    },
+    "LLM Synthese Conformité": {
+      "main": [
+        [{ "node": "Rapport PDF", "type": "main", "index": 0 }]
+      ]
+    },
+    "Rapport PDF": {
+      "main": [
+        [{ "node": "Email Compliance", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "a1b2c3d4-0004-4000-8000-000000000003",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "banque-finance"
+  },
+  "tags": [
+    { "name": "banque-finance" },
+    { "name": "rapport-conformite" },
+    { "name": "schedule" }
+  ]
+}

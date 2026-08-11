@@ -1,0 +1,463 @@
+# ============================================================
+# SOCIALPULSE CAMPAIGN - CORTEX LEMAN RGPD-IA
+# Campagne par defaut: audit RGPD-IA pour PME FR-CH
+# ============================================================
+
+campaign:
+  name: "cortex-leman-rgpd"
+  label: "Cortex Leman - Audit RGPD-IA"
+  client: "Cortex Leman"
+  vertical: "rgpd-ia"
+  version: "4.0"
+  created: "2026-04-18"
+  updated: "2026-05-03"
+  status: "active"
+
+# ----------------------------------------------------------
+# CIBLE
+# ----------------------------------------------------------
+target:
+  description: "PME utilisant l'IA en Suisse Romande et Haute-Savoie"
+  employee_range: [50, 200]
+  regions:
+    - "Geneve"
+    - "Lausanne"
+    - "Montreux"
+    - "Neuchatel"
+    - "Fribourg"
+    - "Annecy"
+    - "Annemasse"
+  countries: ["CH", "FR"]
+  languages: ["fr"]
+  
+  sectors:
+    - name: "Cabinet comptable"
+      weight: 100
+      search_queries:
+        - "\"cabinet comptable\" + Geneve"
+        - "\"cabinet comptable\" + Lausanne"
+        - "\"expert comptable\" + Annecy"
+    - name: "Cabinet d'avocats"
+      weight: 100
+      search_queries:
+        - "\"cabinet avocat\" + Geneve"
+        - "\"cabinet avocat\" + Lausanne"
+        - "\"avocat affaires\" + Annecy"
+    - name: "Clinique / Sante"
+      weight: 100
+      search_queries:
+        - "\"clinique\" + Geneve"
+        - "\"clinique\" + Lausanne"
+        - "\"cabinet medical\" + Annecy"
+    - name: "Banque / Finance"
+      weight: 100
+      search_queries:
+        - "\"banque\" + Geneve"
+        - "\"gestion fortune\" + Lausanne"
+        - "\"courtier financier\" + Annecy"
+    - name: "Startup Tech"
+      weight: 80
+      search_queries:
+        - "\"startup\" + Geneve"
+        - "\"startup\" + Lausanne"
+        - "\"SaaS\" + Annecy"
+    - name: "Cabinet RH / Recrutement"
+      weight: 80
+      search_queries:
+        - "\"cabinet recrutement\" + Geneve"
+        - "\"cabinet recrutement\" + Lausanne"
+        - "\"chasseur tetes\" + Annecy"
+
+# ----------------------------------------------------------
+# SCORING LEAD (0-100) - DÉTERMINISTE (JsonLogic)
+# ----------------------------------------------------------
+scoring:
+  threshold: 60
+  
+  # Gel automatique si score < threshold
+  # → Arbitrage humain requis pour débloquer
+  gel_on_below_threshold: true
+  arbitrage_required_on_gel: true
+  
+  criteria:
+    employee_count:
+      weight: 0.25
+      brackets:
+        - [0, 49, 50]
+        - [50, 200, 100]
+        - [201, 500, 70]
+        - [501, 9999, 30]
+    
+    sector:
+      weight: 0.30
+      mapping:
+        "Cabinet comptable": 100
+        "Cabinet d'avocats": 100
+        "Clinique / Sante": 100
+        "Banque / Finance": 100
+        "Startup Tech": 80
+        "Cabinet RH / Recrutement": 80
+        "default": 30
+    
+    risk_indicator:
+      weight: 0.25
+      label: "Risque IA"
+      detection:
+        high: "Chatbot/IA detecte sur site web"
+        medium: "Site dynamique, signaux d'usage IA"
+        low: "Pas de signal IA evident"
+      mapping:
+        "high": 100
+        "medium": 60
+        "low": 30
+    
+    location:
+      weight: 0.20
+      mapping:
+        "Geneve": 100
+        "Lausanne": 100
+        "Montreux": 95
+        "Neuchatel": 90
+        "Fribourg": 85
+        "Annecy": 90
+        "Annemasse": 85
+        "Haute-Savoie": 80
+        "autre CH": 60
+        "autre FR": 40
+        "autre": 20
+
+# ----------------------------------------------------------
+# MÉDIATEUR DÉTERMINISTE (NOUVEAU v4)
+# ----------------------------------------------------------
+mediateur:
+  enabled: true
+  description: |
+    Le Médiateur vérifie 12 règles JsonLogic avant chaque action du pipeline.
+    0% LLM. 100% déterministe. Gel automatique si violation.
+  
+  rules:
+    discovery:
+      - description: "Base légale RGPD requise"
+        condition: "discovery.source.legal_basis == 'interet_legitime'"
+        on_violation: "gel"
+      - description: "Max results par source"
+        condition: "discovery.results_count <= campaign.discovery.max_results"
+        on_violation: "gel"
+      - description: "Région autorisée"
+        condition: "discovery.region.country IN campaign.target.countries"
+        on_violation: "gel"
+    
+    enrichment:
+      - description: "Pas de PII dans les outputs"
+        condition: "enrichment.pii_detected == false"
+        on_violation: "gel"
+      - description: "Max 5 data points par lead"
+        condition: "enrichment.data_points <= 5"
+        on_violation: "gel"
+      - description: "Consentement B2B vérifié"
+        condition: "enrichment.consent_status == 'not_required_b2b'"
+        on_violation: "gel"
+    
+    qualification:
+      - description: "Score minimum requis"
+        condition: "lead.score >= campaign.scoring.threshold"
+        on_violation: "gel"
+      - description: "Lead pas opted-out"
+        condition: "lead.opt_out == false"
+        on_violation: "reject"
+      - description: "Lead pas sur DNC"
+        condition: "lead.on_dnc_list == false"
+        on_violation: "reject"
+    
+    personalization:
+      - description: "Max mots email"
+        condition: "personalization.email.word_count <= campaign.personalization.email.max_words"
+        on_violation: "regenerate"
+      - description: "Mention opt-out obligatoire"
+        condition: "personalization.opt_out_mention == true"
+        on_violation: "gel"
+      - description: "Budget batch pas dépassé"
+        condition: "personalization.budget_used <= campaign.budget.max_per_batch_usd"
+        on_violation: "gel"
+  
+  gel_on_violation: true
+  require_arbitrage_on_gel: true
+  log_all_decisions: true
+
+# ----------------------------------------------------------
+# JOURNAL WORM (NOUVEAU v4)
+# ----------------------------------------------------------
+journal:
+  enabled: true
+  description: |
+    Journal inviolable. Hash-chain SHA-256. Append-only.
+    Chaque action du pipeline est tracée: discovery, enrichment, scoring, personnalisation.
+    Vérifiable par audit externe.
+  
+  hash_algorithm: "sha256"
+  storage: "local"
+  directory: "~/socialpulse-output/{campaign_name}/journaux"
+  retention_days: 365
+  verifiable: true
+  entries_per_batch:
+    - discovery_start
+    - discovery_source_google_maps
+    - discovery_source_europages
+    - discovery_source_scrapling
+    - enrichment_contact
+    - enrichment_site_analysis
+    - qualification_scoring
+    - qualification_gel (si applicable)
+    - personalization_email
+    - personalization_infographic
+    - batch_close
+
+# ----------------------------------------------------------
+# GUARDRAILS LLM (NOUVEAU v4)
+# ----------------------------------------------------------
+guardrails:
+  description: |
+    3 couches de protection sur chaque output LLM.
+    Applicable aux emails, posts LinkedIn, et tout contenu généré.
+  
+  pii_detection:
+    enabled: true
+    description: "Détecter et masquer les PII dans les outputs LLM"
+    patterns: ["email", "phone", "iban", "ssn", "siret", "ide"]
+    action_on_detection: "mask_and_log"
+  
+  topic_control:
+    enabled: true
+    description: "Rester dans le vertical de la campagne"
+    allowed_topics: ["RGPD", "AI Act", "conformité", "audit", "IA"]
+    forbidden_topics: ["politique", "religion", "concurrence directe"]
+    action_on_violation: "regenerate"
+  
+  output_safety:
+    enabled: true
+    description: "Pas de contenu risqué dans les outputs"
+    checks: ["no_defamation", "no_false_claims", "no_unverified_stats"]
+    action_on_violation: "regenerate"
+  
+  max_retry_on_violation: 2
+  fallback_on_max_retry: "template_email"
+
+# ----------------------------------------------------------
+# SERMENT SOCIALPULSE (NOUVEAU v4)
+# ----------------------------------------------------------
+serment:
+  enabled: true
+  version: "1.0"
+  principes:
+    - "Ne jamais contacter un lead gelé par le Médiateur"
+    - "Ne jamais dépasser le budget sans arbitrage humain"
+    - "Ne jamais contacter un lead ayant formulé un opt-out"
+    - "Ne jamais fuiter de PII dans les outputs LLM"
+    - "Tracer chaque action dans le journal WORM"
+    - "Le Médiateur décide le scoring, l'humain arbitre"
+    - "Supprimer les données après la retention configurée"
+    - "Respecter robots.txt et les CGU des sources"
+
+# ----------------------------------------------------------
+# DISCOVERY
+# ----------------------------------------------------------
+discovery:
+  google_maps:
+    enabled: true
+    actor: "ittechinnovators/google-maps-business-scraper"
+    cost_per_result: 0.05
+    max_results_per_query: 20
+  
+  europages:
+    enabled: true
+    actor: "saswave/europages-scraper"
+    cost_per_result: 0.013
+    max_results: 30
+  
+  scrapling:
+    enabled: true
+    description: |
+      Scrapling = scraper adaptatif avec anti-bot bypass (Cloudflare Turnstile).
+      Utilise pour: (1) discovery par crawl de directories, (2) enrichment par analyse site lead.
+      Skill pi: ~/.pi/agent/skills/scrapling-official/
+    use_cases:
+      - name: "directory_crawl"
+        description: "Crawler des annuaires professionnels (PagesJaunes CH, local.ch, findit.ch)"
+        fetcher: "StealthyFetcher"
+        css_selectors:
+          business_name: "h2.business-name, .listing-title"
+          address: ".address, .location"
+          phone: ".phone, a[href^='tel:']"
+          website: "a.website-link, a[href*='http']:not([href*='local.ch'])"
+        output: "json"
+        max_pages: 10
+        anti_bot: true
+        solve_cloudflare: true
+      
+      - name: "site_analysis"
+        description: "Analyser le site d'un lead pour detecter chatbot/IA, RGPD mentions, cookies"
+        fetcher: "Fetcher"
+        css_selectors:
+          chatbot: "[class*='chat'], [id*='chat'], iframe[src*='chat'], [class*='bot']"
+          rgpd_banner: "[class*='cookie'], [id*='cookie'], [class*='consent']"
+          privacy_link: "a[href*='privacy'], a[href*='confidentialite']"
+          legal_mentions: "a[href*='mentions'], a[href*='legal']"
+          ai_signals: "[class*='ai'], [class*='gpt'], [class*='assistant']"
+        output: "json"
+      
+      - name: "competitor_monitoring"
+        description: "Monitorer les sites concurrents pour signaux de conformite IA"
+        fetcher: "StealthyFetcher"
+        schedule: "weekly"
+        css_selectors:
+          compliance_page: "a[href*='conformite'], a[href*='compliance']"
+          certifications: "[class*='certif'], [class*='badge']"
+          pricing: "[class*='pricing'], [class*='tarif']"
+        output: "json"
+    
+    spider_config:
+      concurrent_requests: 5
+      robots_txt_obey: true
+      download_delay: 2
+      development_mode: false
+      checkpoint_dir: "~/socialpulse-output/{campaign_name}/checkpoints"
+    
+    cost_per_page: 0.0
+    max_pages_per_run: 50
+    
+    cli_path: "~/.pi/agent/skills/scrapling-official/.venv/bin/scrapling"
+    venv_path: "~/.pi/agent/skills/scrapling-official/.venv"
+
+# ----------------------------------------------------------
+# ENRICHMENT
+# ----------------------------------------------------------
+enrichment:
+  company_contact:
+    enabled: true
+    actor: "alizarin_refrigerator-owner/company-contact-enricher"
+    cost_per_contact: 0.02
+    title_filter: ["CEO", "CTO", "DG", "Directeur", "Fondateur", "Associé"]
+  
+  linkedin:
+    enabled: true
+    actor: "khadinakbar/linkedin-profile-email-scraper"
+    cost_per_profile: 0.04
+  
+  email_fallback:
+    enabled: true
+    actor: "pro100chok/extract-emails"
+    cost_per_result: 0.001
+
+# ----------------------------------------------------------
+# PERSONNALISATION
+# ----------------------------------------------------------
+personalization:
+  email:
+    enabled: true
+    provider: "openrouter"
+    model: "anthropic/claude-sonnet-4"
+    max_words: 150
+    system_prompt: |
+      Tu es un expert en prospection B2B pour Cortex Leman, cabinet d'audit RGPD-IA 
+      pour PME en Suisse Romande et Haute-Savoie. Ton ton est professionnel, direct, 
+      sans jargon excessif. Tu cites des obligations reglementaires concretes (RGPD, AI Act). 
+      Maximum 150 mots.
+    user_prompt_template: |
+      Genere un email d'approche personnalise pour:
+      - Entreprise: {company_name} ({industry}, {employee_count} employes)
+      - Contact: {contact_name}, {contact_title}
+      - Region: {location}
+      - Risque detecte: {risk_indicator}
+      - Point d'ancrage: {specific_observation}
+      
+      Structure:
+      1. Accroche personnalisee (observation specifique sur leur activite)
+      2. Problematique RGPD-IA concrete pour leur secteur
+      3. Proposition: audit gratuit 30min
+      4. CTA: lien vers landing page
+    
+    subject_template: "Audit RGPD-IA pour {company_name} - OWASP GenAI"
+    from_name: "Cortex Leman"
+    from_email: "contact@cortex-leman.ch"
+    landing_page_url: "https://jame-cyber.github.io/cortex-leman/"
+  
+  infographic:
+    enabled: true
+    provider: "kie-ai"
+    size: "1200x630"
+    prompt_template: |
+      Professional infographic for B2B outreach. Theme: "RGPD-IA Conformite".
+      Company: {company_name}. Industry: {industry}.
+      Key stat: "{stat}% des PME {industry} ne sont pas conformes AI Act".
+      Style: Clean, modern, corporate. Colors: Navy (#1a365d) + Teal (#0d9488) + White.
+      Layout: Header with company name, central stat, 3 bullet points about RGPD-IA obligations.
+      Format: 1200x630px (LinkedIn post).
+    brand_colors: "Navy (#1a365d) + Teal (#0d9488) + White"
+    campaign_theme: "RGPD-IA Conformite"
+  
+  linkedin_post:
+    enabled: true
+    provider: "openrouter"
+    model: "anthropic/claude-sonnet-4"
+    max_words: 300
+    hashtag_count: [3, 5]
+    system_prompt: |
+      Tu es un expert en contenu LinkedIn B2B pour Cortex Leman. 
+      Ton style est informatif, accessible, avec des chiffres concrets. 
+      Pas de buzzwords. Maximum 300 mots. 3-5 hashtags pertinents.
+    user_prompt_template: |
+      Cree un post LinkedIn sur le theme RGPD-IA pour le secteur {industry}:
+      - Fait chiffre: {stat}
+      - Obligation: {obligation}
+      - Deadline ou urgence: {urgency}
+      - CTA: audit gratuit Cortex Leman
+
+# ----------------------------------------------------------
+# OUTPUT
+# ----------------------------------------------------------
+output:
+  format: "json"
+  directory: "~/socialpulse-output/cortex-leman-rgpd"
+  lead_card_fields:
+    - company_name
+    - industry
+    - employee_count
+    - location
+    - website
+    - score
+    - contact.name
+    - contact.title
+    - contact.email
+    - contact.linkedin
+    - risk_indicator
+    - personalization.email
+    - personalization.infographic_url
+    - personalization.linkedin_post
+  retention_days: 30
+
+# ----------------------------------------------------------
+# SCHEDULING
+# ----------------------------------------------------------
+schedule:
+  enabled: false
+  cron: "0 10 * * 2,4"
+  batch_size: 20
+  deliver_to: "telegram"
+
+# ----------------------------------------------------------
+# BUDGET
+# ----------------------------------------------------------
+budget:
+  max_per_batch_usd: 15
+  max_monthly_usd: 100
+  alert_threshold_pct: 80
+
+# ----------------------------------------------------------
+# RGPD COMPLIANCE
+# ----------------------------------------------------------
+compliance:
+  legal_basis: "interet legitime (prospection B2B, Art. 6(1)(f) RGPD)"
+  data_retention_days: 30
+  opt_out_mention: true
+  no_sensitive_data: true
+  register_entry: false

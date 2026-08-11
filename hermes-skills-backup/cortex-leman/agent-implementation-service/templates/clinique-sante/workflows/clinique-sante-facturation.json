@@ -1,0 +1,110 @@
+{
+  "name": "clinique-sante-facturation",
+  "nodes": [
+    {
+      "parameters": {
+        "fields": {
+          "values": [
+            { "name": "patient_id", "display": true },
+            { "name": "acte_description", "display": true }
+          ]
+        }
+      },
+      "id": "1",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:3000/api/tarmed/lookup",
+        "method": "POST",
+        "body": {
+          "body": [
+            { "name": "description", "value": "={{$json.acte_description}}" }
+          ]
+        }
+      },
+      "id": "2",
+      "name": "Lookup Code Tarmed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [420, 300]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "prompt": "Tu es un assistant administratif médical. Aide à la facturation Tarmed.\n\nActe décrit: {{$json.acte_description}}\nCode Tarmed trouvé: {{JSON.stringify($json.tarmed_results)}}\n\nGénère un brouillon de facture incluant:\n- Code(s) Tarmed pertinent(s)\n- Montant selon barème en vigueur\n- Remarques éventuelles\n\nIMPORTANT: Tu es un assistant ADMINISTRATIF. Tu ne donnes JAMAIS de conseil médical.\nTu ne décides JAMAIS du code final - c'est une proposition à valider par le personnel.\n\nDISCLAIMER: Proposition administrative. Validation par le personnel requis.",
+        "temperature": 0.1,
+        "maxTokens": 1000
+      },
+      "id": "3",
+      "name": "LLM Assistance Facturation",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [640, 300]
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/factures/drafts/{{new Date().toISOString().split('T')[0]}}-{{$json.patient_id}}-draft.json",
+        "content": "={{JSON.stringify($json)}}"
+      },
+      "id": "4",
+      "name": "Save Draft Facture",
+      "type": "n8n-nodes-base.writeBinaryFile",
+      "typeVersion": 1,
+      "position": [860, 300]
+    },
+    {
+      "parameters": {
+        "fromEmail": "facturation@clinique.ch",
+        "toEmail": "admin@clinique.ch",
+        "subject": "=Brouillon facture à valider - Patient {{$json.patient_id}}",
+        "text": "=Un brouillon de facture a été généré et nécessite votre validation.\n\nPatient: {{$json.patient_id}}\nActe: {{$json.acte_description}}\nCode Tarmed proposé: {{$json.code_tarmed}}\nMontant proposé: {{$json.montant}}\n\n⚠️ VALIDATION HUMAINE REQUISE AVANT ENVOI\n\nCe brouillon est une proposition administrative. Veuillez vérifier les codes et montants."
+      },
+      "id": "5",
+      "name": "Notification Validation Humaine",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [1080, 300]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [{ "node": "Lookup Code Tarmed", "type": "main", "index": 0 }]
+      ]
+    },
+    "Lookup Code Tarmed": {
+      "main": [
+        [{ "node": "LLM Assistance Facturation", "type": "main", "index": 0 }]
+      ]
+    },
+    "LLM Assistance Facturation": {
+      "main": [
+        [{ "node": "Save Draft Facture", "type": "main", "index": 0 }]
+      ]
+    },
+    "Save Draft Facture": {
+      "main": [
+        [{ "node": "Notification Validation Humaine", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "a1b2c3d4-0003-4000-8000-000000000002",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "clinique-sante"
+  },
+  "tags": [
+    { "name": "clinique-sante" },
+    { "name": "facturation-tarmed" },
+    { "name": "validation-humaine" }
+  ]
+}

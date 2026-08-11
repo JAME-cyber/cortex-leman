@@ -1,0 +1,382 @@
+# ============================================================
+# CORTEX LEMAN AGENT SQUAD TEMPLATE v4.0
+# Vertical : Cabinet RH / Recrutement
+# Modèle  : Agent Squad (3 spécialistes + orchestrateur)
+# Risque  : HIGH (AI Act Annexe III — emploi/profilage)
+# Anti-biais : Art. 22 RGPD, détection obligatoire
+# JAMAIS   : sélection autonome de candidats
+# ============================================================
+
+# ----------------------------------------------------------
+# SQUAD : 3 agents spécialisés
+# ----------------------------------------------------------
+squad:
+  name: "cabinet-rh"
+  vertical: "cabinet-rh"
+  version: "4.0.0"
+
+  agents:
+    # --- Agent 1 : Tri & Routage ---
+    - id: "accueil-assist"
+      role: "Tri & Routage"
+      system_prompt: |
+        Tu es l'agent d'accueil du cabinet RH. Tu gères les accusés de réception,
+        le tri administratif des CV et la planification des entretiens.
+        JAMAIS de sélection ou élimination de candidats — les décisions sont HUMAINES.
+        RÈGLES STRICTES :
+        - Accuser réception des candidatures (accusé automatique)
+        - Tri administratif uniquement (complétude, format)
+        - Planifier les entretiens après validation humaine
+        - JAMAIS de scoring, classement ou sélection de candidats
+        - Signaler tout critère potentiellement discriminatoire
+        - Consentement requis pour tout traitement IA des données candidat
+        - Langue : français
+      autonomy_level: "low"
+      data_access:
+        - "candidatures_entrantes"
+        - "postes_ouverts"
+        - "calendrier_entretiens"
+      data_restrictions:
+        - "jamais_selection_ou_elimination_candidat"
+        - "jamais_scoring_ou_classement"
+        - "consentement_candidat_requis"
+        - "suppression_donnees_2_ans_si_non_retenu"
+        - "jamais_donnees_art9_rgpd_collectees"
+      guardrails:
+        human_decision_required:
+          - "shortlist_candidat"
+          - "invitation_entretien"
+          - "rejet_candidature"
+          - "offre_emploi"
+        max_requests_per_hour: 100
+        session_timeout_minutes: 30
+        content_filter: true
+        state_verification:
+          enabled: true
+          methods:
+            - "checksum_fichier_attendu"
+            - "log_confirmation_action"
+            - "verification_aucun_scoring"
+          alert_on_mismatch: true
+
+    # --- Agent 2 : Analyse & Synthèse ---
+    - id: "rapport-assist"
+      role: "Analyse & Synthèse"
+      system_prompt: |
+        Tu es l'agent de reporting du cabinet RH. Tu produis les rapports de consultation,
+        les synthèses de feedback et les analyses d'activité (anonymisées).
+        JAMAIS de sélection autonome — les décisions de recrutement sont HUMAINES.
+        RÈGLES STRICTES :
+        - Générer les rapports de consultation (anonymisés)
+        - Synthétiser les feedbacks d'entretien
+        - Ne jamais scorer ou classer les candidats
+        - Anonymiser toute PII dans les rapports agrégés
+        - Toujours ajouter : « Ce document est préparé par IA. Les décisions de recrutement sont humaines. »
+        - Langue : français
+      autonomy_level: "low"
+      data_access:
+        - "feedbacks_entretiens"
+        - "metriques_recrutement"
+        - "donnees_anonymisees"
+      data_restrictions:
+        - "jamais_scoring_ou_classement_candidat"
+        - "anonymisation_obligatoire_rapports"
+        - "jamais_donnees_art9_rgpd"
+        - "consentement_candidat_requis"
+        - "retention_donnees_max_2_ans"
+      guardrails:
+        human_decision_required:
+          - "validation_rapport_client"
+          - "partage_feedback_identifie"
+        max_requests_per_hour: 80
+        session_timeout_minutes: 30
+        content_filter: true
+        state_verification:
+          enabled: true
+          methods:
+            - "checksum_fichier_attendu"
+            - "log_confirmation_action"
+            - "verification_anonymisation_rapport"
+          alert_on_mismatch: true
+
+    # --- Agent 3 : Action & Suivi ---
+    - id: "alerte-assist"
+      role: "Action & Suivi"
+      system_prompt: |
+        Tu es l'agent d'alerte du cabinet RH. Tu détectes les biais discriminatoires,
+        alertes sur les obligations Art. 22 RGPD et assures le suivi de conformité
+        anti-biais. Tu es le gardien de l'éthique du processus de recrutement.
+        RÈGLES STRICTES :
+        - Détecter les biais discriminatoires (âge, genre, origine, handicap)
+        - Alerter immédiatement si critère discriminatoire dans un processus
+        - Surveiller le respect de l'Art. 22 RGPD (pas de décision automatisée)
+        - JAMAIS de sélection ou élimination de candidats
+        - Documenter toute alerte dans l'audit trail
+        - Langue : français
+      autonomy_level: "low"
+      data_access:
+        - "criteres_recrutement"
+        - "historique_alertes_biais"
+        - "metriques_conformite_art22"
+      data_restrictions:
+        - "jamais_selection_candidat"
+        - "lecture_seule_criteres"
+        - "alerte_et_blocage_si_biais"
+        - "jamais_donnees_art9_rgpd"
+        - "consentement_candidat_requis"
+      guardrails:
+        human_decision_required:
+          - "escalade_alerte_biais"
+          - "correction_critere_discriminatoire"
+          - "rapport_conformite_cnil"
+        max_requests_per_hour: 100
+        session_timeout_minutes: 30
+        content_filter: true
+        state_verification:
+          enabled: true
+          methods:
+            - "log_confirmation_alerte"
+            - "validation_supervision_humaine"
+            - "verification_aucun_scoring"
+          alert_on_mismatch: true
+
+# ----------------------------------------------------------
+# ORCHESTRATION
+# ----------------------------------------------------------
+orchestration:
+  routing: "contextual"          # Par type de tâche (accueil, rapport, alerte)
+  isolation: "strict"            # Jamais cross-candidat — profilage/biais
+  fallback: "human"             # Toujours fallback humain
+  audit_trail: true              # Traces complètes Art. 30 RGPD + Art. 22
+
+# ----------------------------------------------------------
+# INFRASTRUCTURE : 7 règles K8s-compatibles
+# ----------------------------------------------------------
+infrastructure:
+  current: "docker-compose"
+  k8s_compatible: true
+  migration_path: "k3s"
+  migration_trigger: "8+ clients simultanés ou 5+ agents par client"
+
+  # Règle 1 : Un container = un agent
+  containers:
+    accueil-assist:
+      image: "cortex-leman/agent:${AGENT_VERSION}"
+    rapport-assist:
+      image: "cortex-leman/agent:${AGENT_VERSION}"
+    alerte-assist:
+      image: "cortex-leman/agent:${AGENT_VERSION}"
+    orchestrator:
+      image: "cortex-leman/orchestrator:${AGENT_VERSION}"
+    postgres:
+      image: "postgres:16"
+
+  # Règle 2 : Configuration via environnement, pas hardcoded
+  environment:
+    - AGENT_ROLE=${AGENT_ROLE}
+    - AGENT_SQUAD=${SQUAD_NAME}
+    - LLM_PROVIDER=${LLM_PROVIDER}
+    - LLM_MODEL=${LLM_MODEL}
+    - DATA_RESIDENCY=${DATA_RESIDENCY}
+    - LOG_LEVEL=${LOG_LEVEL}
+    - GUARDRAILS_CONFIG=/config/guardrails.yaml
+    - BIAS_DETECTION_ENABLED=true
+
+  # Règle 3 : Health checks obligatoires
+  healthcheck:
+    test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+    interval: "30s"
+    timeout: "10s"
+    retries: 3
+    start_period: "10s"
+
+  # Règle 4 : Resource limits par container
+  resources:
+    limits:
+      cpus: "1.0"
+      memory: "512M"
+    reservations:
+      cpus: "0.25"
+      memory: "128M"
+
+  # Règle 5 : Réseau isolé par client
+  network:
+    method: "network_per_client"
+    driver: "bridge"
+    internal: true
+    documented: true
+    auditable: true
+
+  # Règle 6 : Secrets séparés du code
+  secrets:
+    method: "docker_secrets"
+    never_in_code: true
+    never_in_git: true
+    items:
+      - llm_api_key
+      - db_password
+      - smtp_credentials
+
+  # Règle 7 : Logs structurés JSON
+  logging:
+    format: "structured_json"
+    fields:
+      - "ts"
+      - "agent"
+      - "squad"
+      - "client"
+      - "action"
+      - "result"
+      - "risk"
+      - "latency_ms"
+      - "guardrail_triggered"
+      - "bias_detected"
+    driver: "json-file"
+    max_size: "10m"
+    max_file: 3
+    retention_days: 730           # 2 ans
+
+  # Data residency
+  data_residency:
+    vps_location: "EU"            # UE acceptable (à confirmer par client)
+    provider: ""                  # À spécifier par client
+    documented: true
+    verifiable: true
+
+  # Backup
+  backup:
+    method: "script_cron"
+    frequency: "daily"
+    tested: false
+    offsite: false
+
+# ----------------------------------------------------------
+# MODÈLE (model-agnostic)
+# ----------------------------------------------------------
+model:
+  provider: "${LLM_PROVIDER}"     # openrouter, ollama, local
+  name: "${LLM_MODEL}"            # anthropic/claude-sonnet-4, gpt-4o, glm-4
+  temperature: 0.2                # Faible — RH exige prudence
+  max_tokens: 2048
+  embedding_model: "${EMBEDDING_MODEL}"
+  data_residency: "${DATA_RESIDENCY}"
+
+# ----------------------------------------------------------
+# BASE DE CONNAISSANCES (RAG)
+# ----------------------------------------------------------
+knowledge_base:
+  sources:
+    - type: "job_descriptions"
+      path: "/data/postes/"
+      formats: ["pdf", "docx"]
+    - type: "legislation"
+      description: "Droit du travail FR-CH"
+      references:
+        - "Code du travail (FR)"
+        - "Loi sur le travail (CH)"
+        - "Convention collective"
+        - "AI Act Annexe III (emploi)"
+    - type: "anti_bias"
+      description: "Législation anti-discrimination"
+      references:
+        - "Art. 22 RGPD"
+        - "Loi sur l'égalité (CH)"
+        - "Directive européenne égalité"
+  chunk_size: 512
+  overlap: 64
+  embedding_model: "${EMBEDDING_MODEL}"
+
+# ----------------------------------------------------------
+# INTÉGRATIONS
+# ----------------------------------------------------------
+integrations:
+  email:
+    enabled: true
+    provider: "imap"
+    actions: ["classify", "acknowledge", "schedule"]
+  calendar:
+    enabled: true
+    provider: "caldav"
+    actions: ["planifier_entretien", "rappel"]
+  documents:
+    enabled: true
+    storage: "local_encrypted"
+    ocr: true
+  n8n:
+    enabled: true
+    workflows:
+      - name: "accueil-candidats"
+        description: "Accusé de réception et tri administratif (pas de sélection!)"
+        trigger: "email_receipt"
+        template: "cabinet-rh-accueil.json"
+      - name: "planification-entretiens"
+        description: "Planification automatique des entretiens"
+        trigger: "manual_approval"
+        template: "cabinet-rh-entretiens.json"
+      - name: "rapport-consultation"
+        description: "Rapport mensuel d'activité (anonymisé)"
+        trigger: "schedule_monthly"
+        template: "cabinet-rh-rapport.json"
+
+# ----------------------------------------------------------
+# CONFORMITÉ RGPD-IA
+# ----------------------------------------------------------
+compliance:
+  ai_act_risk_level: "high"      # HIGH — AI Act Annexe III emploi/RH
+  legal_basis: "consent"          # Consentement candidats requis
+  data_controller: "[CABINET NAME]"
+  state_verification:
+    enabled: true
+    description: "L'agent ne peut pas rapporter complétion sans preuve vérifiable (arXiv:2602.20021)"
+    methods:
+      - "checksum_fichier_attendu"
+      - "log_confirmation_action"
+      - "verification_aucun_scoring"
+      - "verification_aucune_selection_autonome"
+    alert_on_mismatch: true
+  register_entry: true           # Art. 30 RGPD — toujours
+  human_oversight: true          # Toujours true par défaut — CRITIQUE pour RH
+  art22_compliant: true          # JAMAIS de décision automatisée sans consentement
+  special_notes: |
+    AI Act Annexe III : Systèmes IA pour l'emploi/recrutement = HIGH RISK.
+    Obligations critiques :
+    - Pas de décision automatisée (Art. 22 RGPD)
+    - Détection de biais obligatoire
+    - Documentation des critères de sélection
+    - Droit d'explication pour les candidats
+    - Audit annuel des biais
+    CNIL FR : Déclaration obligatoire si profilage.
+    PFPDT CH : Mêmes obligations.
+    DPIA obligatoire : high risk AI Act Annexe III.
+
+# ----------------------------------------------------------
+# MONITORING
+# ----------------------------------------------------------
+monitoring:
+  log_all_interactions: true
+  alert_on:
+    - "critère discriminatoire détecté"
+    - "scoring automatique tenté"
+    - "données Art. 9 RGPD dans un CV"
+    - "décision sans validation humaine"
+    - "guardrail déclenché"
+  metrics:
+    - name: "bias_detected"
+      threshold: 0
+      action: "alert_and_block_immediately"
+    - name: "auto_scoring_attempts"
+      threshold: 0
+      action: "block_and_alert"
+    - name: "human_decision_bypassed"
+      threshold: 0
+      action: "block_and_alert_immediately"
+    - name: "requests_per_hour"
+      threshold: 100
+      action: "throttle"
+    - name: "latency_p95_ms"
+      threshold: 2000
+      action: "alert"
+  weekly_report: true
+  monthly_compliance_check: true
+  quarterly_bias_audit: true      # Audit biais trimestriel — CRITIQUE
+  annual_dpia_review: true

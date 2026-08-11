@@ -1,0 +1,4 @@
+commands:
+  - name: workflow
+    description: Lance un workflow multi-team
+    usage: /workflow <name> key=value

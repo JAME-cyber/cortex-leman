@@ -1,0 +1,60 @@
+{
+  "name": "Cortex Leman — Anti-IA Humanizer",
+  "description": "Workflow n8n standalone : étapes 4 (crédibilité) + 6 (nettoyeur clichés) + 7 (scoring anti-IA). Webhook POST /cortex-anti-ia avec {text, source, context, target_score}.",
+  "nodes": [
+    {
+      "parameters": { "path": "cortex-anti-ia", "httpMethod": "POST", "responseMode": "lastNode" },
+      "id": "webhook-trigger", "name": "Webhook Trigger", "type": "n8n-nodes-base.webhook", "typeVersion": 1.1, "position": [0, 0]
+    },
+    {
+      "parameters": { "values": { "string": [
+        { "name": "text", "value": "={{ $json.body.text }}" },
+        { "name": "source", "value": "={{ $json.body.source || 'unknown' }}" },
+        { "name": "context", "value": "={{ $json.body.context || 'general' }}" },
+        { "name": "target_score", "value": "={{ $json.body.target_score || '3' }}" }
+      ]}},
+      "id": "extract-input", "name": "Extraction Input", "type": "n8n-nodes-base.set", "typeVersion": 1, "position": [250, 0]
+    },
+    {
+      "parameters": {
+        "model": "anthropic/claude-sonnet-4-20250514",
+        "options": { "baseURL": "https://openrouter.ai/api/v1" },
+        "prompt": "Agis comme un lecteur sceptique. Réécris tout ce qui paraît artificiel. Plus crédible, direct, personnel. Règles : simplifier les phrases trop parfaites, concrétiser les idées génériques, affirmer un point de vue clair. CONTEXTE : {{ $json.context }}. Texte : {{ $json.text }}"
+      },
+      "id": "credibility-pass", "name": "Étape 4 — Test de Crédibilité", "type": "n8n-nodes-base.openAi", "typeVersion": 1, "position": [500, 0]
+    },
+    {
+      "parameters": {
+        "model": "anthropic/claude-sonnet-4-20250514",
+        "options": { "baseURL": "https://openrouter.ai/api/v1" },
+        "prompt": "Élimine les formulations typiques IA : « Dans le monde d'aujourd'hui », « Il est important de souligner », « En conclusion », « Non seulement... mais aussi », « La clé est de », « Il convient de noter que », « En effet / Par ailleurs / De plus ». Réécris avec langage humain, simple, direct. Varie les longueurs de phrases. Casse les structures symétriques. CONSERVE les termes juridiques (RGPD, DPO, etc.). CONTEXTE : {{ $json.context }}. Texte : {{ $json.message.content }}"
+      },
+      "id": "cliche-cleaner", "name": "Étape 6 — Nettoyeur Clichés IA", "type": "n8n-nodes-base.openAi", "typeVersion": 1, "position": [750, 0]
+    },
+    {
+      "parameters": {
+        "model": "anthropic/claude-sonnet-4-20250514",
+        "options": { "baseURL": "https://openrouter.ai/api/v1" },
+        "prompt": "Attribue une note 1-10 (1=humain, 10=IA). Réponds UNIQUEMENT en JSON : {\"score\": <nombre>, \"flags\": [\"flag1\"], \"patterns\": [\"pattern1\"]}. Texte : {{ $json.message.content }}"
+      },
+      "id": "anti-ia-score", "name": "Étape 7 — Score Anti-IA", "type": "n8n-nodes-base.openAi", "typeVersion": 1, "position": [1000, 0]
+    },
+    {
+      "parameters": { "jsCode": "const humanized=$input.first().json;const scoreResult=$('Étape 7 — Score Anti-IA').item.json;const originalSource=$('Extraction Input').item.json.source;const targetScore=parseInt($('Extraction Input').item.json.target_score);let scoreData;try{const c=scoreResult.message?.content||scoreResult.message?.text||JSON.stringify(scoreResult);const m=c.match(/\\{[\\s\\S]*\\}/);scoreData=m?JSON.parse(m[0]):{score:5,flags:['parse_error'],patterns:[]};}catch(e){scoreData={score:5,flags:['parse_error'],patterns:[]};}const passed=scoreData.score<=targetScore;return{json:{text:humanized.message?.content||humanized.message?.text||'',anti_ia_score:scoreData.score,anti_ia_flags:scoreData.flags,anti_ia_patterns:scoreData.patterns,passed:passed,source:originalSource,target_score:targetScore,processed_at:new Date().toISOString()}};" },
+      "id": "compile-output", "name": "Compilation Résultat", "type": "n8n-nodes-base.code", "typeVersion": 1, "position": [1250, 0]
+    },
+    {
+      "parameters": { "respondWith": "json", "responseBody": "={{ JSON.stringify($json) }}" },
+      "id": "respond-webhook", "name": "Réponse Webhook", "type": "n8n-nodes-base.respondToWebhook", "typeVersion": 1, "position": [1500, 0]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": { "main": [[{"node":"Extraction Input","type":"main","index":0}]] },
+    "Extraction Input": { "main": [[{"node":"Étape 4 — Test de Crédibilité","type":"main","index":0}]] },
+    "Étape 4 — Test de Crédibilité": { "main": [[{"node":"Étape 6 — Nettoyeur Clichés IA","type":"main","index":0}]] },
+    "Étape 6 — Nettoyeur Clichés IA": { "main": [[{"node":"Étape 7 — Score Anti-IA","type":"main","index":0}]] },
+    "Étape 7 — Score Anti-IA": { "main": [[{"node":"Compilation Résultat","type":"main","index":0}]] },
+    "Compilation Résultat": { "main": [[{"node":"Réponse Webhook","type":"main","index":0}]] }
+  },
+  "tags": [{"name":"cortex-leman"},{"name":"anti-ia"},{"name":"post-processing"}]
+}

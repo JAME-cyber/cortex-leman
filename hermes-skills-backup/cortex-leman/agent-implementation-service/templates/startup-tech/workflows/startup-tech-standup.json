@@ -1,0 +1,141 @@
+{
+  "name": "startup-tech-standup",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "cronExpression", "expression": "0 9 * * 1-5" }]
+        }
+      },
+      "id": "1",
+      "name": "Schedule Daily 9h",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.github.com/repos/{{$credentials.repo}}/events",
+        "method": "GET",
+        "headers": {
+          "headers": [
+            { "name": "Authorization", "value": "Bearer {{$credentials.githubToken}}" }
+          ]
+        },
+        "queryParameters": {
+          "parameters": [
+            { "name": "per_page", "value": "50" }
+          ]
+        }
+      },
+      "id": "2",
+      "name": "Fetch GitHub Activity",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [420, 200]
+    },
+    {
+      "parameters": {
+        "url": "=https://slack.com/api/channels.history",
+        "method": "GET",
+        "headers": {
+          "headers": [
+            { "name": "Authorization", "value": "Bearer {{$credentials.slackToken}}" }
+          ]
+        },
+        "queryParameters": {
+          "parameters": [
+            { "name": "channel", "value": "{{$credentials.slackChannelId}}" },
+            { "name": "oldest", "value": "={{Math.floor((Date.now() - 86400000) / 1000)}}" },
+            { "name": "limit", "value": "100" }
+          ]
+        }
+      },
+      "id": "3",
+      "name": "Fetch Slack Messages",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [420, 400]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "mergeByPosition"
+      },
+      "id": "4",
+      "name": "Merge Activity",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [640, 300]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "prompt": "Tu es un tech lead. Génère un résumé de standup quotidien à partir de l'activité du jour.\n\nActivité GitHub (commits, PRs, issues):\n{{JSON.stringify($json.github_activity)}}\n\nMessages Slack du jour:\n{{JSON.stringify($json.slack_messages)}}\n\nStructure du standup:\n1. **Hier** - Ce qui a été fait\n   - PRs mergées\n   - Issues fermées\n   - Commits principaux\n2. **Aujourd'hui** - Ce qui est prévu\n   - PRs en cours\n   - Issues assignées\n3. **Blockers** - Ce qui bloque\n   - Issues P0/P1 ouvertes\n   - Messages signalant des problèmes\n\nFormat: Markdown concis, prêt à poster sur Slack.\nLangue: français avec termes techniques en anglais.",
+        "temperature": 0.3,
+        "maxTokens": 1500
+      },
+      "id": "5",
+      "name": "LLM Résumé Standup",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [860, 300]
+    },
+    {
+      "parameters": {
+        "channel": "#standup",
+        "text": "={{$json.message.content}}",
+        "credentials": "slack_api"
+      },
+      "id": "6",
+      "name": "Post Slack Channel",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [1080, 300]
+    }
+  ],
+  "connections": {
+    "Schedule Daily 9h": {
+      "main": [
+        [
+          { "node": "Fetch GitHub Activity", "type": "main", "index": 0 },
+          { "node": "Fetch Slack Messages", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Fetch GitHub Activity": {
+      "main": [
+        [{ "node": "Merge Activity", "type": "main", "index": 0 }]
+      ]
+    },
+    "Fetch Slack Messages": {
+      "main": [
+        [{ "node": "Merge Activity", "type": "main", "index": 1 }]
+      ]
+    },
+    "Merge Activity": {
+      "main": [
+        [{ "node": "LLM Résumé Standup", "type": "main", "index": 0 }]
+      ]
+    },
+    "LLM Résumé Standup": {
+      "main": [
+        [{ "node": "Post Slack Channel", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "a1b2c3d4-0005-4000-8000-000000000003",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "startup-tech"
+  },
+  "tags": [
+    { "name": "startup-tech" },
+    { "name": "standup" },
+    { "name": "daily-summary" }
+  ]
+}

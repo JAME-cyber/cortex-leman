@@ -1,0 +1,26 @@
+{
+  "description": "Médiateur SocialPulse v4 - Règles déterministes JsonLogic",
+  "version": "4.0",
+  "rules": {
+    "discovery": [
+      {"==": [{"var": "legal_basis"}, "interet_legitime"]},
+      {"<=": [{"var": "results_count"}, {"var": "max_results"}]},
+      {"in": [{"var": "country"}, {"var": "allowed_countries"}]}
+    ],
+    "enrichment": [
+      {"!=": [{"var": "pii_detected"}, true]},
+      {"<=": [{"var": "data_points"}, 5]},
+      {"==": [{"var": "consent_status"}, "not_required_b2b"]}
+    ],
+    "qualification": [
+      {">=": [{"var": "score"}, {"var": "threshold"}]},
+      {"!=": [{"var": "opt_out"}, true]},
+      {"!=": [{"var": "on_dnc_list"}, true]}
+    ],
+    "personalization": [
+      {"<=": [{"var": "word_count"}, {"var": "max_words"}]},
+      {"==": [{"var": "opt_out_mention"}, true]},
+      {"<=": [{"var": "budget_used"}, {"var": "budget_max"}]}
+    ]
+  }
+}

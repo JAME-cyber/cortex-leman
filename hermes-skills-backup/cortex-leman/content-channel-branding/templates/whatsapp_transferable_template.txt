@@ -1,0 +1,92 @@
+# WhatsApp Transférable — Template
+
+> Copier-coller ready pour diffusion parent-à-parent / communautaire.
+> Validé sur Culture en Saveurs (juil. 2026).
+
+## Règles de format
+
+1. **Max 800 caractères** — WhatsApp tronque les longs messages sur mobile
+2. **Emoji en début de ligne** — balise visuelle pour le scan rapide
+3. **1 seul lien** — trop de liens = confusion, le parent ne clique sur aucun
+4. **Auto-suffisant** — un parent doit avoir TOUTES les infos sans cliquer
+5. **CTA explicite à la fin** — "Places limitées — réservez vite !"
+6. **Tagline en signature** — renforce la marque au moment du transfert
+
+## Template — Camp / Atelier enfants
+
+```
+🍳 {NOM ÉVÉNEMENT}
+
+{HOOK ANGLE CONVERSION}, vos enfants ({TRANCHE ÂGE}) {PROMESSE} ! 🌍
+
+📅 {DATES} ({JOURS})
+⏰ {HORAIRES}
+📍 {LIEU + ADRESSE COMPLÈTE}
+
+{PAYS/ACTIVITÉS avec drapeaux emoji}
+
+💰 {TARIF PRINCIPAL} · {TARIF SECONDAIRE}
+👨‍👩‍👧‍👦 {RÉDUCTION FAMILLE}
+
+📲 Inscription : {TÉL}
+📧 {EMAIL}
+🔗 {LIEN UNIQUE}
+
+👉 Places limitées — réservez vite !
+
+{TAGLINE MARQUE}
+```
+
+## Template — Catering / Street Food
+
+```
+🍔 {NOM ASSO} — CATERING & STREET FOOD
+
+{PROMESSE CATERING} !
+
+{MENU avec emoji + plat + prix sur chaque ligne}
+
+{ORIGINE PRODUITS / FAIT MAISON}
+
+📲 Commande : {TÉL}
+📧 {EMAIL}
+📸 {INSTAGRAM}
+🔗 {LIEN UNIQUE}
+
+{TAGLINE MARQUE}
+```
+
+## Exemple validé — Culture en Saveurs Camp (juil. 2026)
+
+```
+🍳 CULTURE EN SAVEURS — Éveil aux Saveurs Africaines
+
+La semaine avant la rentrée, vos enfants (4-12 ans) vivent un voyage inoubliable à travers la cuisine et la culture africaines ! 🌍
+
+📅 10-14 août 2026 (lun-ven)
+⏰ 08h30 - 18h30
+📍 Maison de Quartier le Plateau, 86 Route de Saint-Georges, 1213 Petit-Lancy
+
+🇪🇬 Égypte · 🇨🇲 Cameroun · 🇸🇴 Somalie
+Cuisine, animations culturelles, visio avec un orphelinat au Cameroun, sorties nature au Rhône.
+
+💰 85 CHF/journée complète · 55 CHF demi-journée
+👨‍👩‍👧‍👦 10% dès le 2e enfant
+
+📲 Inscription : +41 76 756 22 82
+📧 cultureensaveur@gmail.com
+🔗 https://linktr.ee/cultureensaveurs
+
+👉 Places limitées — réservez vite !
+
+DÉCOUVRIR · INSPIRER · TRANSMETTRE
+```
+
+## Diffusion strategy
+
+Le message WhatsApp ne se poste pas — il se **transfère**. La stratégie :
+
+1. **Envoyer à Linda** (la fondatrice) — elle transfère à son réseau
+2. **Demander à Linda** de le partager dans : groupes WhatsApp parents d'école, groupes communautaires africains de Genève, groupes maison de quartier
+3. **Joindre la vidéo courte** (le hook visuel) + le message texte (les infos)
+4. **Le message doit être forwardable en 1 tap** — c'est pourquoi il doit être auto-suffisant sans la vidéo

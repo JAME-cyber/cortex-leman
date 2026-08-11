@@ -1,0 +1,152 @@
+{
+  "name": "cabinet-avocat-rappels",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "cronExpression", "expression": "0 7 * * *" }]
+        }
+      },
+      "id": "1",
+      "name": "Schedule Daily 7h",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:3000/api/audiences-echeances",
+        "method": "GET",
+        "queryParameters": {
+          "parameters": [
+            { "name": "horizon_jours", "value": "2" }
+          ]
+        }
+      },
+      "id": "2",
+      "name": "Check Audiences/Echeances",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [420, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            { "value1": "={{$json.audiences.length}}", "operation": "largerThan", "value2": 0 }
+          ]
+        }
+      },
+      "id": "3",
+      "name": "Audiences Existent",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [640, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            { "value1": "={{$json.jours_restant}}", "operation": "smallerThan", "value2": 2 }
+          ]
+        }
+      },
+      "id": "4",
+      "name": "Rappel 24h?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [860, 200]
+    },
+    {
+      "parameters": {
+        "fromEmail": "rappels@cabinet-avocat.ch",
+        "toEmail": "={{$json.avocat_email}}",
+        "subject": "=⚠️ RAPPEL 24h - Audience: {{$json.dossier}} le {{$json.date_audience}}",
+        "text": "=RAPPEL URGENT\n\nAudience dans moins de 24h:\nDossier: {{$json.dossier}}\nDate: {{$json.date_audience}}\nHeure: {{$json.heure_audience}}\nTribunal: {{$json.tribunal}}\n\nVérifiez que tous les documents sont prêts."
+      },
+      "id": "5",
+      "name": "Rappel 24h",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [1100, 100]
+    },
+    {
+      "parameters": {
+        "fromEmail": "rappels@cabinet-avocat.ch",
+        "toEmail": "={{$json.avocat_email}}",
+        "subject": "=📋 Rappel 48h - Audience: {{$json.dossier}} le {{$json.date_audience}}",
+        "text": "=Rappel audience dans 48h:\n\nDossier: {{$json.dossier}}\nDate: {{$json.date_audience}}\nHeure: {{$json.heure_audience}}\nTribunal: {{$json.tribunal}}\n\nPensez à vérifier les pièces du dossier."
+      },
+      "id": "6",
+      "name": "Rappel 48h",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [1100, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:3000/api/sms/send",
+        "method": "POST",
+        "body": {
+          "body": [
+            { "name": "to", "value": "={{$json.avocat_phone}}" },
+            { "name": "message", "value": "=Rappel: Audience {{$json.dossier}} le {{$json.date_audience}} à {{$json.heure_audience}}" }
+          ]
+        }
+      },
+      "id": "7",
+      "name": "SMS Notification",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1320, 200]
+    }
+  ],
+  "connections": {
+    "Schedule Daily 7h": {
+      "main": [
+        [{ "node": "Check Audiences/Echeances", "type": "main", "index": 0 }]
+      ]
+    },
+    "Check Audiences/Echeances": {
+      "main": [
+        [{ "node": "Audiences Existent", "type": "main", "index": 0 }]
+      ]
+    },
+    "Audiences Existent": {
+      "main": [
+        [{ "node": "Rappel 24h?", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "Rappel 24h?": {
+      "main": [
+        [{ "node": "Rappel 24h", "type": "main", "index": 0 }],
+        [{ "node": "Rappel 48h", "type": "main", "index": 0 }]
+      ]
+    },
+    "Rappel 24h": {
+      "main": [
+        [{ "node": "SMS Notification", "type": "main", "index": 0 }]
+      ]
+    },
+    "Rappel 48h": {
+      "main": [
+        [{ "node": "SMS Notification", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "a1b2c3d4-0002-4000-8000-000000000003",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "cabinet-avocat"
+  },
+  "tags": [
+    { "name": "cabinet-avocat" },
+    { "name": "rappels-audiences" },
+    { "name": "schedule" }
+  ]
+}

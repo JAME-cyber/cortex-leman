@@ -1,0 +1,148 @@
+{
+  "name": "cabinet-rh-accueil",
+  "nodes": [
+    {
+      "parameters": {
+        "host": "imap.cabinet-rh.ch",
+        "port": 993,
+        "credentials": "imap_credentials",
+        "mailbox": "INBOX",
+        "filter": "UNSEEN"
+      },
+      "id": "1",
+      "name": "Email Entrant Candidature",
+      "type": "n8n-nodes-base.emailTrigger",
+      "typeVersion": 1,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "prompt": "Tu es un assistant RH ADMINISTRATIF. Extrait les informations administratives d'une candidature.\n\nIMPORTANT: Tu NE fais PAS de scoring, évaluation, ni sélection de candidat. Tu extraits UNIQUEMENT les données factuelles.\n\nSujet email: {{$json.subject}}\nCorps: {{$json.text}}\n\nExtrait en JSON:\n{\n  \"nom\": \"\",\n  \"prenom\": \"\",\n  \"email\": \"\",\n  \"telephone\": \"\",\n  \"poste_souhaite\": \"\",\n  \"documents_recus\": [],\n  \"donnees_sensibles_detectees\": false\n}\n\nSI des données sensibles (Art. 9 RGPD: origine, santé, opinions, etc.) sont détectées, signale-le et NE les extraits PAS.\n\nRÈGLE ABSOLUE: AUCUN scoring, classement ou recommandation de sélection/élimination.",
+        "temperature": 0.1,
+        "maxTokens": 500,
+        "options": {
+          "responseFormat": "json_object"
+        }
+      },
+      "id": "2",
+      "name": "LLM Extraction Infos Admin",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [420, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            { "value1": "={{JSON.parse($json.message.content).donnees_sensibles_detectees}}", "value2": true }
+          ]
+        }
+      },
+      "id": "3",
+      "name": "Données Sensibles?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [640, 300]
+    },
+    {
+      "parameters": {
+        "fromEmail": "cabinet@rh.ch",
+        "toEmail": "compliance@cabinet-rh.ch",
+        "subject": "=⚠️ Données sensibles détectées - Candidature {{$json.nom}}",
+        "text": "=ALERTE: Des données sensibles (Art. 9 RGPD) ont été détectées dans une candidature.\n\nCandidat: {{$json.nom}} {{$json.prenom}}\n\nCes données ont été automatiquement bloquées et ne sont pas stockées.\nVeuillez vérifier manuellement le courrier d'origine."
+      },
+      "id": "4",
+      "name": "Alert Données Sensibles",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [860, 200]
+    },
+    {
+      "parameters": {
+        "fromEmail": "noreply@cabinet-rh.ch",
+        "toEmail": "={{JSON.parse($json.message.content).email}}",
+        "subject": "Accusé de réception de votre candidature",
+        "text": "=Bonjour {{JSON.parse($json.message.content).prenom}},\n\nNous accusons bonne réception de votre candidature pour le poste de {{JSON.parse($json.message.content).poste_souhaite}}.\n\nVotre dossier sera examiné par notre équipe de recrutement. Nous reviendrons vers vous dans les meilleurs délais.\n\nCordialement,\n[CABINET RH]\n\nConformément au RGPD, vos données sont traitées uniquement dans le cadre du recrutement. Vous pouvez exercer vos droits d'accès, de rectification et de suppression à tout moment."
+      },
+      "id": "5",
+      "name": "Accusé Réception",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [860, 400]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:3000/api/candidats/dossier",
+        "method": "POST",
+        "body": {
+          "body": [
+            { "name": "candidat", "value": "={{$json.message.content}}" },
+            { "name": "source", "value": "=email_entrant" },
+            { "name": "date_reception", "value": "={{new Date().toISOString()}}" }
+          ]
+        }
+      },
+      "id": "6",
+      "name": "Dossier Candidat",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1080, 400]
+    },
+    {
+      "parameters": {
+        "fromEmail": "cabinet@rh.ch",
+        "toEmail": "recruteur@cabinet-rh.ch",
+        "subject": "=Nouvelle candidature reçue - {{$json.poste_souhaite}}",
+        "text": "=Nouvelle candidature reçue:\n\nCandidat: {{$json.nom}} {{$json.prenom}}\nPoste: {{$json.poste_souhaite}}\nEmail: {{$json.email}}\n\n⚠️ RAPPEL: La sélection est une décision HUMAINE. Cet agent ne fait PAS de scoring.\n\nLe dossier candidat a été créé. Veuillez examiner la candidature."
+      },
+      "id": "7",
+      "name": "Notification Recruteur",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [1300, 400]
+    }
+  ],
+  "connections": {
+    "Email Entrant Candidature": {
+      "main": [
+        [{ "node": "LLM Extraction Infos Admin", "type": "main", "index": 0 }]
+      ]
+    },
+    "LLM Extraction Infos Admin": {
+      "main": [
+        [{ "node": "Données Sensibles?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Données Sensibles?": {
+      "main": [
+        [{ "node": "Alert Données Sensibles", "type": "main", "index": 0 }],
+        [{ "node": "Accusé Réception", "type": "main", "index": 0 }]
+      ]
+    },
+    "Accusé Réception": {
+      "main": [
+        [{ "node": "Dossier Candidat", "type": "main", "index": 0 }]
+      ]
+    },
+    "Dossier Candidat": {
+      "main": [
+        [{ "node": "Notification Recruteur", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "a1b2c3d4-0006-4000-8000-000000000001",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "cabinet-rh"
+  },
+  "tags": [
+    { "name": "cabinet-rh" },
+    { "name": "accueil-candidats" },
+    { "name": "no-scoring" }
+  ]
+}

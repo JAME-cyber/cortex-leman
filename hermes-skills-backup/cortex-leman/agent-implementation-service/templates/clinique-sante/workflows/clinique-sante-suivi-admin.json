@@ -1,0 +1,110 @@
+{
+  "name": "clinique-sante-suivi-admin",
+  "nodes": [
+    {
+      "parameters": {
+        "fields": {
+          "values": [
+            { "name": "dossier_id", "display": true }
+          ]
+        }
+      },
+      "id": "1",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:3000/api/admin/dossiers-en-cours",
+        "method": "GET",
+        "queryParameters": {
+          "parameters": [
+            { "name": "dossier_id", "value": "={{$json.dossier_id}}" },
+            { "name": "type", "value": "administratif" }
+          ]
+        }
+      },
+      "id": "2",
+      "name": "Check Dossiers Admin",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [420, 300]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "prompt": "Tu es un assistant administratif médical. Résume l'état administratif des dossiers suivants.\n\nIMPORTANT: Tu n'as accès QU'aux données administratives. Tu ne consultes JAMAIS les dossiers médicaux.\nSi des données médicales sont détectées, signale-les et ignore-les.\n\nDossiers administratifs: {{JSON.stringify($json.dossiers)}}\n\nProduis un résumé incluant:\n- Dossiers en attente de document\n- Factures en souffrance\n- Rendez-vous à confirmer\n- Actions requises par le personnel\n\nDISCLAIMER: Résumé administratif uniquement. Pour toute question médicale, consultez votre médecin.",
+        "temperature": 0.1,
+        "maxTokens": 1500
+      },
+      "id": "3",
+      "name": "LLM Resume Admin",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [640, 300]
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/rapports/admin/{{new Date().toISOString().split('T')[0]}}-suivi-admin.pdf",
+        "content": "={{$json.resume}}"
+      },
+      "id": "4",
+      "name": "Generer Rapport",
+      "type": "n8n-nodes-base.writeBinaryFile",
+      "typeVersion": 1,
+      "position": [860, 300]
+    },
+    {
+      "parameters": {
+        "fromEmail": "admin@clinique.ch",
+        "toEmail": "administration@clinique.ch",
+        "subject": "=Suivi administratif - {{$json.dossier_id || 'tous dossiers'}}",
+        "text": "={{$json.resume}}\n\nDISCLAIMER: Résumé administratif uniquement. Pour toute question médicale, consultez votre médecin."
+      },
+      "id": "5",
+      "name": "Notification Admin",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [1080, 300]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [{ "node": "Check Dossiers Admin", "type": "main", "index": 0 }]
+      ]
+    },
+    "Check Dossiers Admin": {
+      "main": [
+        [{ "node": "LLM Resume Admin", "type": "main", "index": 0 }]
+      ]
+    },
+    "LLM Resume Admin": {
+      "main": [
+        [{ "node": "Generer Rapport", "type": "main", "index": 0 }]
+      ]
+    },
+    "Generer Rapport": {
+      "main": [
+        [{ "node": "Notification Admin", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "a1b2c3d4-0003-4000-8000-000000000003",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "clinique-sante"
+  },
+  "tags": [
+    { "name": "clinique-sante" },
+    { "name": "suivi-admin" },
+    { "name": "rapport" }
+  ]
+}

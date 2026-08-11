@@ -1,0 +1,155 @@
+{
+  "name": "startup-tech-deploy",
+  "nodes": [
+    {
+      "parameters": {
+        "fields": {
+          "values": [
+            { "name": "version", "display": true },
+            { "name": "environment", "display": true }
+          ]
+        }
+      },
+      "id": "1",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:3000/api/deploy/checklist",
+        "method": "POST",
+        "body": {
+          "body": [
+            { "name": "version", "value": "={{$json.version}}" },
+            { "name": "environment", "value": "={{$json.environment}}" }
+          ]
+        }
+      },
+      "id": "2",
+      "name": "Checklist Pré-Déploiement",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [420, 300]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "prompt": "Tu es un DevOps engineer. Vérifie la checklist de pré-déploiement suivante.\n\nVersion: {{$json.version}}\nEnvironnement: {{$json.environment}}\nChecklist: {{JSON.stringify($json.checklist)}}\n\nVérifie:\n1. Tous les tests passent (unit, integration, e2e)\n2. Pas de secrets dans le code\n3. Changelog à jour\n4. Migration DB validée\n5. Rollback plan documenté\n6. Monitoring/alertes configurés\n7. Variables d'environnement prêtes\n\nRéponds en JSON:\n{\n  \"go_nogo\": \"go|nogo|conditional\",\n  \"blockers\": [...],\n  \"warnings\": [...],\n  \"score\": number (0-100)\n}\n\nIMPORTANT: Tu es un assistant. La décision Go/No-Go finale est HUMAINE.",
+        "temperature": 0.2,
+        "maxTokens": 1500,
+        "options": {
+          "responseFormat": "json_object"
+        }
+      },
+      "id": "3",
+      "name": "LLM Vérification",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [640, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            { "value1": "={{JSON.parse($json.message.content).go_nogo}}", "operation": "equals", "value2": "go" }
+          ]
+        }
+      },
+      "id": "4",
+      "name": "Go/No-Go?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [860, 300]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.github.com/repos/{{$json.repo}}/git/refs/tags",
+        "method": "POST",
+        "headers": {
+          "headers": [
+            { "name": "Authorization", "value": "Bearer {{$credentials.githubToken}}" }
+          ]
+        },
+        "body": {
+          "body": [
+            { "name": "ref", "value": "=refs/tags/{{$json.version}}" },
+            { "name": "sha", "value": "={{$json.sha}}" }
+          ]
+        }
+      },
+      "id": "5",
+      "name": "Tag Release GitHub",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1100, 200]
+    },
+    {
+      "parameters": {
+        "channel": "#deployments",
+        "text": "=✅ **GO for deploy** v{{$json.version}} → {{$json.environment}}\nScore: {{JSON.parse($json.message.content).score}}/100\n\n⚠️ Note: L'IA recommande Go. La décision finale reste humaine.",
+        "credentials": "slack_api"
+      },
+      "id": "6",
+      "name": "Slack Go Notification",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [1320, 200]
+    },
+    {
+      "parameters": {
+        "channel": "#deployments",
+        "text": "=🛑 **NO-GO** for deploy v{{$json.version}} → {{$json.environment}}\n\nBlockers: {{JSON.stringify(JSON.parse($json.message.content).blockers)}}\nWarnings: {{JSON.stringify(JSON.parse($json.message.content).warnings)}}",
+        "credentials": "slack_api"
+      },
+      "id": "7",
+      "name": "Slack No-Go Notification",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [1100, 400]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [{ "node": "Checklist Pré-Déploiement", "type": "main", "index": 0 }]
+      ]
+    },
+    "Checklist Pré-Déploiement": {
+      "main": [
+        [{ "node": "LLM Vérification", "type": "main", "index": 0 }]
+      ]
+    },
+    "LLM Vérification": {
+      "main": [
+        [{ "node": "Go/No-Go?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Go/No-Go?": {
+      "main": [
+        [{ "node": "Tag Release GitHub", "type": "main", "index": 0 }],
+        [{ "node": "Slack No-Go Notification", "type": "main", "index": 0 }]
+      ]
+    },
+    "Tag Release GitHub": {
+      "main": [
+        [{ "node": "Slack Go Notification", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "a1b2c3d4-0005-4000-8000-000000000002",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "startup-tech"
+  },
+  "tags": [
+    { "name": "startup-tech" },
+    { "name": "deploy" },
+    { "name": "go-nogo" }
+  ]
+}

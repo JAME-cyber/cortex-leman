@@ -1,0 +1,258 @@
+# ============================================================
+# SOCIALPULSE CAMPAIGN CONFIG - TEMPLATE
+# Copier ce fichier et adapter pour chaque client/use case
+# ============================================================
+
+campaign:
+  name: "nom-campagne"
+  label: "Nom Affiché Campagne"
+  client: "Nom Client"
+  vertical: "vertical-slug"
+  version: "4.0"
+  created: "2026-04-18"
+  status: "draft"
+
+# ----------------------------------------------------------
+# CIBLE
+# ----------------------------------------------------------
+target:
+  description: "Description courte de la cible"
+  employee_range: [50, 200]      # Min-max employes
+  regions:
+    - "Geneve"
+    - "Lausanne"
+  countries: ["CH", "FR"]
+  languages: ["fr"]
+  
+  # Secteurs prioritaires (ordre = priorite)
+  sectors:
+    - name: "Secteur 1"
+      weight: 100                # Score max pour ce secteur
+      search_queries:            # Requetes Google Maps
+        - "\"terme recherche\" + Ville"
+    - name: "Secteur 2"
+      weight: 80
+      search_queries:
+        - "\"terme\" + Ville"
+
+# ----------------------------------------------------------
+# SCORING LEAD (0-100)
+# ----------------------------------------------------------
+scoring:
+  threshold: 60                  # Score minimum pour qualifier
+  
+  criteria:
+    employee_count:
+      weight: 0.25               # 25% du score total
+      brackets:                  # [min, max, score]
+        - [0, 49, 50]
+        - [50, 200, 100]
+        - [201, 500, 70]
+        - [501, 9999, 30]
+    
+    sector:
+      weight: 0.30
+      mapping:                   # secteur → score
+        "Secteur 1": 100
+        "Secteur 2": 80
+        "Secteur 3": 50
+        "default": 30
+    
+    risk_indicator:
+      weight: 0.25
+      label: "Risque"            # Nom affiché du critere
+      detection:                 # Ce qu'on detecte sur le site
+        high: "chatbot/IA detecte"       # score 100
+        medium: "site dynamique"         # score 60
+        low: "pas de signal"             # score 30
+      mapping:
+        "high": 100
+        "medium": 60
+        "low": 30
+    
+    location:
+      weight: 0.20
+      mapping:
+        "Geneve": 100
+        "Lausanne": 100
+        "Haute-Savoie": 90
+        "autre CH": 60
+        "autre FR": 40
+        "autre": 20
+
+# ----------------------------------------------------------
+# DISCOVERY - Sources de données
+# ----------------------------------------------------------
+discovery:
+  google_maps:
+    enabled: true
+    actor: "ittechinnovators/google-maps-business-scraper"
+    cost_per_result: 0.05
+    max_results_per_query: 20
+  
+  europages:
+    enabled: true
+    actor: "saswave/europages-scraper"
+    cost_per_result: 0.013
+    max_results: 30
+  
+  scrapling:
+    enabled: true
+    description: |
+      Scrapling = scraper adaptatif avec anti-bot bypass.
+      Utilise pour: directory crawl, site analysis, competitor monitoring.
+      Skill: ~/.pi/agent/skills/scrapling-official/
+    use_cases:
+      - name: "directory_crawl"
+        description: "Crawler des annuaires pour trouver des entreprises"
+        fetcher: "StealthyFetcher"
+        anti_bot: true
+      - name: "site_analysis"
+        description: "Analyser le site d'un lead pour signaux IA/RGPD"
+        fetcher: "Fetcher"
+      - name: "competitor_monitoring"
+        description: "Monitorer les concurrents"
+        fetcher: "StealthyFetcher"
+        schedule: "weekly"
+    cost_per_page: 0.0
+    max_pages_per_run: 50
+    cli_path: "~/.pi/agent/skills/scrapling-official/.venv/bin/scrapling"
+    venv_path: "~/.pi/agent/skills/scrapling-official/.venv"
+
+# ----------------------------------------------------------
+# ENRICHMENT
+# ----------------------------------------------------------
+enrichment:
+  company_contact:
+    enabled: true
+    actor: "alizarin_refrigerator-owner/company-contact-enricher"
+    cost_per_contact: 0.02
+    title_filter: ["CEO", "CTO", "DG", "Directeur", "Fondateur"]
+  
+  linkedin:
+    enabled: true
+    actor: "khadinakbar/linkedin-profile-email-scraper"
+    cost_per_profile: 0.04
+  
+  email_fallback:
+    enabled: true
+    actor: "pro100chok/extract-emails"
+    cost_per_result: 0.001
+
+# ----------------------------------------------------------
+# PERSONNALISATION
+# ----------------------------------------------------------
+personalization:
+  # Email d'approche
+  email:
+    enabled: true
+    provider: "openrouter"       # openrouter, ollama, etc.
+    model: "anthropic/claude-sonnet-4"
+    max_words: 150
+    system_prompt: |
+      Tu es un expert en prospection B2B pour {campaign_label}.
+      Ton ton est professionnel, direct, sans jargon excessif.
+      Tu cites des obligations concretes quand pertinent.
+      Maximum {max_words} mots.
+    user_prompt_template: |
+      Genere un email d'approche personnalise pour:
+      - Entreprise: {company_name} ({industry}, {employee_count} employes)
+      - Contact: {contact_name}, {contact_title}
+      - Region: {location}
+      - Signal detecte: {risk_indicator}
+      - Point d'ancrage: {specific_observation}
+      
+      Structure:
+      1. Accroche personnalisee
+      2. Problematique concrete pour leur secteur
+      3. Proposition de valeur
+      4. CTA: lien vers {landing_page_url}
+    
+    subject_template: "Objet email pour {company_name}"
+    from_name: "Ton Nom"
+    from_email: "contact@domain.ch"
+    landing_page_url: "https://example.com"
+  
+  # Infographie/visuel
+  infographic:
+    enabled: true
+    provider: "kie-ai"          # kie-ai, stability-ai, placeholder
+    size: "1200x630"            # LinkedIn post format
+    prompt_template: |
+      Professional infographic for B2B outreach.
+      Theme: "{campaign_theme}".
+      Company: {company_name}. Industry: {industry}.
+      Key stat: "{stat}".
+      Style: Clean, modern, corporate. Colors: {brand_colors}.
+      Layout: Header with company name, central stat, 3 bullet points.
+      Format: {size}px (LinkedIn post).
+    brand_colors: "Navy (#1a365d) + Teal (#0d9488) + White"
+    campaign_theme: "Theme campagne"
+  
+  # Post LinkedIn
+  linkedin_post:
+    enabled: true
+    provider: "openrouter"
+    model: "anthropic/claude-sonnet-4"
+    max_words: 300
+    hashtag_count: [3, 5]
+    system_prompt: |
+      Tu es un expert en contenu LinkedIn B2B.
+      Ton style est informatif, accessible, avec des chiffres concrets.
+      Pas de buzzwords. Maximum {max_words} mots.
+    user_prompt_template: |
+      Cree un post LinkedIn pour le secteur {industry}:
+      - Fait chiffre: {stat}
+      - Obligation/enjeu: {obligation}
+      - Urgence: {urgency}
+      - CTA: {cta_text}
+
+# ----------------------------------------------------------
+# OUTPUT
+# ----------------------------------------------------------
+output:
+  format: "json"                # json, csv, html
+  directory: "~/socialpulse-output/{campaign_name}"
+  lead_card_fields:
+    - company_name
+    - industry
+    - employee_count
+    - location
+    - website
+    - score
+    - contact.name
+    - contact.title
+    - contact.email
+    - contact.linkedin
+    - risk_indicator
+    - personalization.email
+    - personalization.infographic_url
+    - personalization.linkedin_post
+  retention_days: 30            # RGPD: suppression apres X jours
+
+# ----------------------------------------------------------
+# SCHEDULING (cron)
+# ----------------------------------------------------------
+schedule:
+  enabled: false
+  cron: "0 10 * * 2,4"          # Mar + Jeu 10h
+  batch_size: 20                 # Leads par execution
+  deliver_to: "telegram"         # telegram, email, local
+
+# ----------------------------------------------------------
+# BUDGET
+# ----------------------------------------------------------
+budget:
+  max_per_batch_usd: 15
+  max_monthly_usd: 100
+  alert_threshold_pct: 80        # Alerte a 80% du budget mensuel
+
+# ----------------------------------------------------------
+# RGPD COMPLIANCE
+# ----------------------------------------------------------
+compliance:
+  legal_basis: "interet legitime (prospection B2B, Art. 6(1)(f) RGPD)"
+  data_retention_days: 30
+  opt_out_mention: true          # Mention droit d'opposition dans emails
+  no_sensitive_data: true        # Pas de donnees Art. 9 RGPD
+  register_entry: false          # Inscrit au registre des traitements?
