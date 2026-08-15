@@ -4,87 +4,87 @@
 > (syncé GitHub) pour être lisible depuis les deux machines. Il définit **qui fait quoi**
 > pour ne pas gaspiller le travail structurel déjà effectué côté Tars.
 
-**Date:** 2026-08-16
+**Date:** 2026-08-16 (v2)
 **Statut:** Actif — à mettre à jour à chaque nouveau projet
 
 ---
 
-## 1. Principe fondateur
+## 1. Principe fondateur (v2)
 
-> **Tars produit le raisonnement. OpenCode produit le livrable visible.**
+> **Tars est l'exécutant par défaut sur TOUT. OpenCode est une capacité de débordement.**
 
-| | **Tars** (laptop tars — Hermes + Pi) | **OpenCode** (ce laptop) |
+La v1 séparait "structure" (Tars) et "web" (OpenCode). **Cette frontière était artificielle** :
+Tars fait aussi le web (HTML/React/Vite, Playwright, déploiement Cloudflare Pages — alconst
+et darkom déployés depuis Tars). Le périmètre "web" d'OpenCode n'apporte aucune compétence
+que Tars n'a pas.
+
+Ce que la 2e machine apporte réellement :
+
+| Bénéfice | Réel ? | Détail |
 |---|---|---|
-| **Domaine** | Structure, raisonnement, stratégie | Sites web, front, déploiement |
-| **Produits** | Plans, audits, scoring, skills, pipelines, analyses | Pages, formulaires, dashboards, SEO, UX |
-| **Force** | Avance structurelle (skills Cortex Leman, anti-sycophancie, 13 agents) | Exécution web directe, itération rapide, tests Playwright |
-| **Stack** | Hermes Agent, Pi framework (v0.80.3), skills, SQLite | OpenCode, HTML/React/Vite, Playwright, n8n+GLM-4.5-flash |
+| Parallélisme matériel | ✅ | 2 pipelines simultanés (render vidéo pendant qu'un front itère) |
+| Redondance | ✅ | Une machine down ≠ arrêt total |
+| Budget API séparé | ✅ marginal | GLM-4.5-flash sur n8n local |
+| Compétences web exclusives | ❌ | Tars fait tout, y compris Playwright et les déploiements |
 
-**Règle d'or:** Un projet n'est jamais dupliqué. Chaque couche a un propriétaire unique.
+**Règle d'or :** OpenCode ne prend un projet que si Tars est saturé (render long, crawl,
+batch) ou si le travail doit tourner en parallèle d'un gros job Tars. Sinon → Tars.
 
 ---
 
 ## 2. Matrice des projets (qui fait quoi)
 
-| Projet | Nature | Propriétaire STRUCTURE | Propriétaire WEB | Notes |
-|---|---|---|---|---|
-| **cortex-leman** | Système agentique + assets | 🔵 Tars | — | Skills, guardrails, anti-sycophancie, docs, vidéo Sankofa |
-| **dropship-atom** | Pipeline agentic (7 agents) | 🔵 Tars | — | Scoring déterministe HUNTER→SCOUT→CREATOR — ne pas dupliquer |
-| **compliance-skills** | 12 skills réglementaires | 🔵 Tars | — | RGPD, AI Act, secret professionnel |
-| **alconst-website** | Site vitrine | — | 🟢 OpenCode | HTML, Cloudflare Pages, auto-deploy CI |
-| **darkom-debarras** | Site métier | — | 🟢 OpenCode | React+TS+Vite, SEO/RGPD fait (07/07) |
-| **idol-card-dreams** | App cards | — | 🟢 OpenCode | React+TS+Supabase, **stagnant depuis 03/03** → reprise prioritaire |
-| **socialpulse-mvp** | Lead gen (7 agents) | 🔵 Tars | 🟢 OpenCode | Tars = agents Python + scoring ; OpenCode = pages HTML demo |
-| **import-export-strategy** | Carte stratégique | 🔵 Tars | 🟢 OpenCode | Tars = stratégie multi-pays ; OpenCode = dashboard HTML |
-| **12_agents** (D:\) | Pipeline n8n + GLM-4 | 🔵 Tars | 🟢 OpenCode | Structure du pipeline = Tars ; **couche d'exécution GLM-4.5-flash = active ici** |
+| Projet | Nature | Propriétaire | Notes |
+|---|---|---|---|
+| **cortex-leman** | Système agentique + assets | 🔵 Tars | Skills, guardrails, anti-sycophancie, docs, vidéo Sankofa |
+| **dropship-atom** | Pipeline agentic (7 agents) | 🔵 Tars | Scoring déterministe — ne pas dupliquer |
+| **compliance-skills** | 12 skills réglementaires | 🔵 Tars | RGPD, AI Act, secret professionnel |
+| **alconst-website** | Site vitrine | 🔵 Tars | HTML, Cloudflare Pages — reprise par Tars |
+| **darkom-debarras** | Site métier | 🔵 Tars | React+TS+Vite, SEO/RGPD fait (07/07) |
+| **idol-card-dreams** | App cards | 🔵 Tars | **candidat reprise n°1** (stagnant depuis 03/03) |
+| **socialpulse-mvp** | Lead gen (7 agents) | 🔵 Tars | Agents Python + scoring + pages demo |
+| **import-export-strategy** | Carte stratégique | 🔵 Tars | Stratégie + dashboard HTML |
+| **12_agents** (D:\) | Pipeline n8n + GLM-4 | 🔵 Tars | Structure pipeline + couche GLM-4.5-flash |
+
+OpenCode = **débordement à la demande** : gros renders, crawls longs, tests de charge —
+attribués explicitement quand Tars est saturé, jamais par défaut.
 
 ---
 
-## 3. Périmètre OpenCode (notre charge)
-
-### 3.1 Sites vitrine / métier — maintenance + évolution
-- **alconst-website** — évolutions : sections, formulaire, SEO
-- **darkom-debarras** — évolutions : photos, zones, devis, RC Pro
-- **idol-card-dreams** — **candidat n°1 reprise** (3 mois de stagnation)
-
-### 3.2 Front des projets hybrides
-- **socialpulse-mvp** : pages `demo/` + `annemasse-agency/` pendant que Tars gère les agents
-- **import-export-strategy** : le dashboard multi-pays pendant que Tars affûte la stratégie
-
-### 3.3 Couche d'exécution LLM
-- **Pipeline n8n + GLM-4.5-flash** (12_agents) — génération de contenu réelle, validée (SWOT réel, HTTP 200)
-- **Tests Playwright** — 22/22, config auto (webServer, retries CI)
-
----
-
-## 4. Périmètre Tars (ne pas toucher)
+## 3. Périmètre Tars (défaut sur tout)
 
 - Skills Hermes Cortex Leman (Gardien des Normes, Narrateur, Oeil, Architecte)
-- Anti-sycophancie (`anti_sycophancy.py`) et cost tracking (`hermes_cost_audit.py`)
-- Scoring déterministe dropship-atom
-- 12 skills compliance
-- Tout raisonnement stratégique produit par Hermes/Pi sur tars
+- Anti-sycophancie et cost tracking
+- Scoring déterministe dropship-atom, 12 skills compliance
+- **Sites web : alconst, darkom, idol-card-dreams** (front, SEO, déploiement, Playwright)
+- Front des projets hybrides : socialpulse demo/, import-export dashboard
+- Tout raisonnement stratégique produit par Hermes/Pi
+
+## 4. Périmètre OpenCode (débordement)
+
+Uniquement sur assignation explicite (Tars saturé / travail parallèle nécessaire) :
+
+- Gros renders vidéo, crawls longs, batches massifs, tests de charge
+- Exécution de specs produites par Tars — jamais de refonte structurelle en autonomie
+- **Jamais** : skills, guardrails, scoring, secrets, backups, déploiements
 
 ---
 
 ## 5. Interfaces entre les deux stacks
 
 ```
-Tars (raisonnement)
-    │  plans / audits / specs / scoring
+Tars (exécutant défaut — specs, plans, audits, web, déploiement)
+    │  assignation de débordement: spec + contexte + clés via vault
     ▼
-Cortex Leman repo (GitHub — point de sync)
-    │  docs, briefs, decisions
+OpenCode (capacité parallèle — renders, crawls, batches)
+    │  livrables + evidence (logs, captures)
     ▼
-OpenCode (exécution web)
-    │  pages, dashboards, formulaires, SEO
-    ▼
-Déploiement (Cloudflare Pages / Vercel)
+Repo cortex-leman (GitHub — point de sync unique)
 ```
 
 **Pipeline de contenu (optionnel mais validé):**
 ```
-n8n (13 agents) → GLM-4.5-flash → contenu structuré → alimente les sites OpenCode
+n8n (13 agents) → GLM-4.5-flash → contenu structuré → alimente les sites
 ```
 
 ---
@@ -92,11 +92,12 @@ n8n (13 agents) → GLM-4.5-flash → contenu structuré → alimente les sites 
 ## 6. Règles d'engagement
 
 1. **Un propriétaire par couche** — si Tars a déjà un plan/audit/scoring pour un sujet, OpenCode l'utilise, ne le recrée pas.
-2. **Le repo cortex-leman est le point de sync** — toute décision structurante y est documentée (lisible depuis les deux laptops).
+2. **Le repo cortex-leman est le point de sync** — toute décision structurante y est documentée (lisible depuis les deux laptops). Pull avant push.
 3. **Demander avant de toucher** — un élément du périmètre Tars (skill, scoring, guardrail) ne se modifie pas sans accord.
-4. **Preuve avant livraison** — OpenCode livre avec tests (Playwright) et evidence (logs, captures).
-5. **Sécurité des clés** — jamais de clé API dans les repos publics (leçons apprises : clés ZAI/Kie exposées dans cortex-leman à révoquer).
+4. **Preuve avant livraison** — livraison avec tests (Playwright) et evidence (logs, captures).
+5. **Sécurité des clés** — jamais de clé API dans les repos publics (leçons apprises : clés ZAI/Kie exposées dans cortex-leman, purgées et révoquées 16/08).
 6. **Les clés vivent UNIQUEMENT dans le vault chiffré** (`~/.hermes/vault/vault.py` sur chaque machine) — jamais en dur dans un fichier, un backup, ou un message. Config → `api_key_env_var` uniquement.
+7. **Tout backup poussé sur GitHub passe un scan de secrets avant push** (`git grep` patterns de clés) — l'incident d'août est parti d'un backup non scanné.
 
 ---
 
@@ -116,3 +117,4 @@ n8n (13 agents) → GLM-4.5-flash → contenu structuré → alimente les sites 
 |---|---|
 | 2026-08-16 | Création du document — division Tars (structure) / OpenCode (web) actée |
 | 2026-08-16 | INCIDENT SÉCURITÉ clos: clés ZAI+Kie exposées → révoquées (vérifié API 401), historique git purgé (filter-repo, 0 clé complète restante), nouvelle clé ZAI vaultée |
+| 2026-08-16 | **v2** — Refonte de la division : Tars = exécutant défaut sur tout (web inclus), OpenCode = capacité de débordement uniquement. Frontière "structure/web" abandonnée (artificielle). |
