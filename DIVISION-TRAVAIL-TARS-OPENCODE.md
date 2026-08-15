@@ -96,6 +96,7 @@ n8n (13 agents) → GLM-4.5-flash → contenu structuré → alimente les sites 
 3. **Demander avant de toucher** — un élément du périmètre Tars (skill, scoring, guardrail) ne se modifie pas sans accord.
 4. **Preuve avant livraison** — OpenCode livre avec tests (Playwright) et evidence (logs, captures).
 5. **Sécurité des clés** — jamais de clé API dans les repos publics (leçons apprises : clés ZAI/Kie exposées dans cortex-leman à révoquer).
+6. **Les clés vivent UNIQUEMENT dans le vault chiffré** (`~/.hermes/vault/vault.py` sur chaque machine) — jamais en dur dans un fichier, un backup, ou un message. Config → `api_key_env_var` uniquement.
 
 ---
 
@@ -105,7 +106,7 @@ n8n (13 agents) → GLM-4.5-flash → contenu structuré → alimente les sites 
 - [ ] Évolutions **alconst-website** (liste des sections à ajouter)
 - [ ] Évolutions **darkom-debarras** (devis, photos, zones)
 - [ ] Interface n8n→sites (brancher la génération GLM-4.5-flash sur un site réel)
-- [ ] Révocation des clés API exposées (ZAI `c55159...`, Kie `00a891...`)
+- [x] ~~Révocation des clés API exposées~~ **FAIT 16/08** — clés révoquées (test API = 401), purge historique complète effectuée
 
 ---
 
@@ -114,3 +115,4 @@ n8n (13 agents) → GLM-4.5-flash → contenu structuré → alimente les sites 
 | Date | Événement |
 |---|---|
 | 2026-08-16 | Création du document — division Tars (structure) / OpenCode (web) actée |
+| 2026-08-16 | INCIDENT SÉCURITÉ clos: clés ZAI+Kie exposées → révoquées (vérifié API 401), historique git purgé (filter-repo, 0 clé complète restante), nouvelle clé ZAI vaultée |
