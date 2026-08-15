@@ -173,7 +173,7 @@
 
         .hero-subtitle {
             font-size: 18px;
-            color: rgba(240, 242, 245, 0.55);
+            color: rgba(240, 242, 245, 0.65);
             max-width: 720px;
             line-height: 1.7;
             margin-bottom: 48px;
@@ -202,7 +202,7 @@
 
         .hero-stat-label {
             font-size: 13px;
-            color: rgba(240, 242, 245, 0.4);
+            color: rgba(240, 242, 245, 0.6);
         }
 
         .hero-ctas {
@@ -282,7 +282,7 @@
 
         .section-subtitle {
             font-size: 18px;
-            color: rgba(240, 242, 245, 0.55);
+            color: rgba(240, 242, 245, 0.65);
             max-width: 720px;
             line-height: 1.7;
             margin: 0 auto;
@@ -348,7 +348,7 @@
 
         .threat-description {
             font-size: 14px;
-            color: rgba(240, 242, 245, 0.45);
+            color: rgba(240, 242, 245, 0.6);
             line-height: 1.6;
             margin: 0 0 16px;
         }
@@ -370,7 +370,7 @@
 
         .threat-mitigations-list {
             font-size: 13px;
-            color: rgba(240, 242, 245, 0.55);
+            color: rgba(240, 242, 245, 0.65);
             margin: 0;
             padding-left: 24px;
         }
@@ -451,7 +451,7 @@
 
         .pricing-price-currency {
             font-size: 16px;
-            color: rgba(240, 242, 245, 0.4);
+            color: rgba(240, 242, 245, 0.6);
             font-weight: 400;
         }
 
@@ -466,14 +466,14 @@
 
         .pricing-description {
             font-size: 14px;
-            color: rgba(240, 242, 245, 0.45);
+            color: rgba(240, 242, 245, 0.6);
             line-height: 1.6;
             margin: 0 0 24px;
         }
 
         .pricing-features {
             font-size: 13px;
-            color: rgba(240, 242, 245, 0.55);
+            color: rgba(240, 242, 245, 0.65);
             margin: 0 0 24px;
             padding-left: 24px;
         }
@@ -772,7 +772,7 @@
 
         .form-privacy {
             font-size: 12px;
-            color: rgba(240, 242, 245, 0.4);
+            color: rgba(240, 242, 245, 0.6);
             text-align: center;
             margin-top: 16px;
         }
@@ -787,7 +787,7 @@
                     <div class="nav-logo">CL</div>
                     <div class="nav-brand-text">Cortex <span>Leman</span></div>
                 </a>
-                <a href="#contact-section" class="nav-cta">Démarrer un audit</a>
+                <a href="#contact-section" class="nav-cta" aria-label="Aller à la section contact pour démarrer un audit">Démarrer un audit</a>
             </div>
         </div>
     </nav>
@@ -1143,7 +1143,7 @@
                         
                         <div class="form-group">
                             <label for="email" class="form-label">Email professionnel *</label>
-                            <input type="email" id="email" name="email" class="form-input" required placeholder="jean@entreprise.ch">
+                            <input type="email" id="email" name="email" class="form-input" required pattern="[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}$" title="Veuillez entrer une adresse email valide (ex: jean@entreprise.ch)" placeholder="jean@entreprise.ch">
                         </div>
                         
                         <div class="form-group">
@@ -1191,15 +1191,6 @@
         </div>
     </footer>
 
-    <!-- Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-XXXXXXXXXX');
-    </script>
-
     <!-- Contact Form Handler (FormSubmit.co) -->
     <script>
     document.getElementById('contactForm').addEventListener('submit', function(event) {
@@ -1207,6 +1198,15 @@
         
         const btn = this.querySelector('.form-submit')
         const originalText = btn.textContent
+        
+        // Validation email côté client
+        const emailField = document.getElementById('email')
+        const emailRegex = /^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}$/i
+        if (!emailRegex.test(emailField.value)) {
+            alert('❌ Adresse email invalide.\n\nVeuillez entrer une adresse email valide (ex: jean@entreprise.ch)')
+            emailField.focus()
+            return
+        }
         
         // Afficher chargement
         btn.textContent = '⏳ Envoi en cours...'
