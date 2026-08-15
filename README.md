@@ -2,6 +2,9 @@
 
 Workshop Tars. Opérations, recherche, et assets de production.
 
+> **🗂️ Coordination inter-laptops:** voir [`DIVISION-TRAVAIL-TARS-OPENCODE.md`](./DIVISION-TRAVAIL-TARS-OPENCODE.md)
+> — qui fait quoi entre Tars (raisonnement/structure) et OpenCode (sites web).
+
 ## Structure
 
 ```
