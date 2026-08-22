@@ -89,7 +89,7 @@ OneTrust (registre, Visionary Gartner MQ 2026), Vanta (150+ contrôles, 16 polit
 
 ### 2.5 ZénithIA — fiche de référence (déjà documentée)
 
-Voir `zenithia-competitive-analysis.md` (fiche complète) : CA 750 k€, tiers 500 €–50 k€, n8n+Claude, zéro compliance, FR-only. **À copier** : pipeline proposition auto (transcript appel → Claude → Gamma → signature), technique "miroir des mots du client", funnel contenu→communauté→B2B, clarté des 3 tiers.
+Voir `hermes-skills-backup/cortex-leman-business-generator/references/zenithia-competitive-analysis.md` (fiche complète) : CA 750 k€, tiers 500 €–50 k€, n8n+Claude, zéro compliance, FR-only. **À copier** : pipeline proposition auto (transcript appel → Claude → Gamma → signature), technique "miroir des mots du client", funnel contenu→communauté→B2B, clarté des 3 tiers.
 
 ### 2.6 Ancres pricing consolidées
 
@@ -105,14 +105,15 @@ Voir `zenithia-competitive-analysis.md` (fiche complète) : CA 750 k€, tiers 5
 | AI Officer CH | CHF 500/mois (sidd.swiss) | idem |
 | DPO externe CH | CHF 290–500/mois (DE) · 400–1 500 €/mois (FR) | datenschutzkonform.ch · doc interne |
 | SaaS gouvernance entrée | 10–20 k€/an | aiactblog.nl |
-| **Nos audits** | **890 € / 3 500 € / 750 €/mois** | cortex-leman-pricing.md |
+| **Nos audits compliance** | **890 € / 3 500 € / 750 €/mois** | cortex-leman-pricing.md |
+| **Notre audit agent-readiness (GEO)** | **1 500–3 500 CHF one-shot · 290–590 CHF/mois loop** | agent-readiness-offer.md (SKU distinct des audits compliance) |
 | GEO audit US | diagnostic 2–4 semaines, souvent gratuit en lead magnet | Helium, Xpand 2026 |
 
 ---
 
 ## 3. Mise à jour réglementale critique (à propager dans le moat pitch)
 
-Le `moat-compliance-pitch.md` (v1.0, 09/08) porte des échéances **périmées** sur deux points :
+Le `moat-compliance-pitch.md` (v1.0, 09/08) **portait** des échéances **périmées** sur deux points (corrigées en v1.1 le 22/08 — voir Action ci-dessous) :
 
 | Point | Moat doc (09/08) | Réalité (08/2026, vérifiée) |
 |---|---|---|
