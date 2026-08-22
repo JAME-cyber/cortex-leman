@@ -1,6 +1,6 @@
 # Moat Compliance: Pourquoi l'AI Act est notre avantage concurrentiel
 
-> Version 1.0 — 9 août 2026  
+> Version 1.1 — 22 août 2026 (correction horloge réglementaire: report Digital Omnibus, Règlement UE 2026/1744 — cf. `competitor-registry.md` §3)  
 > Document de positionnement stratégique pour Cortex Leman  
 > Audience: Tars (propriétaire), pas le client final
 
@@ -16,8 +16,8 @@
 |---|---|---|---|
 | **Labeling contenus IA réalistes** | Immédiate (2 août 2026) | Jusqu'à 35M€ ou 7% CA mondial | Vidéos marketing, posts social, newsletters automatisées |
 | **Transparence des systèmes d'IA générale** | 2 août 2026 | Jusqu'à 15M€ ou 3% CA | Tous usages OpenAI/Claude en production |
-| **Évaluation d'impact IA** | 2 février 2027 | Suspend l'activité | Automatisation de processus clients |
-| **Registre des usages IA** | 2 août 2027 | 10M€ ou 2% CA | Documentation obligatoire de tous les workflows IA |
+| **Évaluation d'impact IA** | 2 décembre 2027 (report Digital Omnibus 07/2026 — était 02/02/2027) | Suspend l'activité | Automatisation de processus clients |
+| **Registre des usages IA** | 2 août 2028 (Annexe I embarqué — était 02/08/2027) | 10M€ ou 2% CA | Documentation obligatoire de tous les workflows IA |
 
 ### 1.2 Réalité terrain
 
