@@ -1,14 +1,14 @@
 model:
-  default: glm-5.2
+  default: nvidia/meta-llama-3.3-70b-instruct
   provider: zai
   base_url: https://api.z.ai/api/coding/paas/v4
-  api_key_env_var: GLM_API_KEY
+  api_key_env_var: <REDACTED>
   fallback_model: z-ai/glm-4.5
   context_length: 128000
 providers:
   nvidia-nim:
     base_url: https://integrate.api.nvidia.com/v1
-    api_key_env_var: NVIDIA_API_KEY
+    api_key_env_var: <REDACTED>
     models:
       - mistralai/mistral-nemotron
   api.z.ai:
@@ -17,7 +17,15 @@ providers:
     default_model: glm-5
   api_z_ai:
     base_url: https://openrouter.ai/api/v1
-fallback_providers: '[openrouter]'
+fallback_providers:
+  - provider: openrouter
+    model: nvidia/nemotron-3.5-lightning:free
+  - provider: nvidia-nim
+    model: mistralai/mistral-nemotron
+    base_url: https://integrate.api.nvidia.com/v1
+    key_env: NVIDIA_API_KEY
+  - provider: openrouter
+    model: nvidia/nemotron-3-ultra-550b-a55b:free
 credential_pool_strategies:
   openrouter: fill_first
 toolsets:
@@ -112,7 +120,7 @@ browser:
   command_timeout: 30
   record_sessions: false
   allow_private_urls: false
-  engine: auto
+  engine: lightpanda
   auto_local_for_private_urls: true
   cdp_url: ''
   dialog_policy: must_respond
@@ -183,25 +191,25 @@ auxiliary:
     base_url: https://api.z.ai/api/coding/paas/v4
     timeout: 30
     download_timeout: 30
-    api_key_env_var: GLM_API_KEY
+    api_key_env_var: <REDACTED>
   web_extract:
     provider: zai
     model: glm-4.7
     base_url: https://api.z.ai/api/coding/paas/v4
     timeout: 30
-    api_key_env_var: GLM_API_KEY
+    api_key_env_var: <REDACTED>
   compression:
     provider: zai
     model: glm-4.7
     base_url: https://api.z.ai/api/coding/paas/v4
     timeout: 120
-    api_key_env_var: GLM_API_KEY
+    api_key_env_var: <REDACTED>
   skills_hub:
     provider: zai
     model: glm-4.7
     base_url: https://api.z.ai/api/coding/paas/v4
     timeout: 30
-    api_key_env_var: GLM_API_KEY
+    api_key_env_var: <REDACTED>
   approval:
     provider: auto
     model: ''
@@ -213,7 +221,7 @@ auxiliary:
     model: glm-4.7
     base_url: https://api.z.ai/api/coding/paas/v4
     timeout: 30
-    api_key_env_var: GLM_API_KEY
+    api_key_env_var: <REDACTED>
   title_generation:
     provider: auto
     model: ''
@@ -260,23 +268,23 @@ auxiliary:
     provider: zai
     model: glm-4.7
     base_url: https://api.z.ai/api/coding/paas/v4
-    api_key_env_var: GLM_API_KEY
+    api_key_env_var: <REDACTED>
     timeout: 30
   flush_memories:
     provider: zai
     model: glm-4.7
     base_url: https://api.z.ai/api/coding/paas/v4
-    api_key_env_var: GLM_API_KEY
+    api_key_env_var: <REDACTED>
     timeout: 30
   approvals:
     provider: zai
     model: glm-4.7
     base_url: https://api.z.ai/api/coding/paas/v4
-    api_key_env_var: GLM_API_KEY
+    api_key_env_var: <REDACTED>
     timeout: 30
 display:
   compact: false
-  personality: technical
+  personality: ''
   resume_display: full
   resume_exchanges: 10
   resume_max_user_chars: 300
@@ -325,7 +333,7 @@ display:
       - cwd
   copy_shortcut: auto
   tool_progress: all
-  background_process_notifications: all
+  background_process_notifications: concise
 dashboard:
   theme: default
   show_token_analytics: false
@@ -411,16 +419,16 @@ memory:
   nudge_interval: 10
   flush_min_turns: 6
 delegation:
-  model: anthropic/claude-sonnet-4
+  model: nvidia/nemotron-3-ultra-550b-a55b:free
   provider: openrouter
   base_url: ''
   api_key: ''
   api_mode: ''
   inherit_mcp_toolsets: true
-  max_iterations: 50
+  max_iterations: 250
   child_timeout_seconds: 600
   reasoning_effort: medium
-  max_concurrent_children: 3
+  max_concurrent_children: 10
   max_spawn_depth: 1
   orchestrator_enabled: true
   subagent_auto_approve: false
@@ -428,6 +436,8 @@ delegation:
     - terminal
     - file
     - web
+  fallback_model: mistralai/mistral-nemotron
+  fallback_provider: nvidia-nim
 prefill_messages_file: ''
 goals:
   max_turns: 20
@@ -503,19 +513,21 @@ approvals:
   mcp_reload_confirm: true
   destructive_slash_confirm: true
 command_allowlist:
-  - script execution via heredoc
-  - sudo with privilege flag (stdin/askpass/shell/list)
-  - hermes update (restarts gateway, kills running agents)
-  - delete in root path
-  - script execution via -e/-c flag
-  - kill process via pgrep/pidof expansion (self-termination)
-  - overwrite system config
   - command parser limit or malformed executable payload
   - shell execution via heredoc
+  - overwrite system config
+  - delete in root path
+  - hermes update (restarts gateway, kills running agents)
+  - script execution via heredoc
+  - sudo with privilege flag (stdin/askpass/shell/list)
   - execute_code
+  - script execution via -e/-c flag
+  - docker compose restart/stop/kill/down (container lifecycle)
+  - kill process via pgrep/pidof expansion (self-termination)
+  - shell command via -c/-lc flag
+  - recursive delete
   - overwrite project env/config via redirection
   - docker restart/stop/kill (container lifecycle)
-  - shell command via -c/-lc flag
 quick_commands:
   workflow:
     type: exec
@@ -612,6 +624,7 @@ onboarding:
   seen:
     busy_input_prompt: true
     tool_progress_prompt: true
+    profile_build_offered: true
   profile_build: ask
 updates:
   pre_update_backup: false
@@ -638,7 +651,7 @@ secrets:
 paste_collapse_threshold: 5
 paste_collapse_threshold_fallback: 5
 paste_collapse_char_threshold: 2000
-_config_version: 33
+_config_version: 39
 smart_model_routing:
   enabled: false
   max_simple_chars: 160
@@ -709,7 +722,7 @@ mcp_servers:
       - -y
       - '@apify/actors-mcp-server'
     env:
-      APIFY_TOKEN: <REDACTED_APIFY_TOKEN>
+      APIFY_TOKEN: apify_api_<REDACTED>
     timeout: 120
     connect_timeout: 60
   knowledge:
@@ -732,6 +745,7 @@ mcp_servers:
 plugins:
   enabled:
     - platforms/a2a
+    - agency-agents-router
   disabled: []
 webhook:
   enabled: true

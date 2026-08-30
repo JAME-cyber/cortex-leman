@@ -1,25 +1,15 @@
-User: fact-based analysis, reasonable defaults. Right-size: short ask = 2-3 lines, explicit request = full. Just execute.
+PoilNet: «réseau social des chiens», vitrine https://poilnet.pages.dev. Phase 1: agents IA salons de toilettage (relances WhatsApp opt-in salon). Pas de Plaud → pipeline DIY.
 §
-Vision QA: skill `vision-analysis-fallback` (NVIDIA 11B gratuit→Gemini). Réceptionniste: skill `ai-voice-receptionist` Mode2=HF s2s+Ultravox(supprime STT, 150ms).
+Scraper prix/stock multi-sites (sites.json+Puppeteer/SQLite) prévu DropAtom ET import-export.
 §
-Vidéo stack: Higgsfield(€39/mo,4K+NanoBanana2 ILLIMITÉ) > Flova($0.03/s) >>> kie.ai(ABANDONNÉ). Film AI bible: skill `ai-film-production-bible` (15-block prompts, char sheets 3-panel, locks nommés).
+29/08: state.db reconstruit après corruption (151652 msgs, FTS OK). Backups ~6,5GB à purger mi-sept (state.db.bak-corrupt*, .malformed*, .corrupt-final*, -wal.bak). Scripts: ~/.hermes/db_recover*.py.
 §
-Social automation: skill `social-media-agent` (dry-run par défaut).
+Email Tars: beninagro1974@gmail.com via himalaya v2.1.0 (~/.config/himalaya/, app-password .gmail-pass 600, dossiers Gmail FR). Envoi auto validé. DropAtom Q4: 4 RFQ partis 30/08 — Likdiy/EuropeCosmétique/MadeByNature (email) + SHILANDER/Tracy Shen via Alibaba (réponse <30min, demande lien produit exact). Tracker: ~/archive/dropship-atom/output/q4-rfq/. Deadlines: réponses 02/09, Go/No-Go 05/09, samples 10/09, commandes 12/09. Veille inbox: ~/.hermes/scripts/rfq_inbox_watch.sh (matching à finir).
 §
-Vault: `python3 ~/.hermes/vault/vault.py get KEY`. Stocke CF_TOKEN, CF_ACCOUNT_ID, INFOMANIAK_USER, etc.
+29/08: 4 prompts Seedance 2.0 volés (Sprite 16:9, KitKat 9:16, LUV red+black, AQUA LUXE skincare aqua+white). Template unifié: ~/calao/prompts/patterns/seedance-shopify-template.md (6 catégories produit). Instanciation sur-mesure = «pour plus tard» (Tars fournira le produit).
 §
-PRISME = méthode marketing VALIDÉE. Playbook: /home/tars/cortex-leman/marketing-playbook.md. Funnel Cortex Leman: Quick Audit Google (500-1K CHF) → Audit RGPD-IA (2-4K) → Build (5-15K) → Retainer (500-3K/mois). Persona="Magalie de la compta". Narratif="IA pour 99% FR-CH". Moat vs Polsia = compliance nLPD/RGPD + local + sur-mesure. Triade compliance=nLPD+RGPD+AI Act.
+User prefers concise 2-3 line FR-CH responses, skills audit mandatory before builds, free/low-cost tooling. Ubuntu 24.04 + Lightpanda env, Telegram 385109564, primary model glm-5.3 via Z.AI. Projects: DropAtom, Léman-Legal, PoilNet, Calao. Email beninagro1974@gmail.com via himalaya v2.1.0.
 §
-AlConst = client EXTERNE. Tars = indépendant, PAS d'entité enregistrée (état août 2026). C2PA au nom de personne physique.
+Convention 29/08: patterns réutilisables → ~/calao/prompts/patterns/; usage funnel e-commerce → ~/archive/dropship-atom/marketing/ (Q4-PATTERNS-PLAYBOOK.md §9 mappe Seedance→beats Q4). Frontière nette Calao↔DropAtom, ne pas mélanger.
 §
-C2PA: sign_video.py+build.py. Prod=SSL.com FREE. Moat: cortex-leman/moat-compliance-pitch.md.
-§
-Computer-use OPÉRATIONNEL (X11 only). cua-driver 0.19.2. Screenshot=get_desktop_state→screenshot_png_b64.
-§
-GitHub: JAME-cyber=perso/Cortex Leman/Sankofa. koussek=CLIENT, JAMAIS push perso dessus. Token GH_JAME_TOKEN dans vault. PushProtection=scanner secrets (GOCSPX, googleusercontent, ghp_) AVANT push.
-§
-YT Sankofa (@sankofa-histoire): 8 vidéos publiques. Mansa prêt (attente Higgsfield). Baobab Kids pilote Anansi ($9 Flova) = PRIORITÉ #1. Comment auto-reply ACTIF: cron 6h silent, /home/tars/sankofa/comment_manager.py, DB locale commentateurs (nouveau→CTA subscribe, fidèle→pas CTA). Token YT scope force-ssl+upload.
-§
-Tars=autonomie. Trier intelligemment sans demander (garder dernières versions, exclure artifacts/tmp, sanitizer secrets→env vars).
-§
-Tars=1 seul numéro tel. Google bloque création nouveau compte. Workaround=Brand Account (chaîne YT séparée, pas de tel requis).
+PC James (Windows): TotalAV SecurityService supprimé 29/08 (brûlait ~31% CPU continu → chauffe). Résidu endpointprotection protégé kernel, non supprimable à distance. Defender+Malwarebytes actifs.
