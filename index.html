@@ -4,17 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-    <title>Cortex Leman — Diagnostic de gouvernance IA avec OWASP GenAI v1.0</title>
-    <meta name="description" content="Diagnostic de gouvernance IA incluant OWASP GenAI (Agentic AI + Data Security) + OWASP Top 10. Démarche suisse, conforme nLPD et AI Act. Délai: 2-3 semaines.">
+    <title>Cortex Leman — Diagnostic de gouvernance IA pour professions régulées FR-CH</title>
+    <meta name="description" content="Cortex Leman accompagne cabinets, cliniques et PME romands : diagnostic de gouvernance IA, pilotes bornés à validation humaine, hébergement Suisse. Conforme nLPD et AI Act.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html { scroll-behavior: smooth; }
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -23,1376 +21,468 @@
             line-height: 1.6;
         }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 24px;
-        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
 
-        /* Navigation */
+        /* ===== NAV (style figma existant) ===== */
         nav {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 1000;
+            position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
             background: rgba(13, 17, 23, 0.92);
             backdrop-filter: blur(12px);
             border-bottom: 1px solid rgba(255, 255, 255, 0.08);
         }
-
-        .nav-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            height: 64px;
+        .nav-inner {
+            display: flex; align-items: center; justify-content: space-between;
+            height: 64px; max-width: 1200px; margin: 0 auto; padding: 0 24px;
         }
-
-        .nav-brand {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            text-decoration: none;
-        }
-
-        .nav-logo {
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
-            flex-shrink: 0;
-            display: block;
-        }
-
-        .nav-brand-text {
-            font-weight: 700;
-            font-size: 18px;
-            color: #f0f2f5;
-        }
-
-        .nav-brand-text span {
-            color: #3b82f6;
-        }
-
+        .nav-logo { display: flex; align-items: center; gap: 10px; font-weight: 700; letter-spacing: -0.5px; text-decoration: none; color: #f0f2f5; }
+        .nav-links { display: flex; gap: 28px; align-items: center; }
+        .nav-links a { color: rgba(240, 242, 245, 0.7); text-decoration: none; font-size: 14px; transition: color 0.2s; }
+        .nav-links a:hover { color: #3b82f6; }
         .nav-cta {
-            font-size: 13px;
-            font-weight: 500;
-            padding: 8px 18px;
-            border-radius: 8px;
-            background: rgba(75, 158, 255, 0.12);
-            color: #3b82f6;
-            border: 1px solid rgba(75, 158, 255, 0.3);
-            text-decoration: none;
-            transition: all 0.2s;
+            background: #3b82f6; color: #0d1117; padding: 9px 18px; border-radius: 8px;
+            font-weight: 600; font-size: 14px; text-decoration: none; transition: background 0.2s;
         }
+        .nav-cta:hover { background: #6db3ff; }
 
-        .nav-cta:hover {
-            background: rgba(75, 158, 255, 0.18);
-            border-color: #3b82f6;
-        }
-
-        /* Hero Section */
-        .hero {
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            padding: 120px 24px 80px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .hero-grid {
-            position: absolute;
-            inset: 0;
-            z-index: 0;
-            background-image: linear-gradient(rgba(75, 158, 255, 0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(75, 158, 255, 0.04) 1px, transparent 1px);
-            background-size: 48px 48px;
-        }
-
-        .hero-glow {
-            position: absolute;
-            top: 20%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 600px;
-            height: 600px;
-            background: radial-gradient(circle, rgba(75, 158, 255, 0.08) 0%, transparent 70%);
-            z-index: 0;
-        }
-
-        .hero-content {
-            position: relative;
-            z-index: 1;
-        }
-
-        .hero-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 14px;
-            border-radius: 100;
-            background: rgba(75, 158, 255, 0.08);
-            border: 1px solid rgba(75, 158, 255, 0.2);
-            margin-bottom: 32px;
-        }
-
-        .hero-badge-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: #10b981;
-        }
-
-        .hero-badge-text {
-            font-family: 'Roboto Mono', monospace;
-            font-size: 12px;
-            color: rgba(75, 158, 255, 0.9);
-            letter-spacing: 0.08em;
-        }
-
-        .hero-title {
-            font-size: clamp(42px, 7vw, 88px);
-            font-weight: 800;
-            line-height: 1.0;
-            color: #f0f2f5;
-            margin-bottom: 24px;
-            letter-spacing: -2px;
-        }
-
-        .hero-title .highlight {
-            color: #3b82f6;
-        }
-
-        .hero-title .highlight-2 {
-            color: #F59E0B;
-        }
-
-        .hero-subtitle {
-            font-size: 18px;
-            color: rgba(240, 242, 245, 0.65);
-            max-width: 720px;
-            line-height: 1.7;
-            margin-bottom: 48px;
-        }
-
-        .hero-subtitle strong {
-            color: #10b981;
-        }
-
-        .hero-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 24px;
-            margin-top: 48px;
-            padding-top: 48px;
-            border-top: 1px solid rgba(255, 255, 255, 0.08);
-        }
-
-        .hero-stat {
-            font-family: 'Roboto Mono', monospace;
-            font-size: 15px;
-            font-weight: 600;
-            color: #f0f2f5;
-            letter-spacing: -0.3px;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .hero-stat-icon {
-            color: #10b981;
-            flex-shrink: 0;
-        }
-
-        .hero-stat-label {
-            font-size: 13px;
-            color: rgba(240, 242, 245, 0.6);
-        }
-
-        .hero-ctas {
-            display: flex;
-            gap: 16px;
-            margin-top: 48px;
-            flex-wrap: wrap;
-        }
-
-        .hero-cta {
-            font-weight: 600;
-            font-size: 15px;
-            padding: 14px 28px;
-            border-radius: 10px;
-            text-decoration: none;
-            background: #3b82f6;
-            color: #0d1117;
-            border: 1px solid rgba(75, 158, 255, 0.3);
-            transition: all 0.2s;
-        }
-
-        .hero-cta:hover {
-            background: #6DB3FF;
-        }
-
-        .hero-cta-secondary {
-            font-weight: 600;
-            font-size: 15px;
-            padding: 14px 28px;
-            border-radius: 10px;
-            text-decoration: none;
-            background: rgba(255, 255, 255, 0.05);
-            color: rgba(240, 242, 245, 0.8);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            transition: all 0.2s;
-        }
-
-        .hero-cta-secondary:hover {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: #3b82f6;
-            color: #0d1117;
-        }
-
-        /* OWASP GenAI Section */
-        .owasp-genai {
-            padding: 120px 24px;
-            background: rgba(75, 158, 255, 0.02);
-            border-top: 1px solid rgba(255, 255, 255, 0.08);
-        }
-
-        .section-header {
-            margin-bottom: 64px;
-            text-align: center;
-        }
-
-        /* Why Cortex Leman */
-        .why-us {
-            padding: 120px 24px;
-            background: linear-gradient(180deg, rgba(16, 185, 129, 0.03), transparent 40%);
-        }
-
-        .why-us-header {
-            max-width: 900px;
-            margin-bottom: 72px;
-        }
-
-        .why-us-title {
-            font-size: clamp(40px, 8vw, 70px);
-            font-weight: 800;
-            line-height: 1.05;
-            letter-spacing: -2.5px;
-            color: #f0f2f5;
-            margin: 16px 0 24px;
-        }
-
-        .why-us-intro {
-            font-size: 18px;
-            font-weight: 500;
-            line-height: 1.6;
-            color: rgba(240, 242, 245, 0.65);
-            max-width: 720px;
-        }
-
-        .why-us-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0 48px;
-        }
-
-        .why-us-item {
-            padding: 28px 0 32px;
-            border-top: 1px dashed rgba(255, 255, 255, 0.12);
-        }
-
-        .why-us-statement {
-            font-size: clamp(22px, 2.8vw, 35px);
-            font-weight: 500;
-            line-height: 1.25;
-            letter-spacing: -0.875px;
-            color: #f0f2f5;
-        }
-
-        .why-us-statement strong {
-            color: #10b981;
-            font-weight: 600;
-        }
-
+        /* ===== HERO ===== */
+        .hero { padding: 150px 24px 90px; text-align: center; position: relative; }
         .section-badge {
-            font-family: 'Roboto Mono', monospace;
-            font-size: 11px;
-            letter-spacing: 0.15em;
-            color: #F59E0B;
-            text-transform: uppercase;
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 6px;
-            background: rgba(245, 158, 11, 0.06);
-            border: 1px solid rgba(245, 158, 11, 0.2);
-            margin-bottom: 8px;
-        }
-
-        .section-title {
-            font-size: clamp(42px, 6vw, 64px);
-            font-weight: 800;
-            color: #f0f2f5;
-            margin-bottom: 16px;
-            letter-spacing: -2px;
-        }
-
-        .section-subtitle {
-            font-size: 18px;
-            color: rgba(240, 242, 245, 0.65);
-            max-width: 720px;
-            line-height: 1.7;
-            margin: 0 auto;
-        }
-
-        .section-subtitle strong {
-            color: #3b82f6;
-        }
-
-        .threats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 24px;
-            background: rgba(255, 255, 255, 0.03);
-            padding: 32px;
-            border-radius: 16px;
-        }
-
-        .threat-card {
-            padding: 24px;
-            border-radius: 12px;
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-        }
-
-        .threat-card.critical {
-            background: rgba(239, 68, 68, 0.04);
-            border-color: rgba(220, 38, 38, 0.2);
-        }
-
-        .threat-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 16px;
-        }
-
-        .threat-badge {
-            font-family: 'Roboto Mono', monospace;
-            font-size: 11px;
-            letter-spacing: 0.12em;
-            padding: 4px 10px;
-            border-radius: 4px;
-            text-transform: uppercase;
-        }
-
-        .threat-badge.critical {
-            background: rgba(220, 38, 38, 0.15);
-            color: #f0f2f5;
-        }
-
-        .threat-badge.high {
-            background: rgba(163, 230, 53, 0.1);
-            color: #f0f2f5;
-        }
-
-        .threat-name {
-            font-size: 20px;
-            font-weight: 700;
-            color: #f0f2f5;
-            margin: 0 0 8px;
-        }
-
-        .threat-description {
-            font-size: 14px;
-            color: rgba(240, 242, 245, 0.6);
-            line-height: 1.6;
-            margin: 0 0 16px;
-        }
-
-        .threat-mitigations {
-            margin-top: 16px;
-            padding-top: 16px;
-            border-top: 1px solid rgba(255, 255, 255, 0.08);
-        }
-
-        .threat-mitigations-title {
-            font-family: 'Roboto Mono', monospace;
-            font-size: 11px;
-            color: #10b981;
-            letter-spacing: 0.1em;
-            margin-bottom: 8px;
-            text-transform: uppercase;
-        }
-
-        .threat-mitigations-list {
-            font-size: 13px;
-            color: rgba(240, 242, 245, 0.65);
-            margin: 0;
-            padding-left: 24px;
-        }
-
-        .threat-mitigations-list li {
-            margin-bottom: 4px;
-        }
-
-        .threat-mitigations-list strong {
-            color: #3b82f6;
-        }
-
-        /* Pricing Section */
-        .pricing {
-            padding: 120px 24px;
-            background: rgba(75, 158, 255, 0.02);
-            border-top: 1px solid rgba(255, 255, 255, 0.08);
-        }
-
-        .pricing-header {
-            margin-bottom: 64px;
-        }
-
-        .pricing-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 24px;
-            margin-bottom: 48px;
-        }
-
-        .pricing-card {
-            padding: 36px 32px;
-            border-radius: 16px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            background: rgba(255, 255, 255, 0.02);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .pricing-card.popular {
-            border: 2px solid #3b82f6;
-            background: rgba(75, 158, 255, 0.05);
-        }
-
-        .pricing-badge {
-            position: absolute;
-            top: 16px;
-            right: 16px;
-            font-family: 'Roboto Mono', monospace;
-            font-size: 10px;
-            padding: 4px 10px;
-            border-radius: 100;
-            background: #3b82f6;
-            color: #0d1117;
-            letter-spacing: 0.08em;
-        }
-
-        .pricing-name {
-            font-size: 22px;
-            font-weight: 700;
-            color: #f0f2f5;
-            margin-bottom: 8px;
-        }
-
-        .pricing-price {
-            display: flex;
-            align-items: baseline;
-            gap: 4px;
-            margin: 20px 0 28px;
-        }
-
-        .pricing-price-amount {
-            font-size: 44px;
-            font-weight: 800;
-            color: #3b82f6;
-            letter-spacing: -2px;
-        }
-
-        .pricing-price-currency {
-            font-size: 16px;
-            color: rgba(240, 242, 245, 0.6);
-            font-weight: 400;
-        }
-
-        .pricing-delay {
-            font-family: 'Roboto Mono', monospace;
-            font-size: 11px;
-            color: #10b981;
-            letter-spacing: 0.12em;
-            margin-bottom: 16px;
-            text-transform: uppercase;
-        }
-
-        .pricing-description {
-            font-size: 14px;
-            color: rgba(240, 242, 245, 0.6);
-            line-height: 1.6;
-            margin: 0 0 24px;
-        }
-
-        .pricing-features {
-            font-size: 13px;
-            color: rgba(240, 242, 245, 0.65);
-            margin: 0 0 24px;
-            padding-left: 24px;
-        }
-
-        .pricing-features li {
-            margin-bottom: 8px;
-        }
-
-        .pricing-features strong {
-            color: #3b82f6;
-        }
-
-        .pricing-cta {
-            display: block;
-            text-align: center;
-            padding: 12px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 600;
-            background: #3b82f6;
-            color: #0d1117;
-            border: 1px solid rgba(75, 158, 255, 0.3);
-            transition: all 0.2s;
-        }
-
-        .pricing-cta:hover {
-            background: #6DB3FF;
-        }
-
-        /* Comparison Table */
-        .comparison {
-            margin-top: 48px;
-            padding: 24px;
-            border-top: 1px solid rgba(255, 255, 255, 0.08);
-            background: rgba(255, 255, 255, 0.02);
-            border-radius: 16px;
-        }
-
-        .comparison h3 {
-            font-size: clamp(24px, 3vw, 32px);
-            font-weight: 700;
-            color: #f0f2f5;
+            font-family: 'Roboto Mono', monospace; font-size: 12px; letter-spacing: 2px;
+            color: #10b981; text-transform: uppercase;
+            display: inline-block; padding: 6px 14px;
+            border: 1px dashed rgba(16, 185, 129, 0.4); border-radius: 6px;
             margin-bottom: 24px;
-            letter-spacing: -1px;
+        }
+        .hero-title { font-size: clamp(40px, 8vw, 70px); font-weight: 700; letter-spacing: -2px; line-height: 1.08; }
+        .hero-title .highlight { color: #3b82f6; }
+        .hero-title .highlight-2 { color: #10b981; }
+        .hero-subtitle { max-width: 720px; margin: 28px auto 0; font-size: 18px; color: rgba(240, 242, 245, 0.75); }
+        .hero-actions { margin-top: 40px; display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+        .btn-primary {
+            background: #3b82f6; color: #0d1117; padding: 14px 28px; border-radius: 10px;
+            font-weight: 600; text-decoration: none; transition: background 0.2s;
+        }
+        .btn-primary:hover { background: #6db3ff; }
+        .btn-secondary {
+            color: #f0f2f5; padding: 14px 28px; border-radius: 10px; font-weight: 600;
+            text-decoration: none; border: 1px solid rgba(255, 255, 255, 0.15); transition: border-color 0.2s;
+        }
+        .btn-secondary:hover { border-color: #3b82f6; }
+
+        .hero-stats { display: flex; justify-content: center; gap: 48px; margin-top: 56px; flex-wrap: wrap; }
+        .hero-stat-value { font-family: 'Roboto Mono', monospace; font-size: 26px; color: #10b981; font-weight: 600; }
+        .hero-stat-label { font-size: 13px; color: rgba(240, 242, 245, 0.6); margin-top: 4px; }
+
+        /* ===== SECTIONS ===== */
+        section { padding: 90px 0; border-top: 1px solid rgba(255, 255, 255, 0.08); }
+        .section-header { text-align: center; margin-bottom: 56px; }
+        .section-title { font-size: clamp(30px, 5vw, 44px); font-weight: 700; letter-spacing: -1.5px; line-height: 1.15; }
+        .section-subtitle { max-width: 640px; margin: 16px auto 0; color: rgba(240, 242, 245, 0.7); }
+
+        /* Confiance — version honnête : secteurs + cas réelles */
+        .trust-strip { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+        .trust-chip {
+            font-family: 'Roboto Mono', monospace; font-size: 13px;
+            padding: 10px 18px; border-radius: 8px;
+            border: 1px dashed rgba(255, 255, 255, 0.15); color: rgba(240, 242, 245, 0.8);
         }
 
-        .comparison-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 13px;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-
-        .comparison-table thead {
-            background: #0d1117;
-        }
-
-        .comparison-table th {
-            padding: 12px 16px;
-            color: #fff;
-            font-weight: 600;
-            text-align: left;
-        }
-
-        .comparison-table th:nth-child(2) {
-            background: #3b82f6;
-            text-align: center;
-        }
-
-        .comparison-table th:nth-child(3) {
-            background: #F59E0B;
-            text-align: center;
-        }
-
-        .comparison-table tbody tr:nth-child(even) {
+        /* ===== SERVICES (4 cartes style Mister IA) ===== */
+        .services-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+        .service-card {
             background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px; padding: 32px;
+            transition: border-color 0.2s, transform 0.2s;
         }
+        .service-card:hover { border-color: #3b82f6; transform: translateY(-2px); }
+        .service-num { font-family: 'Roboto Mono', monospace; font-size: 13px; color: #3b82f6; letter-spacing: 1px; }
+        .service-title { font-size: 22px; font-weight: 600; margin: 12px 0; letter-spacing: -0.5px; }
+        .service-desc { font-size: 15px; color: rgba(240, 242, 245, 0.75); }
+        .service-meta { margin-top: 20px; padding-top: 16px; border-top: 1px dashed rgba(255, 255, 255, 0.12); font-family: 'Roboto Mono', monospace; font-size: 12px; color: #10b981; }
 
-        .comparison-table td {
-            padding: 12px 16px;
-            color: #f0f2f5;
-            font-weight: 600;
+        /* ===== ÉQUIPE (pattern Kirako : agents étiquetés) ===== */
+        .team-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+        .team-card {
+            background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px; padding: 28px;
         }
-
-        .comparison-table td:nth-child(2),
-        .comparison-table td:nth-child(3) {
-            text-align: center;
+        .team-role {
+            font-family: 'Roboto Mono', monospace; font-size: 11px; letter-spacing: 1.5px;
+            text-transform: uppercase; padding: 4px 10px; border-radius: 5px; display: inline-block; margin-bottom: 14px;
         }
+        .team-role.human { color: #10b981; border: 1px dashed rgba(16, 185, 129, 0.5); }
+        .team-role.agent { color: #3b82f6; border: 1px dashed rgba(59, 130, 246, 0.5); }
+        .team-name { font-size: 19px; font-weight: 600; }
+        .team-desc { font-size: 14px; color: rgba(240, 242, 245, 0.7); margin-top: 8px; }
 
-        .comparison-table td:nth-child(3) {
-            color: #3b82f6;
-            font-weight: 600;
+        .team-note { text-align: center; margin-top: 32px; color: rgba(240, 242, 245, 0.6); font-size: 14px; }
+
+        /* ===== FAQ ===== */
+        .faq-list { max-width: 760px; margin: 0 auto; }
+        .faq-item { border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; margin-bottom: 12px; overflow: hidden; background: rgba(255, 255, 255, 0.02); }
+        .faq-question {
+            width: 100%; text-align: left; background: none; border: none; color: #f0f2f5;
+            font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 600;
+            padding: 20px 24px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 16px;
         }
+        .faq-question:hover { color: #3b82f6; }
+        .faq-icon { font-family: 'Roboto Mono', monospace; color: #10b981; transition: transform 0.2s; flex-shrink: 0; }
+        .faq-item.open .faq-icon { transform: rotate(45deg); }
+        .faq-answer { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
+        .faq-answer-inner { padding: 0 24px 20px; color: rgba(240, 242, 245, 0.75); font-size: 15px; }
 
-        /* Footer */
-        footer {
-            border-top: 1px solid rgba(255, 255, 255, 0.08);
-            padding: 40px 24px;
-            background: #495057;
-            color: #fff;
-        }
-
-        .footer-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 16px;
-        }
-
-        .footer-brand {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-weight: 700;
-            font-size: 16px;
-            color: #fff;
-        }
-
-        .footer-brand svg {
-            flex-shrink: 0;
-        }
-
-        .footer-text {
-            font-size: 13px;
-            color: rgba(255, 255, 255, 0.7);
-            max-width: 600px;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .hero-title {
-                font-size: 42px;
-            }
-
-            .hero-subtitle {
-                font-size: 16px;
-            }
-
-            .hero-stats {
-                grid-template-columns: 1fr;
-            }
-
-            .hero-ctas {
-                flex-direction: column;
-                width: 100%;
-            }
-
-            .hero-cta,
-            .hero-cta-secondary {
-                width: 100%;
-                text-align: center;
-            }
-
-            .nav-content {
-                padding: 0 16px;
-            }
-
-            .comparison-table {
-                font-size: 11px;
-            }
-
-            .comparison-table th,
-            .comparison-table td {
-                padding: 8px 12px;
-            }
-            
-            .contact-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .why-us {
-                padding: 80px 16px;
-            }
-
-            .why-us-grid {
-                grid-template-columns: 1fr;
-                gap: 0;
-            }
-
-            .why-us-item {
-                padding: 24px 0 28px;
-            }
-        }
-        
-        /* Contact Section */
-        .contact {
-            padding: 120px 24px;
-            background: rgba(75, 158, 255, 0.02);
-            border-top: 1px solid rgba(255, 255, 255, 0.08);
-        }
-
-        .contact-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 48px;
-            margin-top: 48px;
-        }
-
+        /* ===== CONTACT ===== */
+        .contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; }
         .contact-info {
-            padding: 32px;
-            background: rgba(255, 255, 255, 0.02);
-            border-radius: 16px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 32px; background: rgba(255, 255, 255, 0.02);
+            border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.08);
         }
-
-        .contact-info-title {
-            font-size: 24px;
-            font-weight: 700;
-            color: #f0f2f5;
-            margin-bottom: 24px;
-            letter-spacing: -1px;
+        .contact-info-title { font-size: 22px; font-weight: 700; margin-bottom: 20px; letter-spacing: -0.5px; }
+        .contact-info-list { list-style: none; }
+        .contact-info-list li { font-size: 14px; color: rgba(240, 242, 245, 0.8); line-height: 1.9; }
+        .contact-info-list li::before { content: "✓ "; color: #10b981; }
+        .contact-form-container { padding: 32px; background: rgba(255, 255, 255, 0.02); border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.08); }
+        .form-group { margin-bottom: 18px; }
+        .form-label { display: block; font-size: 13px; font-weight: 500; color: rgba(240, 242, 245, 0.8); margin-bottom: 8px; }
+        .form-input, .form-textarea {
+            width: 100%; padding: 12px 16px; background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px;
+            color: #f0f2f5; font-size: 14px; font-family: 'Inter', sans-serif;
         }
-
-        .contact-info-list {
-            list-style: none;
-            padding: 0;
-            margin: 0 0 32px;
-        }
-
-        .contact-info-list li {
-            font-size: 14px;
-            color: rgba(240, 242, 245, 0.8);
-            line-height: 2;
-            margin-bottom: 12px;
-            padding-left: 28px;
-            position: relative;
-        }
-
-        .contact-info-list li::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 4px;
-            width: 18px;
-            height: 18px;
-            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><path d="M4.5 12.5l5 5 10-11" stroke="%2310b981" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>') no-repeat center;
-            background-size: contain;
-        }
-
-        .contact-social {
-            padding-top: 24px;
-            border-top: 1px solid rgba(255, 255, 255, 0.08);
-        }
-
-        .contact-social-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: #f0f2f5;
-            margin-bottom: 16px;
-        }
-
-        .contact-social-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 12px;
-            font-size: 14px;
-            color: rgba(240, 242, 245, 0.8);
-        }
-
-        .contact-social-icon {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #10b981;
-        }
-
-        .contact-form-container {
-            padding: 32px;
-            background: rgba(255, 255, 255, 0.02);
-            border-radius: 16px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-label {
-            display: block;
-            font-size: 13px;
-            font-weight: 500;
-            color: rgba(240, 242, 245, 0.8);
-            margin-bottom: 8px;
-        }
-
-        .form-input,
-        .form-textarea {
-            width: 100%;
-            padding: 12px 16px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 8px;
-            color: #f0f2f5;
-            font-size: 14px;
-            font-family: 'Inter', sans-serif;
-            transition: all 0.2s;
-        }
-
-        .form-input:focus,
-        .form-textarea:focus {
-            outline: none;
-            border-color: #3b82f6;
-            background: rgba(255, 255, 255, 0.08);
-        }
-
-        .form-textarea {
-            resize: vertical;
-            min-height: 100px;
-        }
-
+        .form-input:focus, .form-textarea:focus { outline: none; border-color: #3b82f6; background: rgba(255, 255, 255, 0.08); }
+        .form-textarea { resize: vertical; min-height: 100px; }
         .form-submit {
-            width: 100%;
-            padding: 14px 28px;
-            background: #3b82f6;
-            color: #0d1117;
-            border: 1px solid rgba(75, 158, 255, 0.3);
-            border-radius: 10px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-family: 'Inter', sans-serif;
+            width: 100%; padding: 14px 28px; background: #3b82f6; color: #0d1117;
+            border: none; border-radius: 10px; font-size: 15px; font-weight: 600;
+            cursor: pointer; font-family: 'Inter', sans-serif; transition: background 0.2s;
+        }
+        .form-submit:hover { background: #6db3ff; }
+
+        /* ===== FOOTER ===== */
+        footer { border-top: 1px solid rgba(255, 255, 255, 0.08); padding: 40px 0; }
+        .footer-inner { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; font-size: 13px; color: rgba(240, 242, 245, 0.5); }
+
+        /* ===== MOTION — reveal au scroll ===== */
+        .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.6s ease, transform 0.6s ease; }
+        .reveal.visible { opacity: 1; transform: none; }
+        @media (prefers-reduced-motion: reduce) {
+            .reveal { opacity: 1; transform: none; transition: none; }
+            html { scroll-behavior: auto; }
         }
 
-        .form-submit:hover {
-            background: #6DB3FF;
-        }
-
-        .form-privacy {
-            font-size: 12px;
-            color: rgba(240, 242, 245, 0.6);
-            text-align: center;
-            margin-top: 16px;
+        @media (max-width: 850px) {
+            .services-grid, .team-grid, .contact-grid { grid-template-columns: 1fr; }
+            .nav-links a:not(.nav-cta) { display: none; }
         }
     </style>
 </head>
 <body>
-    <!-- Navigation -->
-    <nav>
-        <div class="container">
-            <div class="nav-content">
-                <a href="#" class="nav-brand">
-                    <svg class="nav-logo" width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
-                        <rect width="32" height="32" rx="8" fill="#0d1117"/>
-                        <path d="M16 4L6 9v14l10 5 10-5V9L16 4z" stroke="#10b981" stroke-width="1.5" fill="none"/>
-                        <path d="M16 4v24M6 9l10 5 10-5M6 23l10-9 10 9" stroke="#10b981" stroke-width="1" opacity="0.5"/>
-                        <circle cx="16" cy="4" r="2" fill="#10b981"/>
-                        <circle cx="6" cy="9" r="1.5" fill="#3b82f6"/>
-                        <circle cx="26" cy="9" r="1.5" fill="#3b82f6"/>
-                        <circle cx="6" cy="23" r="1.5" fill="#10b981"/>
-                        <circle cx="26" cy="23" r="1.5" fill="#10b981"/>
-                        <circle cx="16" cy="28" r="2" fill="#10b981"/>
-                    </svg>
-                    <div class="nav-brand-text">Cortex <span>Leman</span></div>
-                </a>
-                <a href="#contact-section" class="nav-cta" aria-label="Aller à la section contact pour démarrer un diagnostic">Démarrer un diagnostic</a>
-            </div>
+
+<nav>
+    <div class="nav-inner">
+        <a href="#" class="nav-logo">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2l8.5 4.9v9.8L12 22l-8.5-5.3V6.9L12 2z" stroke="#10b981" stroke-width="1.6"/><path d="M12 7.5l4 2.3v4.6l-4 2.4-4-2.4V9.8l4-2.3z" stroke="#3b82f6" stroke-width="1.4"/></svg>
+            Cortex Leman
+        </a>
+        <div class="nav-links">
+            <a href="#services">Services</a>
+            <a href="#equipe">Équipe</a>
+            <a href="#faq">FAQ</a>
+            <a href="#contact-section" class="nav-cta">Prendre rendez-vous</a>
         </div>
-    </nav>
+    </div>
+</nav>
 
-    <!-- Hero Section -->
-    <section class="hero">
-        <div class="hero-grid"></div>
-        <div class="hero-glow"></div>
-        <div class="container hero-content">
-            <div class="hero-badge">
-                <div class="hero-badge-dot"></div>
-                <div class="hero-badge-text">OWASP GENAI v1.0 · 9-Phase SecOps · 12 Menaces</div>
-            </div>
-            <h1 class="hero-title">
-                Diagnostic de gouvernance IA<br>
-                <span class="highlight">OWASP GenAI</span> + <span class="highlight-2">OWASP Top 10</span>
-            </h1>
-            <p class="hero-subtitle">
-                Contrairement à <strong>OneTrust et Vanta</strong> qui ne couvrent que <strong>OWASP Top 10 traditionnel</strong>, Cortex Leman couvre en plus <strong>OWASP GenAI Agentic AI (9-Phase SecOps)</strong> + <strong>OWASP GenAI Data Security v1.0 (12 menaces)</strong>.
-                <br><br>
-                Premier diagnostic spécifique aux systèmes d'IA multi-agents (LLM, agents autonomes, chatbots) conformes à l'AI Act (juillet 2025).
-            </p>
+<!-- HERO -->
+<header class="hero">
+    <div class="section-badge">Solutions IA conformes · FR-CH</div>
+    <h1 class="hero-title">
+        Diagnostic de <span class="highlight">gouvernance IA</span><br>
+        pour professions <span class="highlight-2">régulées</span>
+    </h1>
+    <p class="hero-subtitle">
+        Nous aidons cabinets, cliniques et PME romands à intégrer l'IA sans perdre
+        le contrôle : diagnostic mesurable, pilotes bornés, validation humaine
+        obligatoire, hébergement en Suisse.
+    </p>
+    <div class="hero-actions">
+        <a href="#contact-section" class="btn-primary">Échangeons sur votre projet →</a>
+        <a href="#services" class="btn-secondary">Voir les services</a>
+    </div>
+    <div class="hero-stats">
+        <div><div class="hero-stat-value">CH 100%</div><div class="hero-stat-label">Hébergement et traitement en Suisse</div></div>
+        <div><div class="hero-stat-value">nLPD</div><div class="hero-stat-label">Conçu pour le cadre suisse</div></div>
+        <div><div class="hero-stat-value">0</div><div class="hero-stat-label">Décision automatisée sans humain</div></div>
+    </div>
+</header>
 
-            <div class="hero-stats">
-                <div class="hero-stat-block">
-                    <div class="hero-stat">
-                        <svg class="hero-stat-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><path d="M12 2L4 5.5v5.1c0 5 3.4 9.6 8 11.4 4.6-1.8 8-6.4 8-11.4V5.5L12 2z" stroke="currentColor" stroke-width="1.8" fill="none"/></svg>
-                        OWASP GenAI v1.0
-                    </div>
-                    <div class="hero-stat-label">Diagnostic complet (3 volets inclus)</div>
-                </div>
-                <div class="hero-stat-block">
-                    <div class="hero-stat">
-                        <svg class="hero-stat-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><path d="M7 3h7l4 4v14H7V3z" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M14 3v4h4M10 12h5M10 16h5" stroke="currentColor" stroke-width="1.8" fill="none"/></svg>
-                        AI Act Compliance
-                    </div>
-                    <div class="hero-stat-label">Articles 9-16, Sanctions jusqu'à 6% CA</div>
-                </div>
-                <div class="hero-stat-block">
-                    <div class="hero-stat">
-                        <svg class="hero-stat-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><path d="M13 2L4 14h6l-1 8 9-12h-6l1-8z" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linejoin="round"/></svg>
-                        Délai rapide
-                    </div>
-                    <div class="hero-stat-label">2-3 semaines vs 6-12 mois</div>
-                </div>
-                <div class="hero-stat-block">
-                    <div class="hero-stat">
-                        <svg class="hero-stat-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.8" fill="none"/><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.8" fill="none"/><circle cx="12" cy="12" r="0.8" fill="currentColor"/></svg>
-                        Spécialisé PME FR-CH
-                    </div>
-                    <div class="hero-stat-label">Support local, FR/DE/IT</div>
-                </div>
-            </div>
-
-            <div class="hero-ctas">
-                <a href="#owasp-genai" class="hero-cta">Découvrir OWASP GenAI →</a>
-                <a href="#contact-section" class="hero-cta-secondary">Démarrer un diagnostic →</a>
-            </div>
+<!-- CONFIANCE (version honnête : secteurs + cas réelles, pas de logos empruntés) -->
+<section>
+    <div class="container">
+        <div class="section-header reveal">
+            <div class="section-badge">Secteurs</div>
+            <h2 class="section-title">Où nous intervenons</h2>
+            <p class="section-subtitle">Nos travaux couvrent trois verticales romandes à forte contrainte de conformité.</p>
         </div>
-    </section>
+        <div class="trust-strip reveal">
+            <span class="trust-chip">Fiduciaires &amp; cabinets</span>
+            <span class="trust-chip">Santé &amp; réadaptation</span>
+            <span class="trust-chip">PME &amp; commerce</span>
+            <span class="trust-chip">Conseil juridique</span>
+            <span class="trust-chip">Immobilier &amp; BTP</span>
+        </div>
+    </div>
+</section>
 
-    <!-- Why Cortex Leman -->
-    <section class="why-us" id="why-us">
-        <div class="container">
-            <div class="why-us-header">
-                <div class="section-badge">POURQUOI CORTEX LEMAN</div>
-                <h2 class="why-us-title">Évalués par des réviseurs. Pas juste des ingénieurs.</h2>
-                <p class="why-us-intro">
-                    La plupart des boîtes de conformité sont l'un ou l'autre. Les équipes tech-first connaissent les API mais pas l'AI Act. Les cabinets legacy connaissent les process mais pas les agents. Cortex Leman fait les deux — et teste chaque diagnostic sur ses propres systèmes avant de le vendre.
+<!-- SERVICES -->
+<section id="services">
+    <div class="container">
+        <div class="section-header reveal">
+            <div class="section-badge">Services</div>
+            <h2 class="section-title">Quatre interventions, une même exigence</h2>
+        </div>
+        <div class="services-grid">
+            <div class="service-card reveal">
+                <div class="service-num">01</div>
+                <h3 class="service-title">Diagnostic de gouvernance IA</h3>
+                <p class="service-desc">
+                    Nous analysons vos usages et processus pour identifier les cas d'IA à fort
+                    impact — et les risques qui vont avec. Vous recevez une feuille de route
+                    priorisée, avec vos chiffres, pas des moyennes de marché.
                 </p>
+                <div class="service-meta">CHF 500 – 1 500 · selon étendue · 2-3 semaines</div>
             </div>
-
-            <div class="why-us-grid">
-                <div class="why-us-item">
-                    <p class="why-us-statement">Premier diagnostic à couvrir <strong>OWASP GenAI Agentic AI</strong> + <strong>Data Security</strong>, pas juste le Top 10 traditionnel.</p>
-                </div>
-                <div class="why-us-item">
-                    <p class="why-us-statement">On évalue d'abord <strong>nos propres systèmes</strong>. Chaque playbook tourne sur notre infra avant de toucher la vôtre.</p>
-                </div>
-                <div class="why-us-item">
-                    <p class="why-us-statement">Déploiement en <strong>2-3 semaines</strong>, pas en trimestres. Vous voyez les résultats avant la prochaine facture.</p>
-                </div>
-                <div class="why-us-item">
-                    <p class="why-us-statement">On reste <strong>embedded jusqu'à ce que ça marche</strong>. Quand on se retire, votre équipe possède le système.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- OWASP GenAI Section -->
-    <section class="owasp-genai" id="owasp-genai">
-        <div class="container">
-            <div class="section-header">
-                <div class="section-badge">OWASP GENAI v1.0</div>
-                <h2 class="section-title">12 Menaces OWASP GenAI</h2>
-                <p class="section-subtitle">
-                    Contrairement à <strong>OneTrust et Vanta</strong> qui ne couvrent que <strong>OWASP Top 10 traditionnel</strong>, Cortex Leman est le premier diagnostic à couvrir <strong>OWASP GenAI Agentic AI (9-Phase SecOps)</strong> + <strong>OWASP GenAI Data Security v1.0 (12 menaces)</strong>.
+            <div class="service-card reveal">
+                <div class="service-num">02</div>
+                <h3 class="service-title">Pilotes bornés</h3>
+                <p class="service-desc">
+                    Une unité, un périmètre, une durée. Indicateurs fixés à J0 avec le sponsor,
+                    porte de sortie à mi-parcours sans frais, rapport final honnête — même si
+                    les objectifs ne sont pas atteints.
                 </p>
+                <div class="service-meta">CHF 4 900 · 10 semaines · sortie S5 sans frais</div>
             </div>
-
-            <div class="threats-grid">
-                <div class="threat-card critical">
-                    <div class="threat-header">
-                        <span class="threat-badge critical">CRITICAL</span>
-                        <h3 class="threat-name">Data Poisoning</h3>
-                    </div>
-                    <p class="threat-description">Injection de données malveillantes dans training data</p>
-                    <div class="threat-mitigations">
-                        <div class="threat-mitigations-title">Mitigations:</div>
-                        <ul class="threat-mitigations-list">
-                            <li><strong>Data sanitization</strong> pipeline</li>
-                            <li><strong>Outlier detection</strong></li>
-                            <li><strong>Adversarial filtering</strong></li>
-                            <li><strong>Immutable training data</strong> (WORM)</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="threat-card">
-                    <div class="threat-header">
-                        <span class="threat-badge high">HIGH</span>
-                        <h3 class="threat-name">Data Extraction</h3>
-                    </div>
-                    <p class="threat-description">Extraction non autorisée de training data</p>
-                    <div class="threat-mitigations">
-                        <div class="threat-mitigations-title">Mitigations:</div>
-                        <ul class="threat-mitigations-list">
-                            <li><strong>Differential privacy</strong> (DP-SGD, DP-SGD)</li>
-                            <li><strong>Output filtering</strong></li>
-                            <li><strong>Response length limits</strong></li>
-                            <li><strong>Rate limiting</strong> sur model queries</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="threat-card">
-                    <div class="threat-header">
-                        <span class="threat-badge high">HIGH</span>
-                        <h3 class="threat-name">Model Inversion</h3>
-                    </div>
-                    <p class="threat-description">Reconstruction de training data depuis le modèle</p>
-                    <div class="threat-mitigations">
-                        <div class="threat-mitigations-title">Mitigations:</div>
-                        <ul class="threat-mitigations-list">
-                            <li><strong>Gradient shielding</strong> during inference</li>
-                            <li><strong>Model regularization</strong> (L1/L2, dropout)</li>
-                            <li><strong>Output confidence thresholds</strong></li>
-                            <li><strong>Shadow models</strong> for anomaly detection</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="threat-card critical">
-                    <div class="threat-header">
-                        <span class="threat-badge critical">CRITICAL</span>
-                        <h3 class="threat-name">Backdoor Attacks</h3>
-                    </div>
-                    <p class="threat-description">Insertion de triggers cachés dans le modèle</p>
-                    <div class="threat-mitigations">
-                        <div class="threat-mitigations-title">Mitigations:</div>
-                        <ul class="threat-mitigations-list">
-                            <li><strong>Pruning fine-tuned layers</strong> before deployment</li>
-                            <li><strong>Outlier detection</strong> during inference</li>
-                            <li><strong>Adversarial testing</strong> before deployment</li>
-                            <li><strong>Backdoor detection</strong> (trigger scanning)</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="threat-card">
-                    <div class="threat-header">
-                        <span class="threat-badge high">HIGH</span>
-                        <h3 class="threat-name">Adversarial Examples</h3>
-                    </div>
-                    <p class="threat-description">Input perturbés pour tromper le modèle</p>
-                    <div class="threat-mitigations">
-                        <div class="threat-mitigations-title">Mitigations:</div>
-                        <ul class="threat-mitigations-list">
-                            <li><strong>Adversarial training</strong> (FGSM, PGD, CW)</li>
-                            <li><strong>Input perturbation detection</strong></li>
-                            <li><strong>Ensemble voting</strong></li>
-                            <li><strong>Input preprocessing</strong> (defenses)</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="threat-card">
-                    <div class="threat-header">
-                        <span class="threat-badge high">HIGH</span>
-                        <h3 class="threat-name">Context Extraction</h3>
-                    </div>
-                    <p class="threat-description">Extraction de données sensibles depuis context LLM</p>
-                    <div class="threat-mitigations">
-                        <div class="threat-mitigations-title">Mitigations:</div>
-                        <ul class="threat-mitigations-list">
-                            <li><strong>Context masking</strong> (redaction, anonymization)</li>
-                            <li><strong>Input/output filtering</strong></li>
-                            <li><strong>Memory scoping</strong> (isolate sensitive context)</li>
-                            <li><strong>Context encryption</strong></li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="threat-card">
-                    <div class="threat-header">
-                        <span class="threat-badge high">HIGH</span>
-                        <h3 class="threat-name">Prompt Injection for Data</h3>
-                    </div>
-                    <p class="threat-description">Injection de prompts pour extraire des données</p>
-                    <div class="threat-mitigations">
-                        <div class="threat-mitigations-title">Mitigations:</div>
-                        <ul class="threat-mitigations-list">
-                            <li><strong>Input validation</strong></li>
-                            <li><strong>Prompt filtering</strong></li>
-                            <li><strong>Output sanitization</strong></li>
-                            <li><strong>Prompt injection detection</strong></li>
-                            <li><strong>LLM firewalls</strong></li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Pricing Section -->
-    <section class="pricing" id="pricing">
-        <div class="container">
-            <div class="pricing-header">
-                <div class="section-badge">TARIFS</div>
-                <h2 class="section-title">Diagnostic RGPD-IA One-Time</h2>
-                <p class="section-subtitle">
-                    vs Abonnement annuel (OneTrust/Vanta: 5,000-50,000€)
+            <div class="service-card reveal">
+                <div class="service-num">03</div>
+                <h3 class="service-title">Intégration avec validation humaine</h3>
+                <p class="service-desc">
+                    Nous déployons des outils où chaque publication passe par un validateur nommé.
+                    Journal d'audit chaîné : toute modification rétroactive est détectable.
+                    Aucune décision automatisée laissée au système.
                 </p>
+                <div class="service-meta">Sur devis · traçabilité native · export libre</div>
             </div>
-
-            <div class="pricing-grid">
-                <!-- Startup -->
-                <div class="pricing-card">
-                    <h3 class="pricing-name">🚀 STARTUP</h3>
-                    <div class="pricing-price">
-                        <span class="pricing-price-amount">1500-3000</span>
-                        <span class="pricing-price-currency">€</span>
-                    </div>
-                    <div class="pricing-delay">2 semaines</div>
-                    <p class="pricing-description">Pour petites équipes (5-15 employés)</p>
-                    <ul class="pricing-features">
-                        <li><strong>3 volets complets</strong></li>
-                        <li><strong>OWASP Top 10 + ASVS v4.0</strong></li>
-                        <li><strong>OWASP GenAI Agentic AI</strong></li>
-                        <li><strong>OWASP GenAI Data Security v1.0</strong></li>
-                    </ul>
-                    <a href="#contact-section" class="pricing-cta">Démarrer →</a>
-                </div>
-
-                <!-- Growth (POPULAIRE) -->
-                <div class="pricing-card popular">
-                    <div class="pricing-badge">POPULAIRE</div>
-                    <h3 class="pricing-name">🏆 GROWTH</h3>
-                    <div class="pricing-price">
-                        <span class="pricing-price-amount">3000-5000</span>
-                        <span class="pricing-price-currency">€</span>
-                    </div>
-                    <div class="pricing-delay">3 semaines</div>
-                    <p class="pricing-description">Pour équipes en croissance (16-35 employés)</p>
-                    <ul class="pricing-features">
-                        <li><strong>3 volets complets + support</strong></li>
-                        <li><strong>Délai prioritaire</strong></li>
-                        <li><strong>Mapping AI Act</strong> (Articles 9-16)</li>
-                        <li><strong>Support local</strong> (Français/Allemand/Italien)</li>
-                    </ul>
-                    <a href="#contact-section" class="pricing-cta">Démarrer →</a>
-                </div>
-
-                <!-- Enterprise -->
-                <div class="pricing-card">
-                    <h3 class="pricing-name">🏢 ENTERPRISE</h3>
-                    <div class="pricing-price">
-                        <span class="pricing-price-amount">5000-7500</span>
-                        <span class="pricing-price-currency">€</span>
-                    </div>
-                    <div class="pricing-delay">3-4 semaines</div>
-                    <p class="pricing-description">Pour grandes entreprises (36-50+ employés)</p>
-                    <ul class="pricing-features">
-                        <li><strong>3 volets + support prioritaire</strong></li>
-                        <li><strong>Dashboard personnalisé</strong></li>
-                        <li><strong>Consulting stratégique</strong></li>
-                        <li><strong>Taux préférentiel</strong></li>
-                    </ul>
-                    <a href="#contact-section" class="pricing-cta">Démarrer →</a>
-                </div>
-            </div>
-
-            <!-- Comparison Table -->
-            <div class="comparison">
-                <h3>⚖️ Différenciation vs OneTrust/Vanta</h3>
-                <table class="comparison-table">
-                    <thead>
-                        <tr>
-                            <th>Critère</th>
-                            <th>OneTrust/Vanta</th>
-                            <th>Cortex Leman</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>OWASP Top 10</td>
-                            <td>Oui (A01-A10)</td>
-                            <td>Oui (A01-A10 + ASVS v4.0)</td>
-                        </tr>
-                        <tr>
-                            <td>OWASP GenAI Agentic AI</td>
-                            <td>Non (9 phases)</td>
-                            <td>Oui (9-Phase SecOps)</td>
-                        </tr>
-                        <tr>
-                            <td>OWASP GenAI Data Security</td>
-                            <td>Non (12 menaces)</td>
-                            <td>Oui (12 menaces v1.0)</td>
-                        </tr>
-                        <tr>
-                            <td>Spécialisé PME FR-CH</td>
-                            <td>Non (Global)</td>
-                            <td>Oui (Local expertise)</td>
-                        </tr>
-                        <tr>
-                            <td>Prix</td>
-                            <td>5,000-50,000€/an (abonnement)</td>
-                            <td>1,500-7,500€ (one-time)</td>
-                        </tr>
-                        <tr>
-                            <td>Délai</td>
-                            <td>6-12 mois (SaaS onboarding)</td>
-                            <td>2-3 semaines (diagnostic intensif)</td>
-                        </tr>
-                        <tr>
-                            <td>Support</td>
-                            <td>Anglais (Global)</td>
-                            <td>Français/Allemand/Italien (Local)</td>
-                        </tr>
-                    </tbody>
-                </table>
+            <div class="service-card reveal">
+                <div class="service-num">04</div>
+                <h3 class="service-title">Transmission &amp; autonomie</h3>
+                <p class="service-desc">
+                    Documenter le savoir de vos équipes pour qu'il survive aux départs, et former
+                    vos collaborateurs aux outils — sans jargon, avec des cas tirés de votre métier.
+                </p>
+                <div class="service-meta">Sur devis · savoir documenté · équipes autonomes</div>
             </div>
         </div>
-    </section>
+        <p class="team-note reveal">Tous les montants en CHF, TTC hors déplacements. Devis nominatif avant tout engagement.</p>
+    </div>
+</section>
 
-    <!-- Contact Section -->
-    <section class="contact" id="contact-section">
-        <div class="container">
-            <div class="section-header">
-                <div class="section-badge">Démarrer un diagnostic</div>
-                <h2 class="section-title">Prêt pour la conformité AI Act ?</h2>
-                <p class="section-subtitle">Remplissez ce formulaire pour un appel découverte gratuit (30 min) et un devis personnalisé.</p>
+<!-- PREUVE (case study honnête + données réelles) -->
+<section id="preuve">
+    <div class="container">
+        <div class="section-header reveal">
+            <div class="section-badge">Preuve</div>
+            <h2 class="section-title">Pas de logos d'emprunt. Des chiffres réels.</h2>
+        </div>
+        <div class="contact-grid">
+            <div class="contact-info reveal">
+                <h3 class="contact-info-title">Notre premier diagnostic interne : 3/10 — et voici pourquoi</h3>
+                <ul class="contact-info-list">
+                    <li>2 557 PME analysées, 1 641 sans site web</li>
+                    <li>0 deal conclu, 0 CHF dépensé — tout est documenté</li>
+                    <li>Le rapport complet dit ce qui a échoué et ce qu'on ferait autrement</li>
+                    <li>La même rigueur s'applique à vos indicateurs, dans les deux sens</li>
+                </ul>
             </div>
-            
-            <div class="contact-grid">
-                <div class="contact-info">
-                    <h3 class="contact-info-title">Pourquoi Cortex Leman ?</h3>
-                    <ul class="contact-info-list">
-                        <li><strong>OWASP GenAI v1.0 complet</strong> - 3 volets intégrés</li>
-                        <li><strong>Spécialisé PME FR-CH</strong> - Support local FR/DE/IT</li>
-                        <li><strong>ROI > 4000%</strong> prouvé sur 3 cas clients</li>
-                        <li><strong>Délai 2-3 semaines</strong> vs 6-12 mois chez les concurrents</li>
-                        <li><strong>Prix one-time</strong> vs abonnements 5K-50K€/an</li>
-                    </ul>
-                    
-                    <div class="contact-social">
-                        <h3 class="contact-social-title">Contactez-nous</h3>
-                        <div class="contact-social-item">
-                            <span class="contact-social-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M4 7l8 6 8-6" stroke="currentColor" stroke-width="1.8" fill="none"/></svg></span>
-                            <span class="contact-social-text">contact@cortex-leman.ch</span>
-                        </div>
-                        <div class="contact-social-item">
-                            <span class="contact-social-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><path d="M12 21s7-6.1 7-11a7 7 0 10-14 0c0 4.9 7 11 7 11z" stroke="currentColor" stroke-width="1.8" fill="none"/><circle cx="12" cy="10" r="2.5" stroke="currentColor" stroke-width="1.8" fill="none"/></svg></span>
-                            <span class="contact-social-text">Lausanne, Suisse (FR-CH)</span>
-                        </div>
-                        <div class="contact-social-item">
-                            <span class="contact-social-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M3.5 12h17M12 3a14 14 0 010 18M12 3a14 14 0 000 18" stroke="currentColor" stroke-width="1.5" fill="none"/></svg></span>
-                            <span class="contact-social-text">cortex-leman.ch</span>
-                        </div>
+            <div class="contact-info reveal">
+                <h3 class="contact-info-title">Ce que ça change pour vous</h3>
+                <ul class="contact-info-list">
+                    <li>Un prestataire qui publie ses échecs ne vous cachera pas les vôtres</li>
+                    <li>Les indicateurs sont fixés avant de commencer, avec vous</li>
+                    <li>Porte de sortie contractuelle à mi-parcours</li>
+                    <li>Documents et données : votre propriété, export libre</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ÉQUIPE (pattern agents nommés étiquetés) -->
+<section id="equipe">
+    <div class="container">
+        <div class="section-header reveal">
+            <div class="section-badge">L'équipe</div>
+            <h2 class="section-title">Un humain, des agents qui ne prennent pas de congés</h2>
+            <p class="section-subtitle">Nous utilisons la stack que nous vendons — en toute transparence.</p>
+        </div>
+        <div class="team-grid">
+            <div class="team-card reveal">
+                <span class="team-role human">Fondateur</span>
+                <div class="team-name">Tars</div>
+                <p class="team-desc">Architecture, relation client, arbitrages. Chaque décision finale reste humaine.</p>
+            </div>
+            <div class="team-card reveal">
+                <span class="team-role agent">Agent IA</span>
+                <div class="team-name">Hermes — opérations</div>
+                <p class="team-desc">Recherche, rédaction de brouillons, veille. Toujours en brouillon, jamais publié sans validation.</p>
+            </div>
+            <div class="team-card reveal">
+                <span class="team-role agent">Agent IA</span>
+                <div class="team-name">Le Gardien — conformité</div>
+                <p class="team-desc">Contrôles nLPD/AI Act sur les contenus et traitements. Bloque et alerte, ne décide pas.</p>
+            </div>
+        </div>
+        <p class="team-note reveal">Les agents sont étiquetés « agent IA » partout où ils apparaissent — y compris dans les livrables.</p>
+    </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq">
+    <div class="container">
+        <div class="section-header reveal">
+            <div class="section-badge">Vos questions</div>
+            <h2 class="section-title">Questions fréquentes</h2>
+        </div>
+        <div class="faq-list">
+            <div class="faq-item reveal">
+                <button class="faq-question" aria-expanded="false">Par où commencer quand on n'a rien déployé ?<span class="faq-icon">+</span></button>
+                <div class="faq-answer"><div class="faq-answer-inner">
+                    Deux entrées possibles : la formation (résultats rapides sur les outils généralistes) ou
+                    le diagnostic (vision complète avant d'investir). Pour les professions régulées, nous
+                    recommandons le diagnostic d'abord : il identifie les cas d'usage à fort impact et les
+                    contraintes de conformité avant tout déploiement.
+                </div></div>
+            </div>
+            <div class="faq-item reveal">
+                <button class="faq-question" aria-expanded="false">Où sont hébergées nos données ?<span class="faq-icon">+</span></button>
+                <div class="faq-answer"><div class="faq-answer-inner">
+                    Sur des serveurs dédiés situés en Suisse, avec accès nominatif et journal des
+                    consultations. Pour les pilotes, les données de démonstration sont 100% synthétiques :
+                    aucune donnée patient ou client réelle n'entre dans l'outil avant validation du cadre.
+                </div></div>
+            </div>
+            <div class="faq-item reveal">
+                <button class="faq-question" aria-expanded="false">L'IA peut-elle prendre des décisions à notre place ?<span class="faq-icon">+</span></button>
+                <div class="faq-answer"><div class="faq-answer-inner">
+                    Non — c'est un principe de conception, pas une option. L'IA produit des brouillons et
+                    des canevas ; chaque publication exige un validateur humain nommé. Toute modification
+                    repasse en brouillon. Le journal d'audit chaîné rend cette chaîne vérifiable.
+                </div></div>
+            </div>
+            <div class="faq-item reveal">
+                <button class="faq-question" aria-expanded="false">Comment garantissez-vous les résultats ?<span class="faq-icon">+</span></button>
+                <div class="faq-answer"><div class="faq-answer-inner">
+                    Nous ne promettons pas de résultats — nous mesurons. Les indicateurs sont fixés avant
+                    le démarrage avec le sponsor, et le rapport final dit honnêtement s'ils sont atteints.
+                    Si ce n'est pas le cas, vous gardez les documents produits et vous sortez sans frais
+                    à la revue de mi-parcours.
+                </div></div>
+            </div>
+            <div class="faq-item reveal">
+                <button class="faq-question" aria-expanded="false">Que se passe-t-il si nous arrêtons ?<span class="faq-icon">+</span></button>
+                <div class="faq-answer"><div class="faq-answer-inner">
+                    Export complet de vos données à tout moment, dans un format lisible.
+                    Pas de clause de rétention, pas de frais de sortie. À la revue de
+                    mi-parcours d'un pilote, vous sortez sans frais et gardez tous les
+                    documents produits.
+                </div></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact-section">
+    <div class="container">
+        <div class="section-header reveal">
+            <div class="section-badge">Contact</div>
+            <h2 class="section-title">Démarrer une conversation</h2>
+            <p class="section-subtitle">45 minutes pour qualifier votre besoin — sans engagement.</p>
+        </div>
+        <div class="contact-grid">
+            <div class="contact-info reveal">
+                <h3 class="contact-info-title">Pourquoi Cortex Leman ?</h3>
+                <ul class="contact-info-list">
+                    <li>Cadre suisse : nLPD, secret professionnel, hébergement CH</li>
+                    <li>Validation humaine obligatoire sur chaque publication</li>
+                    <li>Pilotes bornés avec indicateurs fixés avant démarrage</li>
+                    <li>Documents clients propriété du client, export libre</li>
+                    <li>Rapport final honnête, même sans résultats</li>
+                </ul>
+            </div>
+            <div class="contact-form-container reveal">
+                <form class="contact-form" id="contactForm" action="https://formsubmit.co/beninagro1974@gmail.com" method="POST">
+                    <input type="hidden" name="_captcha" value="false">
+                    <input type="hidden" name="_subject" value="Nouvelle demande de rendez-vous - Cortex Leman">
+                    <input type="hidden" name="_template" value="table">
+                    <div class="form-group">
+                        <label for="name" class="form-label">Nom *</label>
+                        <input type="text" id="name" name="name" class="form-input" required placeholder="Prénom Nom">
                     </div>
-                </div>
-                
-                <div class="contact-form-container">
-                    <form class="contact-form" id="contactForm" action="https://formsubmit.co/contact@cortex-leman.ch" method="POST">
-                        <input type="hidden" name="_captcha" value="false">
-                        <input type="hidden" name="_subject" value="Nouvelle demande diagnostic - Cortex Leman">
-                        <input type="hidden" name="_template" value="table">
-                        <input type="hidden" name="_next" value="">
-                        <div class="form-group">
-                            <label for="name" class="form-label">Nom complet *</label>
-                            <input type="text" id="name" name="name" class="form-input" required placeholder="Jean Dupont">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="email" class="form-label">Email professionnel *</label>
-                            <input type="email" id="email" name="email" class="form-input" required pattern="[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}$" title="Veuillez entrer une adresse email valide (ex: jean@entreprise.ch)" placeholder="jean@entreprise.ch">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="company" class="form-label">Entreprise *</label>
-                            <input type="text" id="company" name="company" class="form-input" required placeholder="Entreprise SA">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="size" class="form-label">Taille de l'équipe *</label>
-                            <select id="size" name="size" class="form-input" required>
-                                <option value="">Sélectionnez...</option>
-                                <option value="1-10">1-10 employés</option>
-                                <option value="11-25">11-25 employés</option>
-                                <option value="26-35">26-35 employés</option>
-                                <option value="36-50">36-50 employés</option>
-                                <option value="50+">50+ employés</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="message" class="form-label">Message (optionnel)</label>
-                            <textarea id="message" name="message" class="form-textarea" rows="4" placeholder="Décrivez votre projet IA et vos besoins de conformité..."></textarea>
-                        </div>
-                        
-                        <button type="submit" class="form-submit">Demander un appel découverte →</button>
-                        
-                        <p class="form-privacy">En soumettant ce formulaire, vous acceptez notre politique de confidentialité.</p>
-                    </form>
-                </div>
+                    <div class="form-group">
+                        <label for="email" class="form-label">Email professionnel *</label>
+                        <input type="email" id="email" name="email" class="form-input" required placeholder="vous@entreprise.ch">
+                    </div>
+                    <div class="form-group">
+                        <label for="company" class="form-label">Organisation *</label>
+                        <input type="text" id="company" name="company" class="form-input" required placeholder="Cabinet, clinique, PME…">
+                    </div>
+                    <div class="form-group">
+                        <label for="source" class="form-label">Comment nous avez-vous trouvés ? (optionnel)</label>
+                        <input type="text" id="source" name="source" class="form-input" placeholder="Recherche, recommandation, LinkedIn…">
+                    </div>
+                    <div class="form-group">
+                        <label for="message" class="form-label">Votre contexte (optionnel)</label>
+                        <textarea id="message" name="message" class="form-textarea" rows="4" placeholder="Décrivez votre besoin ou votre situation en quelques lignes."></textarea>
+                    </div>
+                    <button type="submit" class="form-submit">Demander un échange →</button>
+                </form>
             </div>
         </div>
-    </section>
+    </div>
+</section>
 
-    <!-- Footer -->
-    <footer id="footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-brand">
-                    <svg width="24" height="24" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
-                        <rect width="32" height="32" rx="8" fill="#0d1117"/>
-                        <path d="M16 4L6 9v14l10 5 10-5V9L16 4z" stroke="#10b981" stroke-width="1.5" fill="none"/>
-                        <path d="M16 4v24M6 9l10 5 10-5M6 23l10-9 10 9" stroke="#10b981" stroke-width="1" opacity="0.5"/>
-                        <circle cx="16" cy="4" r="2" fill="#10b981"/>
-                        <circle cx="6" cy="9" r="1.5" fill="#3b82f6"/>
-                        <circle cx="26" cy="9" r="1.5" fill="#3b82f6"/>
-                        <circle cx="6" cy="23" r="1.5" fill="#10b981"/>
-                        <circle cx="26" cy="23" r="1.5" fill="#10b981"/>
-                        <circle cx="16" cy="28" r="2" fill="#10b981"/>
-                    </svg>
-                    <span>Cortex Leman — Diagnostic de gouvernance IA avec OWASP GenAI v1.0</span>
-                </div>
-                <div class="footer-text">
-                    Premier diagnostic à couvrir OWASP GenAI (Agentic AI + Data Security) pour les PME FR-CH. · Non substituable à un conseil certifié.
-                </div>
-            </div>
-        </div>
-    </footer>
+<footer>
+    <div class="container footer-inner">
+        <span>Cortex Leman — Diagnostic de gouvernance IA · FR-CH</span>
+        <span>Données hébergées en Suisse · Validation humaine sur chaque publication</span>
+    </div>
+</footer>
 
-    <!-- Contact Form Handler (FormSubmit.co) -->
-    <script>
-    document.getElementById('contactForm').addEventListener('submit', function(event) {
-        event.preventDefault()
-        
-        const btn = this.querySelector('.form-submit')
-        const originalText = btn.textContent
-        
-        // Validation email côté client
-        const emailField = document.getElementById('email')
-        const emailRegex = /^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}$/i
-        if (!emailRegex.test(emailField.value)) {
-            alert('❌ Adresse email invalide.\n\nVeuillez entrer une adresse email valide (ex: jean@entreprise.ch)')
-            emailField.focus()
-            return
-        }
-        
-        // Afficher chargement
-        btn.textContent = '⏳ Envoi en cours...'
-        btn.disabled = true
-        
-        // Récupérer les données du formulaire
-        const formData = new FormData(this)
-        
-        // Envoyer via FormSubmit.co
-        fetch(this.action, {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => {
-            if (response.ok) {
-                alert('✅ Message envoyé avec succès !\n\nNous vous répondrons dans les 24h.')
-                this.reset()
-                btn.textContent = '✅ Envoyé !'
-                setTimeout(() => {
-                    btn.textContent = originalText
-                    btn.disabled = false
-                }, 3000)
-            } else {
-                throw new Error('Erreur réseau')
-            }
-        })
-        .catch(error => {
-            alert('❌ Erreur lors de l\'envoi : ' + error.message + '\n\nVeuillez réessayer ou nous contacter directement à contact@cortex-leman.ch')
-            btn.textContent = originalText
-            btn.disabled = false
-        })
-    })
-    </script>
+<script>
+    // Reveal au scroll (léger, respecte prefers-reduced-motion)
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });
+    }, { threshold: 0.12 });
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+    // FAQ accordéon
+    document.querySelectorAll('.faq-question').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const item = btn.parentElement;
+            const answer = item.querySelector('.faq-answer');
+            const open = item.classList.toggle('open');
+            btn.setAttribute('aria-expanded', open);
+            answer.style.maxHeight = open ? answer.scrollHeight + 'px' : '0';
+        });
+    });
+
+    // Formulaire — état d'envoi
+    document.getElementById('contactForm').addEventListener('submit', function () {
+        const btn = this.querySelector('.form-submit');
+        btn.textContent = 'Envoi…';
+        btn.disabled = true;
+    });
+</script>
 </body>
 </html>
