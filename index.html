@@ -3,16 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="icon" type="image/png" sizes="64x64" href="/favicon_icon_64.png">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <title>Cortex Leman — Diagnostic de gouvernance IA pour professions régulées FR-CH</title>
-    <meta name="description" content="Cortex Leman accompagne cabinets, cliniques et PME romands : diagnostic de gouvernance IA, pilotes bornés à validation humaine, hébergement Suisse. Conforme nLPD et AI Act.">
+    <meta name="description" content="Cortex Leman accompagne cabinets, cliniques et PME romands : diagnostic de gouvernance IA, pilotes bornés à validation humaine, hébergement Suisse. Démarche alignée nLPD et AI Act.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        html { scroll-behavior: smooth; }
+        html.lenis, html.lenis body { height: auto; }
+        .lenis.lenis-smooth { scroll-behavior: auto !important; }
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -20,159 +21,249 @@
             color: #f0f2f5;
             line-height: 1.6;
         }
+        ::selection { background: #3b82f6; color: #0d1117; }
 
-        .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+        .container { max-width: 1160px; margin: 0 auto; padding: 0 24px; }
 
-        /* ===== NAV (style figma existant) ===== */
+        /* ===== NAV (géométrie Figma conservée) ===== */
         nav {
             position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
-            background: rgba(13, 17, 23, 0.92);
+            background: rgba(13, 17, 23, 0.88);
             backdrop-filter: blur(12px);
             border-bottom: 1px solid rgba(255, 255, 255, 0.08);
         }
         .nav-inner {
             display: flex; align-items: center; justify-content: space-between;
-            height: 64px; max-width: 1200px; margin: 0 auto; padding: 0 24px;
+            height: 64px; max-width: 1160px; margin: 0 auto; padding: 0 24px;
         }
         .nav-logo { display: flex; align-items: center; gap: 10px; font-weight: 700; letter-spacing: -0.5px; text-decoration: none; color: #f0f2f5; }
         .nav-links { display: flex; gap: 28px; align-items: center; }
         .nav-links a { color: rgba(240, 242, 245, 0.7); text-decoration: none; font-size: 14px; transition: color 0.2s; }
-        .nav-links a:hover { color: #3b82f6; }
+        .nav-links a:hover { color: #6db3ff; }
         .nav-cta {
-            background: #3b82f6; color: #0d1117; padding: 9px 18px; border-radius: 8px;
-            font-weight: 600; font-size: 14px; text-decoration: none; transition: background 0.2s;
+            background: transparent; color: #6db3ff; padding: 8px 16px; border-radius: 6px;
+            font-weight: 600; font-size: 13px; text-decoration: none;
+            border: 1px solid rgba(59, 130, 246, 0.45); transition: border-color 0.2s, color 0.2s;
         }
-        .nav-cta:hover { background: #6db3ff; }
+        .nav-cta:hover { border-color: #6db3ff; color: #9ccbff; }
 
-        /* ===== HERO ===== */
-        .hero { padding: 150px 24px 90px; text-align: center; position: relative; }
-        .section-badge {
+        /* ===== HERO éditorial (split, pas centré) ===== */
+        .hero { padding: 140px 0 72px; }
+        .hero-grid { display: grid; grid-template-columns: 7fr 5fr; gap: 56px; align-items: center; }
+        .eyebrow {
             font-family: 'Roboto Mono', monospace; font-size: 12px; letter-spacing: 2px;
-            color: #10b981; text-transform: uppercase;
-            display: inline-block; padding: 6px 14px;
-            border: 1px dashed rgba(16, 185, 129, 0.4); border-radius: 6px;
-            margin-bottom: 24px;
+            color: #10b981; text-transform: uppercase; margin-bottom: 22px;
+            display: flex; align-items: center; gap: 10px;
         }
-        .hero-title { font-size: clamp(40px, 8vw, 70px); font-weight: 700; letter-spacing: -2px; line-height: 1.08; }
-        .hero-title .highlight { color: #3b82f6; }
-        .hero-title .highlight-2 { color: #10b981; }
-        .hero-subtitle { max-width: 720px; margin: 28px auto 0; font-size: 18px; color: rgba(240, 242, 245, 0.75); }
-        .hero-actions { margin-top: 40px; display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+        .eyebrow::before { content: ''; width: 26px; height: 1px; background: #10b981; }
+        .hero-title { font-size: clamp(34px, 5vw, 56px); font-weight: 700; letter-spacing: -1.8px; line-height: 1.1; max-width: 560px; }
+        .hero-title em { font-style: italic; font-weight: 600; color: #6db3ff; }
+        .hero-sub { margin-top: 22px; font-size: 17px; color: rgba(240, 242, 245, 0.72); max-width: 520px; }
+        .hero-actions { margin-top: 34px; display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
         .btn-primary {
-            background: #3b82f6; color: #0d1117; padding: 14px 28px; border-radius: 10px;
-            font-weight: 600; text-decoration: none; transition: background 0.2s;
+            background: #3b82f6; color: #0d1117; padding: 13px 24px; border-radius: 8px;
+            font-weight: 600; font-size: 15px; text-decoration: none; transition: background 0.2s, transform 0.2s;
+            display: inline-block;
         }
-        .btn-primary:hover { background: #6db3ff; }
-        .btn-secondary {
-            color: #f0f2f5; padding: 14px 28px; border-radius: 10px; font-weight: 600;
-            text-decoration: none; border: 1px solid rgba(255, 255, 255, 0.15); transition: border-color 0.2s;
+        .btn-primary:hover { background: #6db3ff; transform: translateY(-1px); }
+        .btn-ghost {
+            color: #f0f2f5; font-family: 'Roboto Mono', monospace; font-size: 13px;
+            text-decoration: none; border-bottom: 1px dashed rgba(240, 242, 245, 0.35);
+            padding-bottom: 3px; transition: border-color 0.2s, color 0.2s;
         }
-        .btn-secondary:hover { border-color: #3b82f6; }
+        .btn-ghost:hover { border-color: #10b981; color: #10b981; }
+        .hero-hint { margin-top: 30px; font-family: 'Roboto Mono', monospace; font-size: 11.5px; color: rgba(240, 242, 245, 0.42); }
 
-        .hero-stats { display: flex; justify-content: center; gap: 48px; margin-top: 56px; flex-wrap: wrap; }
-        .hero-stat-value { font-family: 'Roboto Mono', monospace; font-size: 26px; color: #10b981; font-weight: 600; }
-        .hero-stat-label { font-size: 13px; color: rgba(240, 242, 245, 0.6); margin-top: 4px; }
-
-        /* ===== SECTIONS ===== */
-        section { padding: 90px 0; border-top: 1px solid rgba(255, 255, 255, 0.08); }
-        .section-header { text-align: center; margin-bottom: 56px; }
-        .section-title { font-size: clamp(30px, 5vw, 44px); font-weight: 700; letter-spacing: -1.5px; line-height: 1.15; }
-        .section-subtitle { max-width: 640px; margin: 16px auto 0; color: rgba(240, 242, 245, 0.7); }
-
-        /* Confiance — version honnête : secteurs + cas réelles */
-        .trust-strip { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
-        .trust-chip {
-            font-family: 'Roboto Mono', monospace; font-size: 13px;
-            padding: 10px 18px; border-radius: 8px;
-            border: 1px dashed rgba(255, 255, 255, 0.15); color: rgba(240, 242, 245, 0.8);
-        }
-
-        /* ===== SERVICES (4 cartes style Mister IA) ===== */
-        .services-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
-        .service-card {
+        /* Colonne droite : fiche dossier (remplace les stats slop) */
+        .dossier {
             background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 14px; padding: 32px;
-            transition: border-color 0.2s, transform 0.2s;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px; padding: 22px 22px 18px; position: relative;
         }
-        .service-card:hover { border-color: #3b82f6; transform: translateY(-2px); }
-        .service-num { font-family: 'Roboto Mono', monospace; font-size: 13px; color: #3b82f6; letter-spacing: 1px; }
-        .service-title { font-size: 22px; font-weight: 600; margin: 12px 0; letter-spacing: -0.5px; }
-        .service-desc { font-size: 15px; color: rgba(240, 242, 245, 0.75); }
-        .service-meta { margin-top: 20px; padding-top: 16px; border-top: 1px dashed rgba(255, 255, 255, 0.12); font-family: 'Roboto Mono', monospace; font-size: 12px; color: #10b981; }
-
-        /* ===== ÉQUIPE (pattern Kirako : agents étiquetés) ===== */
-        .team-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
-        .team-card {
-            background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 14px; padding: 28px;
+        .dossier::after {
+            content: 'VALIDÉ·HUMAIN'; position: absolute; top: 16px; right: -8px;
+            font-family: 'Roboto Mono', monospace; font-size: 10px; letter-spacing: 1.5px;
+            color: #10b981; border: 1.5px solid rgba(16, 185, 129, 0.55); border-radius: 4px;
+            padding: 4px 9px; transform: rotate(4deg); background: rgba(13, 17, 23, 0.9);
         }
-        .team-role {
-            font-family: 'Roboto Mono', monospace; font-size: 11px; letter-spacing: 1.5px;
-            text-transform: uppercase; padding: 4px 10px; border-radius: 5px; display: inline-block; margin-bottom: 14px;
+        .dossier-head { font-family: 'Roboto Mono', monospace; font-size: 11px; color: rgba(240, 242, 245, 0.45); letter-spacing: 1px; padding-bottom: 12px; border-bottom: 1px dashed rgba(255, 255, 255, 0.12); }
+        .dossier-line { display: flex; gap: 12px; padding: 9px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05); font-size: 13px; align-items: baseline; }
+        .dossier-line:last-of-type { border-bottom: none; }
+        .dossier-t { font-family: 'Roboto Mono', monospace; font-size: 10.5px; color: rgba(240, 242, 245, 0.38); white-space: nowrap; min-width: 44px; }
+        .dossier-line b { font-weight: 600; font-size: 13px; }
+        .dossier-ok { color: #10b981; font-family: 'Roboto Mono', monospace; font-size: 11px; margin-left: auto; white-space: nowrap; }
+        .dossier-note { margin-top: 12px; font-size: 11.5px; color: rgba(240, 242, 245, 0.4); font-style: italic; }
+
+        /* ===== BANDEAU MARQUEE (tokens réglementaires, pas de villes) ===== */
+        .marquee { border-block: 1px solid rgba(255, 255, 255, 0.08); padding: 14px 0; overflow: hidden; background: #090d13; }
+        .marquee-track { display: flex; gap: 0; width: max-content; will-change: transform; animation: marquee-scroll 150s linear infinite; }
+        @keyframes marquee-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+        @media (prefers-reduced-motion: reduce) { .marquee-track { animation: none; } }
+        .marquee span {
+            font-family: 'Roboto Mono', monospace; font-size: 13.5px; letter-spacing: 1px;
+            color: rgba(240, 242, 245, 0.6); padding: 0 20px; white-space: nowrap;
+            display: inline-flex; align-items: center; gap: 20px;
         }
-        .team-role.human { color: #10b981; border: 1px dashed rgba(16, 185, 129, 0.5); }
-        .team-role.agent { color: #3b82f6; border: 1px dashed rgba(59, 130, 246, 0.5); }
-        .team-name { font-size: 19px; font-weight: 600; }
-        .team-desc { font-size: 14px; color: rgba(240, 242, 245, 0.7); margin-top: 8px; }
+        .marquee span::after { content: '·'; color: #10b981; font-weight: 700; }
+        .marquee span.dim { color: rgba(240, 242, 245, 0.38); }
 
-        .team-note { text-align: center; margin-top: 32px; color: rgba(240, 242, 245, 0.6); font-size: 14px; }
+        /* ===== SECTIONS asymétriques ===== */
+        section { padding: 84px 0; }
+        .sec-head { display: flex; align-items: baseline; justify-content: space-between; gap: 24px; margin-bottom: 44px; flex-wrap: wrap; }
+        .sec-label { font-family: 'Roboto Mono', monospace; font-size: 11.5px; letter-spacing: 2px; color: #10b981; text-transform: uppercase; }
+        .sec-title { font-size: clamp(26px, 3.6vw, 38px); font-weight: 700; letter-spacing: -1.2px; line-height: 1.15; margin-top: 10px; }
+        .sec-aside { font-family: 'Roboto Mono', monospace; font-size: 11.5px; color: rgba(240, 242, 245, 0.4); max-width: 260px; text-align: right; line-height: 1.7; }
 
-        /* ===== FAQ ===== */
-        .faq-list { max-width: 760px; margin: 0 auto; }
-        .faq-item { border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; margin-bottom: 12px; overflow: hidden; background: rgba(255, 255, 255, 0.02); }
+        /* Secteurs — ligne mono, pas de chips */
+        .secteurs { border-top: 1px solid rgba(255, 255, 255, 0.08); padding: 26px 0 40px; }
+        .secteurs-line { font-family: 'Roboto Mono', monospace; font-size: 14px; color: rgba(240, 242, 245, 0.75); letter-spacing: 0.5px; }
+        .secteurs-line i { font-style: normal; color: rgba(240, 242, 245, 0.28); padding: 0 12px; }
+        .exemples { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; margin-top: 28px; }
+        .exemple { border-left: 2px solid rgba(59, 130, 246, 0.4); padding-left: 16px; }
+        .exemple-tag { font-family: 'Roboto Mono', monospace; font-size: 10.5px; letter-spacing: 1.5px; color: #10b981; text-transform: uppercase; margin-bottom: 8px; }
+        .exemple p { font-size: 13px; color: rgba(240, 242, 245, 0.62); line-height: 1.7; }
+        .exemples-note { margin-top: 20px; font-size: 11.5px; color: rgba(240, 242, 245, 0.38); font-style: italic; }
+        @media (max-width: 900px) { .exemples { grid-template-columns: 1fr; } }
+
+        /* ===== SIMULATEUR (moteur intact, habillage dé-emojisé) ===== */
+        #simulateur { background: #090d13; border-block: 1px solid rgba(255, 255, 255, 0.06); }
+        .sim-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: start; }
+        @media (max-width: 900px) { .sim-grid { grid-template-columns: 1fr; } }
+        .sim-panel { background: #0d1117; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 14px; overflow: hidden; }
+        .sim-panel-head { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.07); background: rgba(255, 255, 255, 0.02); }
+        .sim-dots { display: flex; gap: 6px; } .sim-dots span { width: 9px; height: 9px; border-radius: 50%; background: rgba(255, 255, 255, 0.14); }
+        .sim-file { font-family: 'Roboto Mono', monospace; font-size: 11px; color: rgba(240, 242, 245, 0.4); }
+        .sim-live { margin-left: auto; font-family: 'Roboto Mono', monospace; font-size: 10px; color: #6db3ff; letter-spacing: 0.1em; display: inline-flex; align-items: center; gap: 6px; }
+        .sim-live::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #3b82f6; animation: simpulse 1.6s infinite; }
+        @keyframes simpulse { 0%,100% {opacity: 1} 50% {opacity: .3} }
+        .sim-body { padding: 26px 20px; }
+        .gov-node { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 12px 16px; display: flex; align-items: center; gap: 12px; opacity: 0.3; transition: opacity 0.4s, border-color 0.4s, box-shadow 0.4s; }
+        .gov-node.active { opacity: 1; border-color: #3b82f6; box-shadow: 0 0 0 1px #3b82f6, 0 8px 28px rgba(59, 130, 246, 0.25); }
+        .gov-node.done { opacity: 1; border-color: rgba(16, 185, 129, 0.45); }
+        .gov-ico { width: 30px; height: 30px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: rgba(59, 130, 246, 0.12); border-radius: 7px; font-family: 'Roboto Mono', monospace; font-size: 10.5px; font-weight: 600; color: #6db3ff; }
+        .gov-node.done .gov-ico { background: rgba(16, 185, 129, 0.12); color: #10b981; }
+        .gov-lbl { font-family: 'Roboto Mono', monospace; font-size: 9px; color: rgba(240, 242, 245, 0.35); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 2px; }
+        .gov-name { font-size: 13.5px; font-weight: 600; }
+        .gov-st { margin-left: auto; font-family: 'Roboto Mono', monospace; font-size: 10.5px; color: rgba(240, 242, 245, 0.35); white-space: nowrap; }
+        .gov-node.active .gov-st { color: #6db3ff; } .gov-node.done .gov-st { color: #10b981; }
+        .gov-link { width: 2px; height: 26px; margin-left: 45px; background: rgba(255, 255, 255, 0.08); position: relative; overflow: hidden; }
+        .gov-link i { position: absolute; inset: 0; background: linear-gradient(180deg, transparent, #3b82f6, transparent); transform: translateY(-100%); transition: transform 0.5s ease-in-out; }
+        .gov-link.on i { transform: translateY(100%); }
+        .sim-doc { margin-top: 22px; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.07); border-radius: 10px; overflow: hidden; opacity: 0; transform: translateY(10px); transition: opacity 0.6s, transform 0.6s; }
+        .sim-doc.show { opacity: 1; transform: none; }
+        .sim-doc-head { padding: 9px 14px; border-bottom: 1px solid rgba(255, 255, 255, 0.06); font-family: 'Roboto Mono', monospace; font-size: 10.5px; color: rgba(240, 242, 245, 0.4); display: flex; justify-content: space-between; }
+        .sim-doc-body { padding: 14px; font-size: 12.5px; line-height: 1.75; color: rgba(240, 242, 245, 0.75); white-space: pre-wrap; font-family: 'Roboto Mono', monospace; }
+        .gov-tag { display: inline-block; padding: 2px 8px; margin: 2px; border-radius: 4px; font-family: 'Roboto Mono', monospace; font-size: 10.5px; background: rgba(59, 130, 246, 0.12); color: #6db3ff; border: 1px solid rgba(59, 130, 246, 0.25); }
+        .gov-tag.ok { background: rgba(16, 185, 129, 0.1); color: #10b981; border-color: rgba(16, 185, 129, 0.3); }
+        .sim-btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 8px; font-size: 13.5px; font-weight: 500; border: 1px solid rgba(59, 130, 246, 0.45); cursor: pointer; background: transparent; color: #6db3ff; font-family: 'Roboto Mono', monospace; transition: background 0.2s, transform 0.2s; }
+        .sim-btn:hover { background: rgba(59, 130, 246, 0.12); transform: translateY(-1px); }
+        .sim-btn.gov-validate { border-color: rgba(16, 185, 129, 0.55); color: #10b981; }
+        .sim-btn.gov-validate:hover { background: rgba(16, 185, 129, 0.12); }
+        .hidden { display: none; }
+        .sim-note { margin-top: 18px; font-size: 12px; color: rgba(240, 242, 245, 0.45); line-height: 1.6; }
+        .sim-note strong { color: #f0f2f5; }
+        .sim-right h3 { font-size: 22px; margin-bottom: 14px; letter-spacing: -0.5px; }
+        .sim-right p { color: rgba(240, 242, 245, 0.65); margin-bottom: 18px; font-size: 14.5px; }
+        .sim-points { list-style: none; display: grid; gap: 12px; margin-bottom: 24px; }
+        .sim-points li { display: flex; gap: 10px; font-size: 13.5px; color: rgba(240, 242, 245, 0.7); }
+        .sim-points li::before { content: '—'; color: #10b981; font-weight: 700; }
+
+        /* ===== SERVICES — liste carte (pas de grille de cartes) ===== */
+        .carte { border-top: 1px solid rgba(255, 255, 255, 0.1); }
+        .carte-row {
+            display: grid; grid-template-columns: 64px 1fr auto; gap: 24px; align-items: baseline;
+            padding: 26px 8px; border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative; transition: background 0.25s;
+        }
+        .carte-row::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: #3b82f6; transform: scaleY(0); transition: transform 0.3s; }
+        .carte-row:hover::before { transform: scaleY(1); }
+        .carte-row:hover { background: rgba(255, 255, 255, 0.015); }
+        .carte-num { font-family: 'Roboto Mono', monospace; font-size: 13px; color: #3b82f6; font-style: italic; }
+        .carte-name { font-size: 20px; font-weight: 600; letter-spacing: -0.4px; }
+        .carte-desc { margin-top: 6px; font-size: 14.5px; color: rgba(240, 242, 245, 0.68); max-width: 560px; line-height: 1.65; }
+        .carte-meta { font-family: 'Roboto Mono', monospace; font-size: 12px; color: #10b981; text-align: right; line-height: 1.8; white-space: nowrap; }
+        .carte-meta i { font-style: italic; color: rgba(240, 242, 245, 0.4); font-size: 11px; }
+        .carte-note { margin-top: 18px; font-size: 12.5px; color: rgba(240, 242, 245, 0.42); font-style: italic; }
+
+        /* ===== PREUVE — 2 fiches asymétriques ===== */
+        .preuve-grid { display: grid; grid-template-columns: 3fr 2fr; gap: 24px; }
+        .fiche { background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.09); border-radius: 12px; padding: 28px; }
+        .fiche-tag { font-family: 'Roboto Mono', monospace; font-size: 10.5px; letter-spacing: 1.5px; color: #10b981; text-transform: uppercase; margin-bottom: 14px; }
+        .fiche h3 { font-size: 19px; font-weight: 600; letter-spacing: -0.3px; margin-bottom: 16px; line-height: 1.35; }
+        .fiche ul { list-style: none; }
+        .fiche li { font-size: 14px; color: rgba(240, 242, 245, 0.75); line-height: 1.9; padding-left: 18px; position: relative; }
+        .fiche li::before { content: '›'; position: absolute; left: 0; color: #6db3ff; }
+
+        /* ===== INTERLOCUTEUR (fondateur dominant + agents subordonnés) ===== */
+        .founder {
+            display: grid; grid-template-columns: auto 1fr; gap: 26px; align-items: start;
+            background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 14px; padding: 30px; margin-bottom: 18px;
+        }
+        .founder-ident { font-family: 'Roboto Mono', monospace; font-size: 10.5px; letter-spacing: 1.5px; color: #10b981; text-transform: uppercase; margin-bottom: 8px; }
+        .founder h3 { font-size: 26px; font-weight: 700; letter-spacing: -0.8px; margin-bottom: 10px; }
+        .founder p { font-size: 14.5px; color: rgba(240, 242, 245, 0.72); line-height: 1.7; max-width: 640px; }
+        .founder-meta { margin-top: 14px; display: flex; gap: 20px; flex-wrap: wrap; font-family: 'Roboto Mono', monospace; font-size: 11.5px; color: rgba(240, 242, 245, 0.5); }
+        .agents-note { border-top: 1px dashed rgba(255, 255, 255, 0.12); padding-top: 16px; }
+        .agents-note-title { font-family: 'Roboto Mono', monospace; font-size: 10.5px; letter-spacing: 1.5px; color: rgba(240, 242, 245, 0.4); text-transform: uppercase; margin-bottom: 12px; }
+        .agent-line { display: flex; align-items: baseline; gap: 14px; padding: 7px 0; font-size: 13.5px; }
+        .agent-line .team-role { margin-bottom: 0; flex-shrink: 0; }
+        .agent-line span:last-child { color: rgba(240, 242, 245, 0.6); font-size: 13px; }
+
+        /* ===== FAQ — lignes numérotées ===== */
+        .faq-list { max-width: 800px; }
+        .faq-item { border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+        .faq-item:first-child { border-top: 1px solid rgba(255, 255, 255, 0.1); }
         .faq-question {
             width: 100%; text-align: left; background: none; border: none; color: #f0f2f5;
-            font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 600;
-            padding: 20px 24px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 16px;
+            font-family: 'Inter', sans-serif; font-size: 15.5px; font-weight: 600;
+            padding: 20px 4px; cursor: pointer; display: flex; gap: 18px; align-items: baseline;
         }
-        .faq-question:hover { color: #3b82f6; }
-        .faq-icon { font-family: 'Roboto Mono', monospace; color: #10b981; transition: transform 0.2s; flex-shrink: 0; }
+        .faq-qnum { font-family: 'Roboto Mono', monospace; font-size: 11px; color: rgba(240, 242, 245, 0.35); font-style: italic; flex-shrink: 0; }
+        .faq-qtext { flex: 1; }
+        .faq-icon { font-family: 'Roboto Mono', monospace; color: #10b981; transition: transform 0.25s; flex-shrink: 0; font-size: 14px; }
         .faq-item.open .faq-icon { transform: rotate(45deg); }
-        .faq-answer { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
-        .faq-answer-inner { padding: 0 24px 20px; color: rgba(240, 242, 245, 0.75); font-size: 15px; }
+        .faq-question:hover .faq-qtext { color: #9ccbff; }
+        .faq-qtext { transition: color 0.2s; }
+        .faq-answer { max-height: 0; overflow: hidden; transition: max-height 0.35s ease; }
+        .faq-answer-inner { padding: 0 4px 20px 38px; color: rgba(240, 242, 245, 0.72); font-size: 14.5px; line-height: 1.7; }
 
         /* ===== CONTACT ===== */
-        .contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; }
-        .contact-info {
-            padding: 32px; background: rgba(255, 255, 255, 0.02);
-            border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.08);
-        }
-        .contact-info-title { font-size: 22px; font-weight: 700; margin-bottom: 20px; letter-spacing: -0.5px; }
-        .contact-info-list { list-style: none; }
-        .contact-info-list li { font-size: 14px; color: rgba(240, 242, 245, 0.8); line-height: 1.9; }
-        .contact-info-list li::before { content: "✓ "; color: #10b981; }
-        .contact-form-container { padding: 32px; background: rgba(255, 255, 255, 0.02); border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.08); }
-        .form-group { margin-bottom: 18px; }
-        .form-label { display: block; font-size: 13px; font-weight: 500; color: rgba(240, 242, 245, 0.8); margin-bottom: 8px; }
+        .contact-grid { display: grid; grid-template-columns: 2fr 3fr; gap: 40px; }
+        .contact-info ul { list-style: none; margin-top: 18px; }
+        .contact-info li { font-size: 14px; color: rgba(240, 242, 245, 0.78); line-height: 2.0; padding-left: 20px; position: relative; }
+        .contact-info li::before { content: '—'; position: absolute; left: 0; color: #10b981; }
+        .contact-info-title { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
+        .contact-form-container { padding: 30px; background: rgba(255, 255, 255, 0.02); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.09); }
+        .form-group { margin-bottom: 16px; }
+        .form-label { display: block; font-family: 'Roboto Mono', monospace; font-size: 11.5px; font-weight: 500; color: rgba(240, 242, 245, 0.6); margin-bottom: 7px; letter-spacing: 0.5px; }
         .form-input, .form-textarea {
-            width: 100%; padding: 12px 16px; background: rgba(255, 255, 255, 0.05);
+            width: 100%; padding: 12px 14px; background: rgba(255, 255, 255, 0.04);
             border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px;
             color: #f0f2f5; font-size: 14px; font-family: 'Inter', sans-serif;
+            transition: border-color 0.2s;
         }
-        .form-input:focus, .form-textarea:focus { outline: none; border-color: #3b82f6; background: rgba(255, 255, 255, 0.08); }
-        .form-textarea { resize: vertical; min-height: 100px; }
+        .form-input:focus, .form-textarea:focus { outline: none; border-color: #3b82f6; background: rgba(255, 255, 255, 0.06); }
+        .form-textarea { resize: vertical; min-height: 96px; }
         .form-submit {
-            width: 100%; padding: 14px 28px; background: #3b82f6; color: #0d1117;
-            border: none; border-radius: 10px; font-size: 15px; font-weight: 600;
+            width: 100%; padding: 13px 24px; background: #3b82f6; color: #0d1117;
+            border: none; border-radius: 8px; font-size: 14.5px; font-weight: 600;
             cursor: pointer; font-family: 'Inter', sans-serif; transition: background 0.2s;
         }
         .form-submit:hover { background: #6db3ff; }
 
         /* ===== FOOTER ===== */
-        footer { border-top: 1px solid rgba(255, 255, 255, 0.08); padding: 40px 0; }
-        .footer-inner { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; font-size: 13px; color: rgba(240, 242, 245, 0.5); }
+        footer { border-top: 1px solid rgba(255, 255, 255, 0.08); padding: 36px 0; margin-top: 40px; }
+        .footer-inner { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; font-size: 12.5px; color: rgba(240, 242, 245, 0.45); }
+        .footer-inner .mono { font-family: 'Roboto Mono', monospace; font-size: 11px; }
 
-        /* ===== MOTION — reveal au scroll ===== */
-        .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.6s ease, transform 0.6s ease; }
-        .reveal.visible { opacity: 1; transform: none; }
-        @media (prefers-reduced-motion: reduce) {
-            .reveal { opacity: 1; transform: none; transition: none; }
-            html { scroll-behavior: auto; }
-        }
-
-        @media (max-width: 850px) {
-            .services-grid, .team-grid, .contact-grid { grid-template-columns: 1fr; }
+        @media (max-width: 900px) {
+            .hero-grid { grid-template-columns: 1fr; gap: 40px; }
+            .hero { padding-top: 110px; }
+            .sec-aside { text-align: left; }
+            .carte-row { grid-template-columns: 44px 1fr; }
+            .carte-meta { grid-column: 2; text-align: left; white-space: normal; }
+            .preuve-grid, .contact-grid { grid-template-columns: 1fr; }
             .nav-links a:not(.nav-cta) { display: none; }
         }
     </style>
@@ -182,10 +273,11 @@
 <nav>
     <div class="nav-inner">
         <a href="#" class="nav-logo">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2l8.5 4.9v9.8L12 22l-8.5-5.3V6.9L12 2z" stroke="#10b981" stroke-width="1.6"/><path d="M12 7.5l4 2.3v4.6l-4 2.4-4-2.4V9.8l4-2.3z" stroke="#3b82f6" stroke-width="1.4"/></svg>
+            <img src="/cl_symbol_900.png" width="28" height="28" alt="Cortex Leman" style="display:block">
             Cortex Leman
         </a>
         <div class="nav-links">
+            <a href="#simulateur">Simulateur</a>
             <a href="#services">Services</a>
             <a href="#equipe">Équipe</a>
             <a href="#faq">FAQ</a>
@@ -194,168 +286,268 @@
     </div>
 </nav>
 
-<!-- HERO -->
+<!-- HERO éditorial -->
 <header class="hero">
-    <div class="section-badge">Solutions IA conformes · FR-CH</div>
-    <h1 class="hero-title">
-        Diagnostic de <span class="highlight">gouvernance IA</span><br>
-        pour professions <span class="highlight-2">régulées</span>
-    </h1>
-    <p class="hero-subtitle">
-        Nous aidons cabinets, cliniques et PME romands à intégrer l'IA sans perdre
-        le contrôle : diagnostic mesurable, pilotes bornés, validation humaine
-        obligatoire, hébergement en Suisse.
-    </p>
-    <div class="hero-actions">
-        <a href="#contact-section" class="btn-primary">Échangeons sur votre projet →</a>
-        <a href="#services" class="btn-secondary">Voir les services</a>
-    </div>
-    <div class="hero-stats">
-        <div><div class="hero-stat-value">CH 100%</div><div class="hero-stat-label">Hébergement et traitement en Suisse</div></div>
-        <div><div class="hero-stat-value">nLPD</div><div class="hero-stat-label">Conçu pour le cadre suisse</div></div>
-        <div><div class="hero-stat-value">0</div><div class="hero-stat-label">Décision automatisée sans humain</div></div>
+    <div class="container hero-grid">
+        <div class="hero-copy">
+            <div class="eyebrow">Gouvernance IA · FR-CH</div>
+            <h1 class="hero-title">Votre assistant IA a rédigé la réponse. <em>Qui l'a relue&#8239;?</em></h1>
+            <p class="hero-sub">
+                Cabinets, cliniques et PME romands : nous bornons ce que vos agents IA peuvent faire
+                — périmètre, garde-fous nLPD, validation humaine consignée, hébergement en Suisse.
+            </p>
+            <div class="hero-actions">
+                <a href="#contact-section" class="btn-primary" data-magnetic>Demander l'échange gratuit (45 min) →</a>
+                <a href="/simulateur.html" class="btn-ghost" target="_blank" rel="noopener">Chiffrer vos heures perdues — 30 s</a>
+            </div>
+            <p class="hero-hint">premier rendez-vous 45 min · gratuit · sans engagement</p>
+        </div>
+        <div class="dossier" id="dossier">
+            <div class="dossier-head">dossier-2026-118 · journal-gouvernance.log</div>
+            <div class="dossier-line"><span class="dossier-t">12:04</span><b>Contrat reçu</b><span class="dossier-ok">classé · confidentiel</span></div>
+            <div class="dossier-line"><span class="dossier-t">12:04</span><b>3 règles nLPD exécutées</b><span class="dossier-ok">PASS</span></div>
+            <div class="dossier-line"><span class="dossier-t">12:06</span><b>Brouillon annoté</b><span class="dossier-ok">2 zones marquées</span></div>
+            <div class="dossier-line"><span class="dossier-t">12:06</span><b>Décision humaine</b><span class="dossier-ok">consignée</span></div>
+            <p class="dossier-note">Scénario fictif — chaque traitement réel génère ce journal automatiquement.</p>
+        </div>
     </div>
 </header>
 
-<!-- CONFIANCE (version honnête : secteurs + cas réelles, pas de logos empruntés) -->
-<section>
-    <div class="container">
-        <div class="section-header reveal">
-            <div class="section-badge">Secteurs</div>
-            <h2 class="section-title">Où nous intervenons</h2>
-            <p class="section-subtitle">Nos travaux couvrent trois verticales romandes à forte contrainte de conformité.</p>
+<!-- AVATAR vidéo (transparence AI Act art. 50 : contenu généré par IA) -->
+<section style="background: var(--ink, #0d1117); padding: 0 0 64px;">
+    <div class="container" style="max-width: 880px;">
+        <div style="border: 1px solid rgba(240,242,245,0.14); border-radius: 12px; overflow: hidden; background: #000;">
+            <video controls preload="metadata" playsinline style="width: 100%; display: block;">
+                <source src="assets/cortex-avatar-tavus.mp4" type="video/mp4">
+                Votre navigateur ne supporte pas la vidéo.
+            </video>
         </div>
-        <div class="trust-strip reveal">
-            <span class="trust-chip">Fiduciaires &amp; cabinets</span>
-            <span class="trust-chip">Santé &amp; réadaptation</span>
-            <span class="trust-chip">PME &amp; commerce</span>
-            <span class="trust-chip">Conseil juridique</span>
-            <span class="trust-chip">Immobilier &amp; BTP</span>
+        <p style="margin-top: 10px; font-size: 12.5px; color: rgba(240,242,245,0.5); text-align: center;">
+            Vidéo générée par IA — conformément à l'art. 50 du AI Act, nous marquons tout contenu synthétique.
+        </p>
+    </div>
+</section>
+
+<!-- MARQUEE réglementaire -->
+<div class="marquee" aria-hidden="true">
+    <div class="marquee-track" id="marqueeTrack">
+        <span>nLPD</span><span class="dim">secret professionnel · art. 321 CP</span><span>AI Act art. 50</span><span class="dim">brouillon jamais publié seul</span><span>journal chaîné</span><span class="dim">0 décision automatisée</span><span>hébergement Suisse</span><span class="dim">validation humaine consignée</span><span>export libre</span><span class="dim">accès nominatif</span><span>RGPD · arrêt SCHUFA</span><span class="dim">porte de sortie à mi-parcours</span>
+    </div>
+</div>
+
+<!-- SECTEURS + EXEMPLES MÉTIER -->
+<div class="secteurs">
+    <div class="container">
+        <div class="secteurs-line">
+            Fiduciaires &amp; cabinets<i>/</i>Santé &amp; réadaptation<i>/</i>Conseil juridique<i>/</i>Immobilier &amp; BTP<i>/</i>PME &amp; commerce
+        </div>
+        <div class="exemples">
+            <div class="exemple">
+                <div class="exemple-tag">fiduciaire</div>
+                <p>Préparer une réponse client sans exposer le dossier : l'assistant rédige un brouillon annoté à partir de pièces classées, le responsable relit et signe. Aucun dossier ne part dans un outil grand public.</p>
+            </div>
+            <div class="exemple">
+                <div class="exemple-tag">cabinet juridique</div>
+                <p>Synthèse documentaire avec sources vérifiables : chaque affirmation de la synthèse renvoie au document source. Contrôle des références avant envoi — jamais après.</p>
+            </div>
+            <div class="exemple">
+                <div class="exemple-tag">clinique / réadaptation</div>
+                <p>Assistance administrative (planning, courriers) sans aucune décision clinique automatisée : les données patients sont filtrées avant d'atteindre le modèle, la sortie passe par un validateur nommé.</p>
+            </div>
+        </div>
+        <p class="exemples-note">Exemples d'usages à encadrer — pas des références clients.</p>
+    </div>
+</div>
+
+<!-- SIMULATEUR GOUVERNANCE (moteur intact) -->
+<section id="simulateur">
+    <div class="container">
+        <div class="sec-head">
+            <div>
+                <div class="sec-label">Simulateur</div>
+                <h2 class="sec-title">Ce que l'agent fait — et ne fait jamais</h2>
+            </div>
+            <p class="sec-aside">scénario fictif — le journal réel est généré à chaque traitement</p>
+        </div>
+        <div class="sim-grid">
+            <div>
+                <div class="sim-panel">
+                    <div class="sim-panel-head">
+                        <div class="sim-dots"><span></span><span></span><span></span></div>
+                        <span class="sim-file">cortex-leman/gouvernance.workflow</span>
+                        <span class="sim-live">DÉMO</span>
+                    </div>
+                    <div class="sim-body">
+                        <div class="gov-node" data-g="0"><div class="gov-ico">01</div><div><div class="gov-lbl">Entrée</div><div class="gov-name">Document client reçu</div></div><div class="gov-st">reçu</div></div>
+                        <div class="gov-link"><i></i></div>
+                        <div class="gov-node" data-g="1"><div class="gov-ico">02</div><div><div class="gov-lbl">Classification</div><div class="gov-name">Catégorie + niveau de sensibilité</div></div><div class="gov-st">en attente</div></div>
+                        <div class="gov-link"><i></i></div>
+                        <div class="gov-node" data-g="2"><div class="gov-ico">03</div><div><div class="gov-lbl">Garde-fou</div><div class="gov-name">Règles nLPD avant traitement</div></div><div class="gov-st">en attente</div></div>
+                        <div class="gov-link"><i></i></div>
+                        <div class="gov-node" data-g="3"><div class="gov-ico">04</div><div><div class="gov-lbl">Préparation</div><div class="gov-name">Brouillon — jamais envoyé seul</div></div><div class="gov-st">en attente</div></div>
+                        <div class="gov-link"><i></i></div>
+                        <div class="gov-node" data-g="4"><div class="gov-ico">05</div><div><div class="gov-lbl">Validation</div><div class="gov-name">Votre décision — l'agent s'arrête ici</div></div><div class="gov-st">en attente</div></div>
+                        <div class="sim-doc" id="govDoc">
+                            <div class="sim-doc-head"><span>journal-gouvernance.log</span><span id="govClock">00s</span></div>
+                            <div class="sim-doc-body" id="govText"></div>
+                        </div>
+                        <div style="margin-top:18px; display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+                            <button class="sim-btn gov-validate hidden" id="govValidate">✓ Valider — c'est vous qui décidez</button>
+                            <button class="sim-btn hidden" id="govRestart">▷ Rejouer la trace</button>
+                            <span style="font-family:'Roboto Mono',monospace; font-size:11px; color:rgba(240,242,245,.4);">l'agent s'arrête — la validation n'est consignée qu'après votre clic</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="sim-right">
+                <h3>Une gouvernance opposable, pas une case à cocher</h3>
+                <p>La démonstration ci-contre illustre le parcours d'un document (données fictives) : classé, filtré par les règles de protection des données, préparé en brouillon — puis l'agent <strong>s'arrête</strong>. La décision finale vous appartient et est consignée.</p>
+                <ul class="sim-points">
+                    <li>Aucun envoi sans validation humaine explicite</li>
+                    <li>Chaque traitement laisse une trace vérifiable</li>
+                    <li>Les règles nLPD sont exécutées avant le modèle, pas après</li>
+                    <li>Le brouillon est annoté : ce que l'IA a proposé vs ce que vous avez décidé</li>
+                </ul>
+                <p style="font-size:13px;">C'est la différence entre « utiliser ChatGPT » et une gouvernance défendable en cas de contrôle.</p>
+            </div>
         </div>
     </div>
 </section>
 
-<!-- SERVICES -->
+<!-- SERVICES — la carte -->
 <section id="services">
     <div class="container">
-        <div class="section-header reveal">
-            <div class="section-badge">Services</div>
-            <h2 class="section-title">Quatre interventions, une même exigence</h2>
+        <div class="sec-head">
+            <div>
+                <div class="sec-label">Services</div>
+                <h2 class="sec-title">Cinq interventions, une même exigence</h2>
+            </div>
+            <p class="sec-aside">montants TTC hors déplacements · devis nominatif avant tout engagement</p>
         </div>
-        <div class="services-grid">
-            <div class="service-card reveal">
-                <div class="service-num">01</div>
-                <h3 class="service-title">Diagnostic de gouvernance IA</h3>
-                <p class="service-desc">
-                    Nous analysons vos usages et processus pour identifier les cas d'IA à fort
-                    impact — et les risques qui vont avec. Vous recevez une feuille de route
-                    priorisée, avec vos chiffres, pas des moyennes de marché.
-                </p>
-                <div class="service-meta">CHF 500 – 1 500 · selon étendue · 2-3 semaines</div>
+        <div class="carte">
+            <div class="carte-row">
+                <span class="carte-num">n° 01</span>
+                <div>
+                    <div class="carte-name">Diagnostic de gouvernance IA</div>
+                    <p class="carte-desc">Analyse de vos usages et processus pour identifier les cas d'IA à fort impact — et les risques qui vont avec. Feuille de route priorisée, avec vos chiffres, pas des moyennes de marché. Périmètre type: 3-5 processus examinés, 2 entretiens d'1h, rendu en 15 jours.</p>
+                    </div>
+                    <div class="carte-meta">CHF 500–1 500<i>selon nb de processus</i></div>
             </div>
-            <div class="service-card reveal">
-                <div class="service-num">02</div>
-                <h3 class="service-title">Pilotes bornés</h3>
-                <p class="service-desc">
-                    Une unité, un périmètre, une durée. Indicateurs fixés à J0 avec le sponsor,
-                    porte de sortie à mi-parcours sans frais, rapport final honnête — même si
-                    les objectifs ne sont pas atteints.
-                </p>
-                <div class="service-meta">CHF 4 900 · 10 semaines · sortie S5 sans frais</div>
+            <div class="carte-row">
+                <span class="carte-num">n° 02</span>
+                <div>
+                    <div class="carte-name">Pilotes bornés</div>
+                    <p class="carte-desc">Une unité, un périmètre, une durée. Indicateurs fixés à J0 avec le sponsor, porte de sortie à mi-parcours sans frais, rapport final honnête — même si les objectifs ne sont pas atteints.</p>
+                </div>
+                <div class="carte-meta">CHF 4 900<br>10 semaines · sortie S5</div>
             </div>
-            <div class="service-card reveal">
-                <div class="service-num">03</div>
-                <h3 class="service-title">Intégration avec validation humaine</h3>
-                <p class="service-desc">
-                    Nous déployons des outils où chaque publication passe par un validateur nommé.
-                    Journal d'audit chaîné : toute modification rétroactive est détectable.
-                    Aucune décision automatisée laissée au système.
-                </p>
-                <div class="service-meta">Sur devis · traçabilité native · export libre</div>
+            <div class="carte-row">
+                <span class="carte-num">n° 03</span>
+                <div>
+                    <div class="carte-name">Intégration avec validation humaine</div>
+                    <p class="carte-desc">Des outils où chaque publication passe par un validateur nommé. Journal d'audit chaîné : toute modification rétroactive est détectable. Aucune décision automatisée laissée au système.</p>
+                </div>
+                <div class="carte-meta">sur devis<br>traçabilité native</div>
             </div>
-            <div class="service-card reveal">
-                <div class="service-num">04</div>
-                <h3 class="service-title">Transmission &amp; autonomie</h3>
-                <p class="service-desc">
-                    Documenter le savoir de vos équipes pour qu'il survive aux départs, et former
-                    vos collaborateurs aux outils — sans jargon, avec des cas tirés de votre métier.
-                </p>
-                <div class="service-meta">Sur devis · savoir documenté · équipes autonomes</div>
+            <div class="carte-row">
+                <span class="carte-num">n° 04</span>
+                <div>
+                    <div class="carte-name">Transmission &amp; autonomie</div>
+                    <p class="carte-desc">Documenter le savoir de vos équipes pour qu'il survive aux départs, et former vos collaborateurs aux outils — sans jargon, avec des cas tirés de votre métier.</p>
+                </div>
+                <div class="carte-meta">sur devis<br>export libre</div>
+            </div>
+            <div class="carte-row">
+                <span class="carte-num">n° 05</span>
+                <div>
+                    <div class="carte-name">Dossier de preuve — Compliance Record</div>
+                    <p class="carte-desc">Pour chaque usage d'IA : base légale, transferts, durée de conservation, supervision humaine — enregistrés dans une attestation scellée SHA-256 et chaînée. Toute modification rétroactive est détectable. Chaque champ absent est marqué « à vérifier », jamais masqué. Livré en PDF présentable à un contrôleur, un assureur ou un client. Réf. Art. 12 AI Act (redevabilité), RGPD, nLPD.</p>
+                </div>
+                <div class="carte-meta">inclus n° 01–02<br>à l'unité sur devis</div>
             </div>
         </div>
-        <p class="team-note reveal">Tous les montants en CHF, TTC hors déplacements. Devis nominatif avant tout engagement.</p>
+        <p class="carte-note">Tous les montants en CHF, TTC hors déplacements. Devis nominatif avant tout engagement.</p>
     </div>
 </section>
 
-<!-- PREUVE (case study honnête + données réelles) -->
+<!-- PREUVE -->
 <section id="preuve">
     <div class="container">
-        <div class="section-header reveal">
-            <div class="section-badge">Preuve</div>
-            <h2 class="section-title">Pas de logos d'emprunt. Des chiffres réels.</h2>
-        </div>
-        <div class="contact-grid">
-            <div class="contact-info reveal">
-                <h3 class="contact-info-title">Notre premier diagnostic interne : 3/10 — et voici pourquoi</h3>
-                <ul class="contact-info-list">
-                    <li>2 557 PME analysées, 1 641 sans site web</li>
-                    <li>0 deal conclu, 0 CHF dépensé — tout est documenté</li>
-                    <li>Le rapport complet dit ce qui a échoué et ce qu'on ferait autrement</li>
-                    <li>La même rigueur s'applique à vos indicateurs, dans les deux sens</li>
-                </ul>
+        <div class="sec-head">
+            <div>
+                <div class="sec-label">Preuve</div>
+                <h2 class="sec-title">Pas de logos d'emprunt. Des chiffres réels.</h2>
             </div>
-            <div class="contact-info reveal">
-                <h3 class="contact-info-title">Ce que ça change pour vous</h3>
-                <ul class="contact-info-list">
-                    <li>Un prestataire qui publie ses échecs ne vous cachera pas les vôtres</li>
-                    <li>Les indicateurs sont fixés avant de commencer, avec vous</li>
-                    <li>Porte de sortie contractuelle à mi-parcours</li>
-                    <li>Documents et données : votre propriété, export libre</li>
+            <p class="sec-aside">notre premier diagnostic interne est publié, échecs compris</p>
+        </div>
+        <div class="preuve-grid">
+            <div class="fiche">
+                <div class="fiche-tag">Réalisation inspectable</div>
+                <h3>Nous appliquons notre méthode à nous-mêmes — et publions les résultats</h3>
+                <ul>
+                    <li>Notre système de veille multi-agents en production : architecture, contrôles, chiffres</li>
+                    <li>Autodiagnostic interne noté 3/10 — rapport disponible sur demande</li>
+                    <li>Porte de sortie à mi-parcours, export libre, indicateurs fixés avant démarrage</li>
                 </ul>
+                <p style="margin-top:16px;"><a href="/realisations.html" style="color:#6db3ff; font-family:'Roboto Mono',monospace; font-size:13px; text-decoration:none; border-bottom:1px dashed rgba(109,179,255,.4); padding-bottom:2px;">Voir la réalisation documentée (chiffres réels) →</a></p>
+            </div>
+            <div class="fiche">
+                <div class="fiche-tag">Livrable consultable</div>
+                <h3>À quoi ressemble un diagnostic ?</h3>
+                <ul>
+                    <li>Usages d'IA recensés — outils réellement utilisés, données manipulées</li>
+                    <li>Risques hiérarchisés, chacun relié à une mesure concrète</li>
+                    <li>Feuille de route priorisée avec indicateurs fixés avant démarrage</li>
+                </ul>
+                <p style="margin-top:16px;"><a href="/livrable.html" style="color:#6db3ff; font-family:'Roboto Mono',monospace; font-size:13px; text-decoration:none; border-bottom:1px dashed rgba(109,179,255,.4); padding-bottom:2px;">Voir l'extrait d'un livrable (exemple fictif) →</a></p>
             </div>
         </div>
     </div>
 </section>
 
-<!-- ÉQUIPE (pattern agents nommés étiquetés) -->
+<!-- INTERLOCUTEUR -->
 <section id="equipe">
     <div class="container">
-        <div class="section-header reveal">
-            <div class="section-badge">L'équipe</div>
-            <h2 class="section-title">Un humain, des agents qui ne prennent pas de congés</h2>
-            <p class="section-subtitle">Nous utilisons la stack que nous vendons — en toute transparence.</p>
+        <div class="sec-head">
+            <div>
+                <div class="sec-label">Votre interlocuteur</div>
+                <h2 class="sec-title">Un seul responsable, joignable, signataire</h2>
+            </div>
+            <p class="sec-aside">vous savez qui répond — avant, pendant, après</p>
         </div>
-        <div class="team-grid">
-            <div class="team-card reveal">
-                <span class="team-role human">Fondateur</span>
-                <div class="team-name">Tars</div>
-                <p class="team-desc">Architecture, relation client, arbitrages. Chaque décision finale reste humaine.</p>
-            </div>
-            <div class="team-card reveal">
-                <span class="team-role agent">Agent IA</span>
-                <div class="team-name">Hermes — opérations</div>
-                <p class="team-desc">Recherche, rédaction de brouillons, veille. Toujours en brouillon, jamais publié sans validation.</p>
-            </div>
-            <div class="team-card reveal">
-                <span class="team-role agent">Agent IA</span>
-                <div class="team-name">Le Gardien — conformité</div>
-                <p class="team-desc">Contrôles nLPD/AI Act sur les contenus et traitements. Bloque et alerte, ne décide pas.</p>
+        <div class="founder">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="border-radius:50%; background:rgba(59,130,246,.1); padding:8px;"><path d="M12 2l8.5 4.9v9.8L12 22l-8.5-5.3V6.9L12 2z" stroke="#10b981" stroke-width="1.4"/><path d="M12 7.5l4 2.3v4.6l-4 2.4-4-2.4V9.8l4-2.3z" stroke="#3b82f6" stroke-width="1.2"/></svg>
+            <div>
+                <div class="founder-ident">Fondateur · signataire des mandats</div>
+                <h3>Fondateur — Genève</h3>
+                <p>Conseil et intégration d'IA pour professions régulées. Chaque mandat est signé nominativement : architecture, arbitrages, relation client. Pas d'intermédiaire — vous parlez toujours à la personne qui a construit le système.</p>
+                <div class="founder-meta">
+                    <span>implanté GE/VD</span>
+                    <span>réponse sous 24h</span>
+                    <span>engagements écrits avant signature</span>
+                </div>
             </div>
         </div>
-        <p class="team-note reveal">Les agents sont étiquetés « agent IA » partout où ils apparaissent — y compris dans les livrables.</p>
+        <div class="agents-note">
+            <div class="agents-note-title">Assistance interne — agents IA étiquetés (AI Act art. 50)</div>
+            <div class="agent-line"><span class="team-role agent">Agent IA</span><span><strong>Hermes</strong> — recherche et brouillons. Jamais publié sans ma validation.</span></div>
+            <div class="agent-line"><span class="team-role agent">Agent IA</span><span><strong>Le Gardien</strong> — contrôles nLPD/AI Act sur les contenus. Bloque et alerte, ne décide pas.</span></div>
+        </div>
     </div>
 </section>
 
 <!-- FAQ -->
 <section id="faq">
     <div class="container">
-        <div class="section-header reveal">
-            <div class="section-badge">Vos questions</div>
-            <h2 class="section-title">Questions fréquentes</h2>
+        <div class="sec-head">
+            <div>
+                <div class="sec-label">Vos questions</div>
+                <h2 class="sec-title">Ce qu'on nous demande avant de signer</h2>
+            </div>
         </div>
         <div class="faq-list">
-            <div class="faq-item reveal">
-                <button class="faq-question" aria-expanded="false">Par où commencer quand on n'a rien déployé ?<span class="faq-icon">+</span></button>
+            <div class="faq-item">
+                <button class="faq-question" aria-expanded="false"><span class="faq-qnum">01</span><span class="faq-qtext">Par où commencer quand on n'a rien déployé ?</span><span class="faq-icon">+</span></button>
                 <div class="faq-answer"><div class="faq-answer-inner">
                     Deux entrées possibles : la formation (résultats rapides sur les outils généralistes) ou
                     le diagnostic (vision complète avant d'investir). Pour les professions régulées, nous
@@ -363,24 +555,27 @@
                     contraintes de conformité avant tout déploiement.
                 </div></div>
             </div>
-            <div class="faq-item reveal">
-                <button class="faq-question" aria-expanded="false">Où sont hébergées nos données ?<span class="faq-icon">+</span></button>
+            <div class="faq-item">
+                <button class="faq-question" aria-expanded="false"><span class="faq-qnum">02</span><span class="faq-qtext">Où sont hébergées nos données ?</span><span class="faq-icon">+</span></button>
                 <div class="faq-answer"><div class="faq-answer-inner">
-                    Sur des serveurs dédiés situés en Suisse, avec accès nominatif et journal des
-                    consultations. Pour les pilotes, les données de démonstration sont 100% synthétiques :
-                    aucune donnée patient ou client réelle n'entre dans l'outil avant validation du cadre.
+                    Deux circuits, deux traitements. <strong>Les données des mandats</strong> (dossiers, documents)
+                    sont traitées sur des serveurs dédiés situés en Suisse, avec accès nominatif et journal des
+                    consultations. <strong>Le formulaire de contact</strong> (nom, email, organisation) transite
+                    par un service tiers de transmission qui nous le délivre par email — c'est pourquoi nous
+                    demandons de ne jamais y saisir de données client, patient ou dossier confidentiel.
+                    Pour les pilotes, les données de démonstration sont 100% synthétiques.
                 </div></div>
             </div>
-            <div class="faq-item reveal">
-                <button class="faq-question" aria-expanded="false">L'IA peut-elle prendre des décisions à notre place ?<span class="faq-icon">+</span></button>
+            <div class="faq-item">
+                <button class="faq-question" aria-expanded="false"><span class="faq-qnum">03</span><span class="faq-qtext">L'IA peut-elle prendre des décisions à notre place ?</span><span class="faq-icon">+</span></button>
                 <div class="faq-answer"><div class="faq-answer-inner">
                     Non — c'est un principe de conception, pas une option. L'IA produit des brouillons et
                     des canevas ; chaque publication exige un validateur humain nommé. Toute modification
                     repasse en brouillon. Le journal d'audit chaîné rend cette chaîne vérifiable.
                 </div></div>
             </div>
-            <div class="faq-item reveal">
-                <button class="faq-question" aria-expanded="false">Comment garantissez-vous les résultats ?<span class="faq-icon">+</span></button>
+            <div class="faq-item">
+                <button class="faq-question" aria-expanded="false"><span class="faq-qnum">04</span><span class="faq-qtext">Comment garantissez-vous les résultats ?</span><span class="faq-icon">+</span></button>
                 <div class="faq-answer"><div class="faq-answer-inner">
                     Nous ne promettons pas de résultats — nous mesurons. Les indicateurs sont fixés avant
                     le démarrage avec le sponsor, et le rapport final dit honnêtement s'ils sont atteints.
@@ -388,8 +583,8 @@
                     à la revue de mi-parcours.
                 </div></div>
             </div>
-            <div class="faq-item reveal">
-                <button class="faq-question" aria-expanded="false">Que se passe-t-il si nous arrêtons ?<span class="faq-icon">+</span></button>
+            <div class="faq-item">
+                <button class="faq-question" aria-expanded="false"><span class="faq-qnum">05</span><span class="faq-qtext">Que se passe-t-il si nous arrêtons ?</span><span class="faq-icon">+</span></button>
                 <div class="faq-answer"><div class="faq-answer-inner">
                     Export complet de vos données à tout moment, dans un format lisible.
                     Pas de clause de rétention, pas de frais de sortie. À la revue de
@@ -404,23 +599,28 @@
 <!-- CONTACT -->
 <section id="contact-section">
     <div class="container">
-        <div class="section-header reveal">
-            <div class="section-badge">Contact</div>
-            <h2 class="section-title">Démarrer une conversation</h2>
-            <p class="section-subtitle">45 minutes pour qualifier votre besoin — sans engagement.</p>
+        <div class="sec-head">
+            <div>
+                <div class="sec-label">Contact</div>
+                <h2 class="sec-title">Démarrer une conversation</h2>
+            </div>
+            <p class="sec-aside">45 minutes pour qualifier votre besoin — sans engagement</p>
         </div>
         <div class="contact-grid">
-            <div class="contact-info reveal">
+            <div class="contact-info">
                 <h3 class="contact-info-title">Pourquoi Cortex Leman ?</h3>
-                <ul class="contact-info-list">
+                <ul>
                     <li>Cadre suisse : nLPD, secret professionnel, hébergement CH</li>
                     <li>Validation humaine obligatoire sur chaque publication</li>
                     <li>Pilotes bornés avec indicateurs fixés avant démarrage</li>
                     <li>Documents clients propriété du client, export libre</li>
                     <li>Rapport final honnête, même sans résultats</li>
                 </ul>
+                <p style="margin-top:20px; font-size:14px; line-height:1.7;">
+                    Pas encore prêt à parler&#8239;? <a href="/simulateur.html" target="_blank" rel="noopener" style="color:#6db3ff;">Chiffrez vos heures perdues en 30 secondes →</a>
+                </p>
             </div>
-            <div class="contact-form-container reveal">
+            <div class="contact-form-container">
                 <form class="contact-form" id="contactForm" action="https://formsubmit.co/beninagro1974@gmail.com" method="POST">
                     <input type="hidden" name="_captcha" value="false">
                     <input type="hidden" name="_subject" value="Nouvelle demande de rendez-vous - Cortex Leman">
@@ -435,15 +635,11 @@
                     </div>
                     <div class="form-group">
                         <label for="company" class="form-label">Organisation *</label>
-                        <input type="text" id="company" name="company" class="form-input" required placeholder="Cabinet, clinique, PME…">
-                    </div>
-                    <div class="form-group">
-                        <label for="source" class="form-label">Comment nous avez-vous trouvés ? (optionnel)</label>
-                        <input type="text" id="source" name="source" class="form-input" placeholder="Recherche, recommandation, LinkedIn…">
+                        <input type="text" id="company" name="company" class="form-input" required placeholder="Fiduciaire, étude, clinique, PME…">
                     </div>
                     <div class="form-group">
                         <label for="message" class="form-label">Votre contexte (optionnel)</label>
-                        <textarea id="message" name="message" class="form-textarea" rows="4" placeholder="Décrivez votre besoin ou votre situation en quelques lignes."></textarea>
+                        <textarea id="message" name="message" class="form-textarea" rows="4" placeholder="Décrivez votre besoin en quelques lignes. Ne transmettez aucune donnée client, patient ou dossier confidentiel."></textarea>
                     </div>
                     <button type="submit" class="form-submit">Demander un échange →</button>
                 </form>
@@ -455,18 +651,12 @@
 <footer>
     <div class="container footer-inner">
         <span>Cortex Leman — Diagnostic de gouvernance IA · FR-CH</span>
-        <span>Données hébergées en Suisse · Validation humaine sur chaque publication</span>
+        <span class="mono">mandats: hébergement et traitement en Suisse · formulaire de contact: voir les informations en bas de page</span>
     </div>
 </footer>
 
 <script>
-    // Reveal au scroll (léger, respecte prefers-reduced-motion)
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });
-    }, { threshold: 0.12 });
-    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
-
-    // FAQ accordéon
+    // FAQ accordéon + formulaire (logique inchangée)
     document.querySelectorAll('.faq-question').forEach(btn => {
         btn.addEventListener('click', () => {
             const item = btn.parentElement;
@@ -476,13 +666,224 @@
             answer.style.maxHeight = open ? answer.scrollHeight + 'px' : '0';
         });
     });
-
-    // Formulaire — état d'envoi
     document.getElementById('contactForm').addEventListener('submit', function () {
         const btn = this.querySelector('.form-submit');
         btn.textContent = 'Envoi…';
         btn.disabled = true;
     });
+</script>
+
+<script>
+    // ===== Simulateur gouvernance — moteur identique (token guard inclus) =====
+    (function () {
+        var STATES = [
+            { st: 'reçu', t: 700 },
+            { st: 'contrat · confidentiel', t: 1500 },
+            { st: '3 règles vérifiées', t: 1700 },
+            { st: 'brouillon annoté', t: 2600 },
+            { st: 'EN ATTENTE DE VOUS', t: 0 }  // l'agent s'arrête — pas d'auto-validation
+        ];
+        var TAGS = ['<span class="gov-tag">#contrat</span><span class="gov-tag">#confidentiel</span>', '<span class="gov-tag ok">nLPD:OK</span><span class="gov-tag ok">CH-hébergé</span>'];
+        var LOG_AGENT = "12:04:01  document reçu — src: boîte cabinet\n12:04:02  classification: contrat / sensibilité haute\n12:04:02  garde-fou nLPD: 3 règles exécutées → PASS\n12:04:04  brouillon préparé — 2 zones annotées\n12:04:05  ── EN ATTENTE DE VALIDATION HUMAINE ──";
+        var LOG_HUMAN = "12:06:31  VALIDÉ par l'humain — décision consignée";
+
+        var nodes = [].slice.call(document.querySelectorAll('.gov-node'));
+        var links = [].slice.call(document.querySelectorAll('.gov-link i'));
+        var doc = document.getElementById('govDoc');
+        var textEl = document.getElementById('govText');
+        var clock = document.getElementById('govClock');
+        var btnValidate = document.getElementById('govValidate');
+        var btnRestart = document.getElementById('govRestart');
+        var token = 0;
+
+        function reset() {
+            nodes.forEach(function (n, i) {
+                n.classList.remove('active', 'done');
+                var st = n.querySelector('.gov-st');
+                st.textContent = i === 0 ? 'reçu' : 'en attente';
+            });
+            links.forEach(function (l) { l.parentElement.classList.remove('on'); });
+            doc.classList.remove('show');
+            textEl.innerHTML = '';
+            btnValidate.classList.add('hidden');
+            btnValidate.disabled = false;
+            btnRestart.classList.add('hidden');
+        }
+
+        function run() {
+            var my = ++token;
+            reset();
+            var i = 0;
+            var elapsed = 0;
+
+            function step() {
+                if (my !== token) return;
+                if (i > 0) {
+                    nodes[i - 1].classList.remove('active');
+                    nodes[i - 1].classList.add('done');
+                    nodes[i - 1].querySelector('.gov-st').textContent = '✓ fait';
+                    if (links[i - 1]) links[i - 1].parentElement.classList.add('on');
+                }
+                if (i >= nodes.length) { pauseForHuman(my); return; }
+                nodes[i].classList.add('active');
+                nodes[i].querySelector('.gov-st').textContent = STATES[i].st;
+                elapsed += STATES[i].t;
+                clock.textContent = (elapsed / 1000).toFixed(0) + 's';
+                i++;
+                if (STATES[i - 1].t === 0) { pauseForHuman(my); return; } // porte humaine: le node reste actif, pas d'auto-avance
+                setTimeout(step, STATES[i - 1].t);
+            }
+            step();
+        }
+
+        // L'agent s'arrête : le journal agent s'écrit, puis on attend le visiteur
+        function pauseForHuman(my) {
+            if (my !== token) return;
+            doc.classList.add('show');
+            textEl.innerHTML = TAGS.join(' ') + '\n\n';
+            var lines = LOG_AGENT.split('\n');
+            var li = 0;
+            (function typeLine() {
+                if (my !== token) return;
+                if (li >= lines.length) {
+                    btnValidate.classList.remove('hidden');
+                    return;
+                }
+                textEl.innerHTML += lines[li] + '\n';
+                li++;
+                setTimeout(typeLine, 420);
+            })();
+        }
+
+        // Seul le visiteur valide — la dernière ligne du journal est SA décision
+        btnValidate.addEventListener('click', function () {
+            var my = token; // pas de nouveau run: on complète la trace courante
+            btnValidate.disabled = true;
+            var node = nodes[nodes.length - 1];
+            node.classList.remove('active');
+            node.classList.add('done');
+            node.querySelector('.gov-st').textContent = '✓ validé par vous';
+            textEl.innerHTML += LOG_HUMAN + '\n';
+            clock.textContent = '147s';
+            btnRestart.classList.remove('hidden');
+        });
+
+        var started = false;
+        function startOnce() {
+            if (started) return; started = true; run();
+        }
+        if ('IntersectionObserver' in window) {
+            var io = new IntersectionObserver(function (entries) {
+                entries.forEach(function (e) { if (e.isIntersecting) { startOnce(); io.disconnect(); } });
+            }, { threshold: 0.35 });
+            io.observe(document.getElementById('simulateur'));
+        } else { startOnce(); }
+
+        btnRestart.addEventListener('click', run);
+    })();
+</script>
+
+<!-- ===== MOTION (GSAP + Lenis) — états initiaux posés en JS uniquement ===== -->
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
+<script>
+(function () {
+    var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // Marquee — clones JS pour une boucle dense, défilement en CSS pur (fiable partout)
+    var track = document.getElementById('marqueeTrack');
+    if (track) {
+        var base = track.innerHTML;
+        track.innerHTML = base + base + base + base; // 4 copies → -50% boucle sans vide même en 4K
+    }
+
+    if (reduced || typeof gsap === 'undefined') return;
+
+    gsap.registerPlugin(ScrollTrigger);
+
+    // Lenis smooth scroll + synchro ScrollTrigger
+    var lenis = null;
+    if (typeof Lenis !== 'undefined') {
+        lenis = new Lenis({ duration: 1.05, smoothWheel: true });
+        lenis.on('scroll', ScrollTrigger.update);
+        gsap.ticker.add(function (t) { lenis.raf(t * 1000); });
+        gsap.ticker.lagSmoothing(0);
+    }
+
+    // HERO — entrée staggerée : eyebrow → titre → sub → actions → fiche (clip-path)
+    var heroTl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+    heroTl
+        .from('.eyebrow', { x: -18, opacity: 0, duration: 0.5 })
+        .from('.hero-title', { y: 26, opacity: 0, duration: 0.7 }, '-=0.25')
+        .from('.hero-sub', { y: 18, opacity: 0, duration: 0.6 }, '-=0.4')
+        .from('.hero-actions', { y: 14, opacity: 0, duration: 0.5 }, '-=0.35')
+        .from('.hero-hint', { opacity: 0, duration: 0.5 }, '-=0.2')
+        .from('.dossier', { clipPath: 'inset(0 0 100% 0)', y: 20, duration: 0.9, ease: 'power4.out' }, 0.3)
+        .from('.dossier-line', { x: 24, opacity: 0, stagger: 0.12, duration: 0.5 }, '-=0.45');
+
+    // SECTIONS — révélation variable par type (jamais le même fade partout)
+    // 1) têtes de section : le label glisse, le titre remonte
+    gsap.utils.toArray('.sec-head').forEach(function (head) {
+        gsap.from(head.children, {
+            y: 22, opacity: 0, duration: 0.6, stagger: 0.08, ease: 'power3.out',
+            scrollTrigger: { trigger: head, start: 'top 85%' }
+        });
+    });
+
+    // 2) carte services : révélation ligne par ligne, décalage horizontal
+    gsap.from('.carte-row', {
+        x: -32, opacity: 0, duration: 0.6, stagger: 0.12, ease: 'power3.out',
+        scrollTrigger: { trigger: '.carte', start: 'top 82%' }
+    });
+
+    // 3) fiches preuve : entrée décalée verticale asymétrique
+    gsap.from('.fiche', {
+        y: 34, opacity: 0, duration: 0.7, stagger: 0.15, ease: 'power3.out',
+        scrollTrigger: { trigger: '.preuve-grid', start: 'top 85%' }
+    });
+
+    // 4) interlocuteur : la fiche fondateur remonte, les lignes agents suivent
+    gsap.from('.founder', {
+        y: 30, opacity: 0, duration: 0.7, ease: 'power3.out',
+        scrollTrigger: { trigger: '.founder', start: 'top 88%' }
+    });
+    gsap.from('.agent-line', {
+        x: -16, opacity: 0, duration: 0.45, stagger: 0.1, ease: 'power2.out',
+        scrollTrigger: { trigger: '.agents-note', start: 'top 90%' }
+    });
+
+    // 5) FAQ : lignes en succession rapide
+    gsap.from('.faq-item', {
+        opacity: 0, y: 16, duration: 0.45, stagger: 0.07, ease: 'power2.out',
+        scrollTrigger: { trigger: '.faq-list', start: 'top 85%' }
+    });
+
+    // 6) contact : le formulaire arrive après la liste
+    gsap.from('.contact-info li', {
+        x: -18, opacity: 0, duration: 0.45, stagger: 0.08, ease: 'power2.out',
+        scrollTrigger: { trigger: '.contact-grid', start: 'top 85%' }
+    });
+    gsap.from('.contact-form-container', {
+        y: 26, opacity: 0, duration: 0.6, ease: 'power3.out',
+        scrollTrigger: { trigger: '.contact-grid', start: 'top 80%' }
+    });
+
+    // CTA magnétique subtil (desktop pointer fin uniquement)
+    if (window.matchMedia('(pointer: fine)').matches) {
+        document.querySelectorAll('[data-magnetic]').forEach(function (el) {
+            el.addEventListener('mousemove', function (e) {
+                var r = el.getBoundingClientRect();
+                var dx = (e.clientX - r.left - r.width / 2) / r.width;
+                var dy = (e.clientY - r.top - r.height / 2) / r.height;
+                gsap.to(el, { x: dx * 8, y: dy * 6, duration: 0.3, ease: 'power2.out' });
+            });
+            el.addEventListener('mouseleave', function () {
+                gsap.to(el, { x: 0, y: 0, duration: 0.45, ease: 'elastic.out(1, 0.5)' });
+            });
+        });
+    }
+})();
 </script>
 </body>
 </html>
